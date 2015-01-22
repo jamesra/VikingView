@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/VikingView">
+        <file>Images/add.png</file>
+        <file>Images/remove.png</file>
+    </qresource>
+</RCC>
