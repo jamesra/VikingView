@@ -57,6 +57,11 @@ private:
 
   void load_structure( int id );
 
+  void import_json(QString json_text);
+
+
+
+
   /// designer form
   Ui_VikingViewApp* ui_;
 

@@ -54,7 +54,12 @@ FIND_PACKAGE(VTK COMPONENTS
   vtkGUISupportQt
 )
 
-INCLUDE( ${USE_VTK_FILE} )
+MESSAGE(STATUS "** USE_VTK_FILE: ${USE_VTK_FILE}")
+
+
+INCLUDE(${VTK_USE_FILE})
+
+#INCLUDE( ${USE_VTK_FILE} )
 MESSAGE(STATUS "** VTK_DIR: ${VTK_DIR}")
 #MESSAGE(STATUS "** VTK_LIBRARIES: ${VTK_LIBRARIES}")
 
@@ -64,6 +69,25 @@ MESSAGE(STATUS "** VTK_DIR: ${VTK_DIR}")
 #ENDIF(ITK_FOUND)
 #MESSAGE(STATUS "** ITK_DIR: ${ITK_DIR}")
 #MESSAGE(STATUS "** ITK_LIBRARIES: ${ITK_LIBRARIES}")
+
+
+FIND_PACKAGE(CGAL REQUIRED)
+
+MESSAGE(STATUS "** USE_CGAL_FILE: ${USE_CGAL_FILE}")
+
+
+#IF (CGAL_FOUND)
+#  INCLUDE (${USE_CGAL_FILE})
+#ENDIF(CGAL_FOUND)
+
+
+if ( CGAL_FOUND )
+  include( ${CGAL_USE_FILE} )
+ENDIF( CGAL_FOUND )
+
+MESSAGE(STATUS "** CGAL_DIR: ${CGAL_DIR}")
+MESSAGE(STATUS "** CGAL_LIBRARIES: ${CGAL_LIBRARIES}")
+
 
 #set( Boost_DEBUG TRUE )
 #SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
@@ -87,6 +111,7 @@ SET( QT_USE_QT3SUPPORT TRUE )
 SET( QT_USE_QTXML TRUE )
 SET( QT_USE_QTSVG TRUE )
 SET( QT_USE_QTNETWORK TRUE )
+SET( QT_USE_QTSCRIPT TRUE )
 
 #--------------------------------------------------------------------------------
 # This sets the windows build that will need the special winmain@16 call. Qt provides
@@ -170,9 +195,10 @@ SET(VIKING_VIEW_APPLICATION_UIS
 #  Application/PreferencesWindow.ui
 )
 
-# ### Data
-# SET(VIKING_VIEW_DATA_HDRS
-#   Data/Mesh.h
+### Data
+ SET(VIKING_VIEW_DATA_HDRS
+   Data/Json.h
+   )
 #   Data/Shape.h
 #   Data/ItkToVtk.h
 #   Data/Project.h
@@ -183,7 +209,9 @@ SET(VIKING_VIEW_APPLICATION_UIS
 #   Data/MeshWorker.h
 #   Data/MeshCache.h
 # )
-# SET(VIKING_VIEW_DATA_SRCS
+SET(VIKING_VIEW_DATA_SRCS
+  Data/Json.cc
+  )
 #   Data/Mesh.cc
 #   Data/Shape.cc
 #   Data/Project.cc
