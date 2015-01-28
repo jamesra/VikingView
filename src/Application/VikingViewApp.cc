@@ -11,6 +11,8 @@
 // viking
 #include <Application/VikingViewApp.h>
 #include <Data/Json.h>
+#include <Data/PointSampler.h>
+#include <Data/AlphaShape.h>
 
 // ui
 #include <ui_VikingViewApp.h>
@@ -235,6 +237,11 @@ void VikingViewApp::import_json( QString json_text )
 
   QList<QVariant> list = map["value"].toList();
 
+
+  PointSampler ps;
+  ps.set_locations(list);
+  ps.sample_points();
+/*
   int count = 0;
   foreach( QVariant var, list ) {
     count++;
@@ -246,6 +253,7 @@ void VikingViewApp::import_json( QString json_text )
       }
     }
   }
+  */
 /*
    QString locations = map["value"].toString();
 

@@ -11,6 +11,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <Data/AlphaShape.h>
+
 #ifndef _USE_OLD_IOSTREAMS
 using namespace std;
 #endif
@@ -81,6 +83,7 @@ int main( int argc, char** argv )
 #endif
   try {
 
+    //cgal_main(argc, argv);
     
     std::cerr << "VikingView initializing...\n";
 

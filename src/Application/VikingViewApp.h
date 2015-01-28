@@ -12,18 +12,10 @@
 #include <QNetworkReply>
 #include <QUrl>
 
-class Lightbox;
-class GroomTool;
-class OptimizeTool;
-class AnalysisTool;
-class Project;
-class Visualizer;
 
 // Forward Qt class declarations
 class Ui_VikingViewApp;
 
-class LightboxLayout;
-class WheelEventForwarder;
 
 //! Main VikingView window
 /*!
