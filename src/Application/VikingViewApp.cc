@@ -53,6 +53,8 @@ void VikingViewApp::on_delete_button_clicked()
 void VikingViewApp::load_structure( int id )
 {
 
+
+
   file = new QFile( "C:\\Users\\amorris\\json.txt" );
 
   if ( !file->open( QIODevice::ReadOnly ) )
@@ -71,6 +73,9 @@ void VikingViewApp::load_structure( int id )
 
   return;
 
+
+
+
   QUrl url = "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc/Locations/?$filter=ParentID eq 476";
 
   QNetworkRequest request = QNetworkRequest( url );
@@ -82,7 +87,7 @@ void VikingViewApp::load_structure( int id )
 
   reply = qnam.get( request );
 
-  file = new QFile( "C:\\Users\\amorris\\file.txt" );
+  file = new QFile( "C:\\Users\\amorris\\json.txt" );
 
   if ( !file->open( QIODevice::WriteOnly ) )
   {
@@ -108,6 +113,7 @@ void VikingViewApp::httpFinished()
 {
   std::cerr << "http finished!\n";
 
+/*
   QString json_text = reply->readAll();
 
   std::cerr << "json size = " << json_text.size() << "\n";
@@ -131,6 +137,7 @@ void VikingViewApp::httpFinished()
   foreach( QString key, map.keys() ) {
     std::cerr << key.toStdString() << " => " << map.value( key ).toString().toStdString() << '\n';
   }
+*/
 
   if ( file )
   {

@@ -3,23 +3,6 @@ PROJECT( VikingView )
 cmake_minimum_required(VERSION 2.8)  
 
 
-###########################################
-# Flags for Microsoft Compiler
-###########################################
-
-IF (WIN32 AND MSVC)
-  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501 -DNTDDI_VERSION=0x05010000)
-#  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
-  ADD_DEFINITIONS(-DPSAPI_VERSION=1)
-  # Disable Visual C++ Secure Warnings
-  ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
-  ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
-  ADD_DEFINITIONS(-D_BIND_TO_CURRENT_VCLIBS_VERSION=1)
-  ADD_DEFINITIONS(-D_BIND_TO_CURRENT_CRT_VERSION=1)
-  SET(CMAKE_CXX_FLAGS "/Oi ${CMAKE_CXX_FLAGS} /MP4 /Zm250")
-ENDIF (WIN32 AND MSVC)
-
-
 #Match everything when analyzing dependencies
 INCLUDE_REGULAR_EXPRESSION("^.*$")
 OPTION (BUILD_SHARED_LIBS "Build shared libraries" OFF)
@@ -602,3 +585,23 @@ if(BUILD_DOCUMENTATION)
   # IF you do NOT want the documentation to be generated EVERY time you build the project
   # then leave out the 'ALL' keyword from the above command.
 endif()
+
+
+
+
+###########################################
+# Flags for Microsoft Compiler
+###########################################
+
+IF (WIN32 AND MSVC)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501 -DNTDDI_VERSION=0x05010000)
+#  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0501)
+  ADD_DEFINITIONS(-DPSAPI_VERSION=1)
+  # Disable Visual C++ Secure Warnings
+  ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
+  ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
+  ADD_DEFINITIONS(-D_BIND_TO_CURRENT_VCLIBS_VERSION=1)
+  ADD_DEFINITIONS(-D_BIND_TO_CURRENT_CRT_VERSION=1)
+  SET(CMAKE_CXX_FLAGS "/Oi ${CMAKE_CXX_FLAGS} /MP4 /Zm250")
+  MESSAGE(STATUS "** WINDOWS OPTIONS")
+ENDIF (WIN32 AND MSVC)
