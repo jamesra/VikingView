@@ -53,8 +53,6 @@ void VikingViewApp::on_delete_button_clicked()
 void VikingViewApp::load_structure( int id )
 {
 
-
-
   file = new QFile( "C:\\Users\\amorris\\json.txt" );
 
   if ( !file->open( QIODevice::ReadOnly ) )
@@ -72,9 +70,6 @@ void VikingViewApp::load_structure( int id )
   this->import_json( file->readAll() );
 
   return;
-
-
-
 
   QUrl url = "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc/Locations/?$filter=ParentID eq 476";
 
@@ -114,30 +109,30 @@ void VikingViewApp::httpFinished()
   std::cerr << "http finished!\n";
 
 /*
-  QString json_text = reply->readAll();
+   QString json_text = reply->readAll();
 
-  std::cerr << "json size = " << json_text.size() << "\n";
+   std::cerr << "json size = " << json_text.size() << "\n";
 
-  QMap<QString, QVariant> map = Json::decode( json_text );
+   QMap<QString, QVariant> map = Json::decode( json_text );
 
-  std::cerr << "parsed " << map.size() << " elements\n";
-  foreach( QString key, map.keys() ) {
+   std::cerr << "parsed " << map.size() << " elements\n";
+   foreach( QString key, map.keys() ) {
     std::cerr << key.toStdString() << " => " << map.value( key ).toString().toStdString() << '\n';
-  }
+   }
 
-  QList<QVariant> list = map["value"].toList();
+   QList<QVariant> list = map["value"].toList();
 
-  QString locations = map["value"].toString();
+   QString locations = map["value"].toString();
 
-  std::cerr << "locations.size = " << locations.size() << "\n";
+   std::cerr << "locations.size = " << locations.size() << "\n";
 
-  map = Json::decode( locations );
+   map = Json::decode( locations );
 
-  std::cerr << "parsed " << map.size() << " elements\n";
-  foreach( QString key, map.keys() ) {
+   std::cerr << "parsed " << map.size() << " elements\n";
+   foreach( QString key, map.keys() ) {
     std::cerr << key.toStdString() << " => " << map.value( key ).toString().toStdString() << '\n';
-  }
-*/
+   }
+ */
 
   if ( file )
   {
@@ -244,13 +239,17 @@ void VikingViewApp::import_json( QString json_text )
 
   QList<QVariant> list = map["value"].toList();
 
-
   PointSampler ps;
-  ps.set_locations(list);
-  ps.sample_points();
+  ps.set_locations( list );
+  std::list<Point> points = ps.sample_points();
+
+  AlphaShape alpha_shape;
+  alpha_shape.set_points( points );
+  vtkPolyData* poly_Data = alpha_shape.get_mesh();
+
 /*
-  int count = 0;
-  foreach( QVariant var, list ) {
+   int count = 0;
+   foreach( QVariant var, list ) {
     count++;
     if ( count < 5 )
     {
@@ -259,8 +258,8 @@ void VikingViewApp::import_json( QString json_text )
         std::cerr << key.toStdString() << " => " << item.value( key ).toString().toStdString() << '\n';
       }
     }
-  }
-  */
+   }
+ */
 /*
    QString locations = map["value"].toString();
 

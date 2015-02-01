@@ -6,6 +6,11 @@
 #include <fstream>
 #include <list>
 #include <cassert>
+
+
+#include <vtkSmartPointer.h>
+#include <vtkCellArray.h>
+
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Gt;
 typedef CGAL::Alpha_shape_vertex_base_3<Gt> Vb;
 typedef CGAL::Alpha_shape_cell_base_3<Gt> Fb;
@@ -34,7 +39,7 @@ int cgal_main( int argc, char** argv )
   // compute alpha shape
   Alpha_shape_3 as( lp.begin(), lp.end() );
   std::cout << "Alpha shape computed in REGULARIZED mode by default"
-            << std::endl;
+    << std::endl;
 
   float alpha = -1;
   if ( argc == 4 )
@@ -49,7 +54,7 @@ int cgal_main( int argc, char** argv )
     // find optimal alpha value
     Alpha_iterator opt = as.find_optimal_alpha( 1 );
     std::cout << "Optimal alpha value to get one connected component is "
-              << *opt << std::endl;
+      << *opt << std::endl;
     as.set_alpha( *opt );
 
     assert( as.number_of_solid_components() == 1 );
@@ -115,15 +120,104 @@ AlphaShape::~AlphaShape()
 
 }
 
-//-----------------------------------------------------------------------------
-void AlphaShape::set_locations(QList<QVariant> locations)
-{
-  this->locations_ = locations;
-}
 
 //-----------------------------------------------------------------------------
 vtkPolyData * AlphaShape::get_mesh()
 {
+  // compute alpha shape
+  Alpha_shape_3 as( this->points_.begin(), this->points_.end() );
+  std::cout << "Alpha shape computed in REGULARIZED mode by default"
+    << std::endl;
 
+  float alpha = -1;
+  if ( alpha != -1 )
+  {
+    std::cout << "Using Alpha = " << alpha << "\n";
+    as.set_alpha( alpha );
+  }
+  else
+  {
+    // find optimal alpha value
+    Alpha_iterator opt = as.find_optimal_alpha( 1 );
+    std::cout << "Optimal alpha value to get one connected component is "
+      << *opt << std::endl;
+    as.set_alpha( *opt );
+
+    assert( as.number_of_solid_components() == 1 );
+  }
+
+
+  vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+
+  vtkSmartPointer<vtkPoints> vtk_pts = vtkSmartPointer<vtkPoints>::New();
+  vtkSmartPointer<vtkCellArray> vtk_triangles = vtkSmartPointer<vtkCellArray>::New();
+
+
+
+
+
+
+  /// collect all regular facets
+  std::vector<Alpha_shape_3::Facet> facets;
+  as.get_alpha_shape_facets( std::back_inserter( facets ), Alpha_shape_3::REGULAR );
+
+  std::stringstream pts;
+  std::stringstream ind;
+
+
+
+
+  std::size_t nbf = facets.size();
+  for ( std::size_t i = 0; i < nbf; ++i )
+  {
+
+    Alpha_shape_3::Facet f = facets[i];
+
+    //if ( as.classify( facets[i].first )==Alpha_shape_3::EXTERIOR )
+    {
+
+      //To have a consistent orientation of the facet, always consider an exterior cell
+      if ( as.classify( facets[i].first ) != Alpha_shape_3::EXTERIOR )
+      {
+        facets[i] = as.mirror_facet( facets[i] );
+      }
+      CGAL_assertion( as.classify( facets[i].first ) == Alpha_shape_3::EXTERIOR );
+
+      int indices[3] = {
+        ( facets[i].second + 1 ) % 4,
+        ( facets[i].second + 2 ) % 4,
+        ( facets[i].second + 3 ) % 4,
+      };
+
+      /// according to the encoding of vertex indices, this is needed to get
+      /// a consistent orienation
+      if ( facets[i].second % 2 == 0 ) { std::swap( indices[0], indices[1] ); }
+
+      pts <<
+        facets[i].first->vertex( indices[0] )->point() << "\n" <<
+        facets[i].first->vertex( indices[1] )->point() << "\n" <<
+        facets[i].first->vertex( indices[2] )->point() << "\n";
+      ind << "3 " << 3 * i << " " << 3 * i + 1 << " " << 3 * i + 2 << "\n";
+
+
+//vtk_pts->InsertNextPoint()
+
+
+    }
+  }
+
+/*
+  std::ofstream os( argv[2] );
+
+  os << "OFF " << 3 * nbf << " " << nbf << " 0\n";
+  os << pts.str();
+  os << ind.str();
+*/
   return 0;
+}
+
+//-----------------------------------------------------------------------------
+void AlphaShape::set_points( std::list<Point> points )
+{
+  this->points_ = points;
 }
