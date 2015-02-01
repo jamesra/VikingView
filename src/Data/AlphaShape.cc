@@ -10,9 +10,13 @@
 #include <vtkSmartPointer.h>
 #include <vtkCellArray.h>
 #include <vtkTriangle.h>
-#include <vtkDataSetWriter.h>
 
-//#include <vtkDataSetWriter.h>
+#include <vtkPolyDataWriter.h>
+
+//#include <vtkXMLPolyDataWriter.h>
+
+
+#include <vtkDataSetWriter.h>
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel Gt;
 typedef CGAL::Alpha_shape_vertex_base_3<Gt> Vb;
@@ -106,7 +110,6 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
 
       ind << "3 " << 3 * i << " " << 3 * i + 1 << " " << 3 * i + 2 << "\n";
 
-      vertex_map[facets[i].first->vertex( indices[0] ) ] = i;
 
       for ( int index = 0; index < 3; index++ )
 
@@ -147,7 +150,7 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
   polydata->SetPoints( vtk_pts );
   polydata->SetPolys( vtk_triangles );
 
-  vtkSmartPointer<vtkPolyDataWriter> writer4 = vtkSmartPointer<vtkDataSetWRi
+  vtkSmartPointer<vtkPolyDataWriter> writer4 = vtkSmartPointer<vtkPolyDataWriter>::New();
   writer4->SetFileName( "C:\\Users\\amorris\\file.vtk" );
   writer4->SetInputData( polydata );
 //writer4->SetInputConnection( geometry->GetOutputPort() );

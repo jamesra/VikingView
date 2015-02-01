@@ -126,7 +126,10 @@ void Viewer::display_mesh( vtkSmartPointer<vtkPolyData> poly_data )
 
   this->renderer_->AddActor( this->surface_actor_ );
   //this->update_actors();
-  this->renderer_->SetBackground( .3, .6, .3 ); // Background color green
+  //this->renderer_->SetBackground( .3, .6, .3 ); // Background color green
+
+  this->renderer_->ResetCamera();
+  this->renderer_->Render();
 }
 
 void Viewer::set_render_window( vtkRenderWindow* render_window )
