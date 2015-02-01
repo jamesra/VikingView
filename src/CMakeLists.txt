@@ -35,7 +35,8 @@ FIND_PACKAGE(VTK COMPONENTS
   vtkViewsQt
   vtkFiltersCore
   vtkGUISupportQt
-)
+  vtkIOLegacy
+  )
 
 MESSAGE(STATUS "** USE_VTK_FILE: ${USE_VTK_FILE}")
 
