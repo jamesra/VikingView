@@ -2,6 +2,7 @@
 #define STUDIO_VISUALIZATION_VIEWER_H
 
 #include <QSharedPointer>
+#include <vtkSmartPointer.h>
 
 class vtkRenderer;
 class vtkLookupTable;
@@ -12,11 +13,9 @@ class vtkGlyph3D;
 class vtkSphereSource;
 class vtkImageActor;
 
-class DisplayObject;
-
 class Viewer;
-
-class StudioInteractorStyle;
+class vtkPolyDataMapper;
+class vtkActor;
 
 typedef QSharedPointer< Viewer > ViewerHandle;
 typedef QVector< ViewerHandle > ViewerList;

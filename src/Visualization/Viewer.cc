@@ -19,6 +19,7 @@
 #include <vtkPropPicker.h>
 #include <vtkCellPicker.h>
 #include <vtkCell.h>
+#include <vtkPolyDataMapper.h>
 
 #include <vtkPolyDataNormals.h>
 

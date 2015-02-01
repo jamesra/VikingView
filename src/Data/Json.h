@@ -1,4 +1,6 @@
 #include <QScriptValue>
+#include <QMap>
+
 
 class Json
 {

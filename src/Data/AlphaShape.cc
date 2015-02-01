@@ -10,6 +10,8 @@
 #include <vtkSmartPointer.h>
 #include <vtkCellArray.h>
 #include <vtkTriangle.h>
+#include <vtkPoints.h>
+#include <vtkPolyData.h>
 
 #include <vtkPolyDataWriter.h>
 

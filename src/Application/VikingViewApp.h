@@ -11,6 +11,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrl>
+#include <QFile>
 
 class Viewer;
 

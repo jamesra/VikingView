@@ -4,6 +4,9 @@
 // qt
 #include <QFileDialog>
 #include <QWidgetAction>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QUrl>
 
 // vtk
 #include <vtkRenderWindow.h>
@@ -76,7 +79,7 @@ void VikingViewApp::load_structure( int id )
 
   return;
 
-  QUrl url = "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc/Locations/?$filter=ParentID eq 476";
+  QUrl url = QString("http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc/Locations/?$filter=ParentID eq 476");
 
   QNetworkRequest request = QNetworkRequest( url );
 
