@@ -12,6 +12,8 @@
 #include <QNetworkReply>
 #include <QUrl>
 
+class Viewer;
+
 
 // Forward Qt class declarations
 class Ui_VikingViewApp;
@@ -62,6 +64,9 @@ private:
   QNetworkReply *reply;
 
   bool httpRequestAborted;
+
+
+  Viewer *viewer_;
 
 };
 

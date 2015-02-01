@@ -19,7 +19,7 @@ public:
 
   void set_points(std::list<Point> points);
 
-  vtkPolyData *get_mesh();
+  vtkSmartPointer<vtkPolyData> get_mesh();
 
 private:
 

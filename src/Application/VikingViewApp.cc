@@ -13,6 +13,7 @@
 #include <Data/Json.h>
 #include <Data/PointSampler.h>
 #include <Data/AlphaShape.h>
+#include <Visualization/Viewer.h>
 
 // ui
 #include <ui_VikingViewApp.h>
@@ -22,6 +23,10 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
 {
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
+
+  this->viewer_ = new Viewer();
+
+  this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
 }
 
 //---------------------------------------------------------------------------
@@ -245,7 +250,11 @@ void VikingViewApp::import_json( QString json_text )
 
   AlphaShape alpha_shape;
   alpha_shape.set_points( points );
-  vtkPolyData* poly_Data = alpha_shape.get_mesh();
+  vtkSmartPointer<vtkPolyData> poly_data = alpha_shape.get_mesh();
+
+  this->viewer_->display_mesh( poly_data );
+
+//vtk
 
 /*
    int count = 0;

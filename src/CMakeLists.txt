@@ -245,27 +245,13 @@ SET(VIKING_VIEW_DATA_SRCS
 #   Analysis/AnalysisTool.ui
 # )
 
-# ### Visualization
-# SET(VIKING_VIEW_VISUALIZATION_HDRS
-#   Visualization/Lightbox.h
-#   Visualization/Viewer.h
-#   Visualization/Visualizer.h
-#   Visualization/DisplayObject.h
-#   Visualization/CustomSurfaceReconstructionFilter.h
-#   Visualization/StudioInteractorStyle.h
-#   Visualization/vtkPolyDataToImageData.h
-#   Visualization/itkImageToVTKImageFilter.h
-#   Visualization/itkImageToVTKImageFilter.hxx
-# )
-# SET(VIKING_VIEW_VISUALIZATION_SRCS
-#   Visualization/Lightbox.cc
-#   Visualization/Viewer.cc
-#   Visualization/Visualizer.cc
-#   Visualization/DisplayObject.cc
-#   Visualization/CustomSurfaceReconstructionFilter.cc
-#   Visualization/StudioInteractorStyle.cc
-#   Visualization/vtkPolyDataToImageData.cxx
-# )
+### Visualization
+SET(VIKING_VIEW_VISUALIZATION_HDRS
+  Visualization/Viewer.h
+)
+SET(VIKING_VIEW_VISUALIZATION_SRCS
+  Visualization/Viewer.cc
+)
 
 # ### Util
 # SET(VIKING_VIEW_UTIL_HDRS

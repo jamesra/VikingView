@@ -53,8 +53,8 @@ std::list<Point> PointSampler::sample_points()
 
   std::list<Point> points;
 
-  int num_radii = 1;
-  int num_points = 3;
+  int num_radii = 2;
+  int num_points = 5;
 
   for ( MapType::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
@@ -92,6 +92,8 @@ std::list<Point> PointSampler::sample_points()
       }
     }
   }
+
+  std::cerr << "Sampled " << points.size() << " points\n";
 
   return points;
 }
