@@ -7,10 +7,6 @@
 #include <QLabel>
 #include <QTimer>
 
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QUrl>
 #include <QFile>
 
 class Viewer;
@@ -34,16 +30,10 @@ public:
 
   //virtual void closeEvent( QCloseEvent* event );
 
-public Q_SLOTS:
+  public Q_SLOTS:
 
   void on_add_button_clicked();
   void on_delete_button_clicked();
-
-
-  void httpFinished();
-  void httpReadyRead();
-  void updateDataReadProgress(qint64 bytesRead, qint64 totalBytes);
-
 
 
 
@@ -60,11 +50,7 @@ private:
   /// designer form
   Ui_VikingViewApp* ui_;
 
-  QFile *file;
-  QNetworkAccessManager qnam;
-  QNetworkReply *reply;
-
-  bool httpRequestAborted;
+  
 
 
   Viewer *viewer_;

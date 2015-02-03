@@ -1,52 +1,21 @@
 #include <Data/PointSampler.h>
+#include <Data/Structure.h>
 
 //#define M_PI           3.14159265358979323846  /* pi */
 
-class Node
+PointSampler::PointSampler(QSharedPointer<Structure> structure)
 {
-public:
-  double x, y, z, radius;
-  long id;
-};
-
-PointSampler::PointSampler()
-{}
+  this->structure_ = structure;
+}
 
 PointSampler::~PointSampler()
 {}
 
-void PointSampler::set_locations( QList<QVariant> locations )
-{
-  this->locations_ = locations;
-}
-
 std::list<Point> PointSampler::sample_points()
 {
 
-  typedef std::map<long, Node> MapType;
-  MapType node_map;
 
-  float units_per_pixel = 2.18 / 1000.0;
-  float units_per_section = 90.0 / 1000.0;
-
-  // construct nodes
-  foreach( QVariant var, this->locations_ ) {
-    Node n;
-    QMap<QString, QVariant> item = var.toMap();
-    n.x = item["VolumeX"].toDouble();
-    n.y = item["VolumeY"].toDouble();
-    n.z = item["Z"].toDouble();
-    n.radius = item["Radius"].toDouble();
-    n.id = item["ID"].toLongLong();
-
-    n.x = n.x * units_per_pixel;
-    n.y = n.y * units_per_pixel;
-    n.z = n.z * units_per_section;
-    n.radius = n.radius * units_per_pixel;
-
-    node_map[n.id] = n;
-
-  }
+  NodeMap node_map = this->structure_->get_node_map();
 
   // links
   // ....
@@ -56,12 +25,9 @@ std::list<Point> PointSampler::sample_points()
   int num_radii = 2;
   int num_points = 5;
 
-  for ( MapType::iterator it = node_map.begin(); it != node_map.end(); ++it )
+  for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
-    // iterator->first = key
-    // iterator->second = value
-    // Repeat if you also want to iterate through the second map.
-
+   
     Node n = it->second;
 
     for ( int r = 0; r < num_radii; r++ )

@@ -180,71 +180,20 @@ SET(VIKING_VIEW_APPLICATION_UIS
 )
 
 ### Data
- SET(VIKING_VIEW_DATA_HDRS
-   Data/Json.h
-   Data/AlphaShape.h
-   Data/PointSampler.h
-   )
-#   Data/Shape.h
-#   Data/ItkToVtk.h
-#   Data/Project.h
-#   Data/MeshManager.h
-#   Data/MeshGenerator.h
-#   Data/MeshSettings.h
-#   Data/MeshWorkQueue.h
-#   Data/MeshWorker.h
-#   Data/MeshCache.h
-# )
+SET(VIKING_VIEW_DATA_HDRS
+  Data/Json.h
+  Data/AlphaShape.h
+  Data/PointSampler.h
+  Data/Downloader.h
+  Data/Structure.h
+  )
 SET(VIKING_VIEW_DATA_SRCS
   Data/Json.cc
   Data/AlphaShape.cc
   Data/PointSampler.cc
+  Data/Downloader.cc
+  Data/Structure.cc
   )
-#   Data/Mesh.cc
-#   Data/Shape.cc
-#   Data/Project.cc
-#   Data/MeshManager.cc
-#   Data/MeshGenerator.cc
-#   Data/MeshSettings.cc
-#   Data/MeshWorkQueue.cc
-#   Data/MeshWorker.cc
-#   Data/MeshCache.cc
-# )
-
-# ### Groom
-# SET(VIKING_VIEW_GROOM_HDRS
-#   Groom/GroomTool.h
-# )
-# SET(VIKING_VIEW_GROOM_SRCS
-#   Groom/GroomTool.cc
-# )
-# SET(VIKING_VIEW_GROOM_UIS
-#   Groom/GroomTool.ui
-# )
-
-# ### Optimize
-# SET(VIKING_VIEW_OPTIMIZE_HDRS
-#   Optimize/OptimizeTool.h
-# )
-# SET(VIKING_VIEW_OPTIMIZE_SRCS
-#   Optimize/OptimizeTool.cc
-# )
-# SET(VIKING_VIEW_OPTIMIZE_UIS
-#   Optimize/OptimizeTool.ui
-# )
-
-# ### Analyis
-# SET(VIKING_VIEW_ANALYSIS_HDRS
-#   Analysis/AnalysisTool.h
-#   Analysis/itkParticleShapeStatistics.h
-#   Analysis/itkParticleShapeStatistics.txx
-# )
-# SET(VIKING_VIEW_ANALYSIS_SRCS
-#   Analysis/AnalysisTool.cc
-# )
-# SET(VIKING_VIEW_ANALYSIS_UIS
-#   Analysis/AnalysisTool.ui
-# )
 
 ### Visualization
 SET(VIKING_VIEW_VISUALIZATION_HDRS
@@ -261,20 +210,6 @@ SET(VIKING_VIEW_VISUALIZATION_SRCS
 # SET(VIKING_VIEW_UTIL_SRCS
 #   Util/WheelEventForwarder.cc
 #   )
-
-
-
-### TinyXML
-# SET (TINYXML_SRCS
-#   TinyXML/tinystr.cpp
-#   TinyXML/tinyxml.cpp
-#   TinyXML/tinyxmlparser.cpp
-#   TinyXML/tinyxmlerror.cpp
-# )
-# SET (TINYXML_HDRS
-#   TinyXML/tinystr.h
-#   TinyXML/tinyxml.h
-# )
 
 
 ### Main Stuff
@@ -302,16 +237,7 @@ SET( VIKING_VIEW_HDRS
 )
 
 SET( VIKING_VIEW_MOC_HDRS
-     # Groom/GroomTool.h
-     # Optimize/OptimizeTool.h
-     # Analysis/AnalysisTool.h
-     # Data/Project.h
-     # Data/MeshManager.h
-     # Data/MeshWorker.h
-     # Application/Preferences.h
-     # Visualization/Visualizer.h
-     # Visualization/Lightbox.h
-     # Util/WheelEventForwarder.h
+  Data/Downloader.h
 )
 
 SET( VIKING_VIEW_RCS
