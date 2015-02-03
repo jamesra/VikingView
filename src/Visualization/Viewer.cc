@@ -131,6 +131,7 @@ void Viewer::display_mesh( vtkSmartPointer<vtkPolyData> poly_data )
 
   this->renderer_->ResetCamera();
   this->renderer_->Render();
+  this->renderer_->Render();
 }
 
 void Viewer::set_render_window( vtkRenderWindow* render_window )
