@@ -2,6 +2,9 @@
 #include <Data/Structure.h>
 
 #include <QString>
+#include <QEventLoop>
+#include <QFile>
+#include <QTextStream>
 
 Downloader::Downloader()
 {}

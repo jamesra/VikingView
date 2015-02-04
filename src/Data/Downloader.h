@@ -5,6 +5,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QUrl>
+#include <QSharedPointer>
 
 class Structure;
 
@@ -39,7 +40,6 @@ private:
   QNetworkAccessManager qnam_;
   QNetworkReply *reply_;
 
-  QFile *file;
 
   bool http_request_aborted;
 

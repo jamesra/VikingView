@@ -1,3 +1,5 @@
+#include <QSharedPointer.h>
+
 #include <Data/PointSampler.h>
 #include <Data/Structure.h>
 

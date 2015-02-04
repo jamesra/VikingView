@@ -1,7 +1,15 @@
 #ifndef VIKING_DATA_STRUCTURE_H
 #define VIKING_DATA_STRUCTURE_H
 
+#include <map>
 
+#include <QSharedPointer.h>
+
+#include <vtkSmartPointer.h>
+
+
+
+class vtkPolyData;
 
 class Node
 {
