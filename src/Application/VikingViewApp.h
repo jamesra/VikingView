@@ -10,11 +10,10 @@
 #include <QFile>
 
 class Viewer;
-
+class Structure;
 
 // Forward Qt class declarations
 class Ui_VikingViewApp;
-
 
 //! Main VikingView window
 /*!
@@ -30,31 +29,25 @@ public:
 
   //virtual void closeEvent( QCloseEvent* event );
 
-  public Q_SLOTS:
+public Q_SLOTS:
 
   void on_add_button_clicked();
   void on_delete_button_clicked();
 
-
-
 private:
 
+  void update_table();
 
   void load_structure( int id );
 
-  void import_json(QString json_text);
-
-
-
+  void import_json( QString json_text );
 
   /// designer form
   Ui_VikingViewApp* ui_;
 
-  
+  QList<QSharedPointer<Structure> > structures_;
 
-
-  Viewer *viewer_;
-
+  Viewer* viewer_;
 };
 
 #endif /* VIKINGVIEW_APPLICATION_VIKINGVIEWAPP_H */

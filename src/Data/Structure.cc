@@ -1,9 +1,17 @@
 #include <Data/Structure.h>
 #include <Data/Json.h>
+#include <Data/PointSampler.h>
+#include <Data/AlphaShape.h>
 
-QSharedPointer<Structure> Structure::create_structure( QString location_text, QString link_text )
+#include <vtkCenterOfMass.h>
+#include <vtkMassProperties.h>
+
+//-----------------------------------------------------------------------------
+QSharedPointer<Structure> Structure::create_structure( int id, QString location_text, QString link_text )
 {
+
   QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
+  structure->id_ = id;
 
   QMap<QString, QVariant> map = Json::decode( location_text );
   QList<QVariant> location_list = map["value"].toList();
@@ -35,13 +43,73 @@ QSharedPointer<Structure> Structure::create_structure( QString location_text, QS
   return structure;
 }
 
+//-----------------------------------------------------------------------------
 Structure::Structure()
 {}
 
+//-----------------------------------------------------------------------------
 Structure::~Structure()
 {}
 
+//-----------------------------------------------------------------------------
 NodeMap Structure::get_node_map()
 {
   return this->node_map_;
+}
+
+//-----------------------------------------------------------------------------
+vtkSmartPointer<vtkPolyData> Structure::get_mesh()
+{
+  if ( !this->mesh_ )
+  {
+    PointSampler ps( this );
+    std::list<Point> points = ps.sample_points();
+
+    AlphaShape alpha_shape;
+    alpha_shape.set_points( points );
+    this->mesh_ = alpha_shape.get_mesh();
+  }
+
+  return this->mesh_;
+}
+
+//-----------------------------------------------------------------------------
+int Structure::get_id()
+{
+  return this->id_;
+}
+
+//-----------------------------------------------------------------------------
+double Structure::get_volume()
+{
+  vtkSmartPointer<vtkPolyData> mesh = this->get_mesh();
+
+  vtkSmartPointer<vtkMassProperties> mass_properties = vtkSmartPointer<vtkMassProperties>::New();
+
+  mass_properties->SetInputData( mesh );
+  mass_properties->Update();
+
+  return mass_properties->GetVolume();
+}
+
+//-----------------------------------------------------------------------------
+QString Structure::get_center_of_mass_string()
+{
+  vtkSmartPointer<vtkPolyData> mesh = this->get_mesh();
+
+  // Compute the center of mass
+  vtkSmartPointer<vtkCenterOfMass> center_of_mass =
+    vtkSmartPointer<vtkCenterOfMass>::New();
+  center_of_mass->SetInputData( mesh );
+  center_of_mass->SetUseScalarsAsWeights( false );
+  center_of_mass->Update();
+
+  double center[3];
+  center_of_mass->GetCenter(center);
+
+  QString str = QString::number(center[0]) + ", " + QString::number(center[1]) + ", " + QString::number(center[2]);
+
+  return str;
+
+  
 }

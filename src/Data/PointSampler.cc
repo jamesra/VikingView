@@ -3,7 +3,7 @@
 
 //#define M_PI           3.14159265358979323846  /* pi */
 
-PointSampler::PointSampler(QSharedPointer<Structure> structure)
+PointSampler::PointSampler( Structure* structure )
 {
   this->structure_ = structure;
 }
@@ -13,7 +13,6 @@ PointSampler::~PointSampler()
 
 std::list<Point> PointSampler::sample_points()
 {
-
 
   NodeMap node_map = this->structure_->get_node_map();
 
@@ -27,7 +26,7 @@ std::list<Point> PointSampler::sample_points()
 
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
-   
+
     Node n = it->second;
 
     for ( int r = 0; r < num_radii; r++ )

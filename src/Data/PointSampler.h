@@ -14,14 +14,14 @@ class PointSampler
 {
 
 public:
-  PointSampler(QSharedPointer<Structure> structure);
+  PointSampler(Structure *structure);
   ~PointSampler();
 
   std::list<Point> sample_points();
 
 private:
 
-  QSharedPointer<Structure> structure_;
+  Structure* structure_;
 
 
 

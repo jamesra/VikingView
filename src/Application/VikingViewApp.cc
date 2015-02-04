@@ -17,6 +17,7 @@
 #include <Data/PointSampler.h>
 #include <Data/AlphaShape.h>
 #include <Data/Downloader.h>
+#include <Data/Structure.h>
 #include <Visualization/Viewer.h>
 
 // ui
@@ -47,105 +48,83 @@ void VikingViewApp::on_add_button_clicked()
   if ( ok && !text.isEmpty() )
   {
 
-    int id = text.toInt();
-    std::cerr << "id = " << id << "\n";
-    //textLabel->setText( text );
-    this->load_structure( id );
+    QStringList pieces = text.split( " " );
+
+    foreach( QString str, pieces ) {
+      int id = str.toInt();
+      std::cerr << "id = " << id << "\n";
+      //textLabel->setText( text );
+      this->load_structure( id );
+    }
   }
 }
 
 //---------------------------------------------------------------------------
 void VikingViewApp::on_delete_button_clicked()
-{}
+{
+  QModelIndexList list = this->ui_->table_widget->selectionModel()->selectedRows();
+
+  QList<int> index_list;
+
+  for ( int i = list.size() - 1; i >= 0; i-- )
+  {
+    index_list << list[i].row();
+  }
+
+  foreach( int i, index_list ) {
+    this->structures_.erase( this->structures_.begin() + i );
+  }
+
+  this->viewer_->display_structures( this->structures_ );
+  this->update_table();
+}
 
 //---------------------------------------------------------------------------
 void VikingViewApp::load_structure( int id )
 {
 
   Downloader downloader;
-  QSharedPointer<Structure> structure = downloader.download_structure(id);
+  QSharedPointer<Structure> structure = downloader.download_structure( id );
 
-  PointSampler ps(structure);
-  std::list<Point> points = ps.sample_points();
+  this->structures_.append( structure );
 
-  AlphaShape alpha_shape;
-  alpha_shape.set_points( points );
-  vtkSmartPointer<vtkPolyData> poly_data = alpha_shape.get_mesh();
-
-  this->viewer_->display_mesh( poly_data );
+  this->viewer_->display_structures( this->structures_ );
+  this->update_table();
 
   return;
-
-
-  QFile *file = new QFile( "C:\\Users\\amorris\\json.txt" );
-
-  if ( !file->open( QIODevice::ReadOnly ) )
-  {
-    QMessageBox::information( this, tr( "HTTP" ),
-                              tr( "Unable to save the file %1: %2." )
-                              .arg( "asdf" ).arg( file->errorString() ) );
-    delete file;
-    file = 0;
-    return;
-  }
-
- 
 }
 
-
-void VikingViewApp::import_json( QString json_text )
+//---------------------------------------------------------------------------
+void VikingViewApp::update_table()
 {
-/*
-  std::cerr << "json size = " << json_text.size() << "\n";
+  this->ui_->table_widget->clear();
 
-  QMap<QString, QVariant> map = Json::decode( json_text );
+  this->ui_->table_widget->setRowCount( this->structures_.size() );
+  this->ui_->table_widget->setColumnCount( 3 );
 
-  std::cerr << "parsed " << map.size() << " elements\n";
-  foreach( QString key, map.keys() ) {
-    std::cerr << key.toStdString() << " => " << map.value( key ).toString().toStdString() << '\n';
+  QStringList table_header;
+  table_header << "Id" << "Volume" << "Center of mass";
+  this->ui_->table_widget->setHorizontalHeaderLabels( table_header );
+
+  this->ui_->table_widget->verticalHeader()->setVisible( false );
+
+  for ( int i = 0; i < this->structures_.size(); i++ )
+  {
+    QSharedPointer<Structure> structure = this->structures_[i];
+
+    QTableWidgetItem* new_item = new QTableWidgetItem( QString::number( this->structures_[i]->get_id() ) );
+    this->ui_->table_widget->setItem( i, 0, new_item );
+
+    new_item = new QTableWidgetItem( QString::number( this->structures_[i]->get_volume() ) );
+    this->ui_->table_widget->setItem( i, 1, new_item );
+
+    new_item = new QTableWidgetItem( this->structures_[i]->get_center_of_mass_string() );
+    this->ui_->table_widget->setItem( i, 2, new_item );
   }
 
-  QList<QVariant> list = map["value"].toList();
+  this->ui_->table_widget->resizeColumnsToContents();
+  //this->ui_->table_widget->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+  this->ui_->table_widget->horizontalHeader()->setStretchLastSection( true );
 
-  PointSampler ps;
-  ps.set_locations( list );
-  std::list<Point> points = ps.sample_points();
-
-  AlphaShape alpha_shape;
-  alpha_shape.set_points( points );
-  vtkSmartPointer<vtkPolyData> poly_data = alpha_shape.get_mesh();
-
-  this->viewer_->display_mesh( poly_data );
-*/
-
-
-
-//vtk
-
-/*
-   int count = 0;
-   foreach( QVariant var, list ) {
-    count++;
-    if ( count < 5 )
-    {
-      QMap<QString, QVariant> item = var.toMap();
-      foreach( QString key, item.keys() ) {
-        std::cerr << key.toStdString() << " => " << item.value( key ).toString().toStdString() << '\n';
-      }
-    }
-   }
- */
-/*
-   QString locations = map["value"].toString();
-
-   std::cerr << "locations.size = " << locations.size() << "\n";
-
-   map = Json::decode(locations);
-
-   std::cerr << "parsed " << map.size() << " elements\n";
-   foreach( QString key, map.keys() )
-   {
-    std::cerr << key.toStdString() << " => " << map.value( key ).toString().toStdString() << '\n';
-   }
- */
+  this->ui_->table_widget->setSelectionBehavior( QAbstractItemView::SelectRows );
 }

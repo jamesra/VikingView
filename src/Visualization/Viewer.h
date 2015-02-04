@@ -17,6 +17,8 @@ class Viewer;
 class vtkPolyDataMapper;
 class vtkActor;
 
+class Structure;
+
 typedef QSharedPointer< Viewer > ViewerHandle;
 typedef QVector< ViewerHandle > ViewerList;
 
@@ -38,7 +40,7 @@ public:
   void set_renderer( vtkSmartPointer<vtkRenderer> renderer );
   vtkSmartPointer<vtkRenderer> get_renderer();
 
-  void display_mesh( vtkSmartPointer<vtkPolyData> poly_data );
+  void display_structures( QList<QSharedPointer<Structure> > structures);
 
   void clear_viewer();
 
@@ -54,8 +56,8 @@ private:
 
   vtkSmartPointer<vtkRenderer>             renderer_;
 
-  vtkSmartPointer<vtkPolyDataMapper>       surface_mapper_;
-  vtkSmartPointer<vtkActor>                surface_actor_;
+  QList<vtkSmartPointer<vtkPolyDataMapper> > surface_mappers_;
+  QList<vtkSmartPointer<vtkActor> > surface_actors_;
 
   vtkSmartPointer<vtkLookupTable>          lut_;
 

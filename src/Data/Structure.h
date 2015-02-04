@@ -21,14 +21,27 @@ public:
   ~Structure();
 
 
-  static QSharedPointer<Structure> create_structure(QString location_text, QString link_text);
+  static QSharedPointer<Structure> create_structure(int id, QString location_text, QString link_text);
 
   NodeMap get_node_map();
 
+  vtkSmartPointer<vtkPolyData> get_mesh();
+
+  double get_volume();
+
+  QString get_center_of_mass_string();
+
+  int get_id();
+
 private:
+
   Structure(); // private
 
+  int id_;
   NodeMap node_map_;
+
+
+  vtkSmartPointer<vtkPolyData> mesh_;
 
 };
 
