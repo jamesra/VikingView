@@ -50,40 +50,36 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
     link_text = this->reply_->readAll();
     std::cerr << "downloaded\n";
 
-
-    if (save_to_file)
+    if ( save_to_file )
     {
-      QFile *file = new QFile( "C:\\Users\\amorris\\json-locations-" + QString::number(id) + ".txt" );
+      QFile* file = new QFile( "C:\\Users\\amorris\\json-locations-" + QString::number( id ) + ".txt" );
 
       if ( !file->open( QIODevice::WriteOnly ) )
       {
         return structure;
       }
 
-      QTextStream ts(file);
+      QTextStream ts( file );
       ts << location_text;
       file->close();
 
-      file = new QFile( "C:\\Users\\amorris\\json-links-" + QString::number(id) + ".txt" );
+      file = new QFile( "C:\\Users\\amorris\\json-links-" + QString::number( id ) + ".txt" );
 
       if ( !file->open( QIODevice::WriteOnly ) )
       {
         return structure;
       }
 
-      QTextStream ts2(file);
+      QTextStream ts2( file );
       ts2 << link_text;
       //file->write(link_text);
       file->close();
-
     }
-
   }
   else
   {
 
-
-    QFile *file = new QFile( "C:\\Users\\amorris\\json-locations-" + QString::number(id) + ".txt" );
+    QFile* file = new QFile( "C:\\Users\\amorris\\json-locations-" + QString::number( id ) + ".txt" );
 
     if ( !file->open( QIODevice::ReadOnly ) )
     {
@@ -92,7 +88,7 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
 
     location_text = file->readAll();
 
-    file = new QFile( "C:\\Users\\amorris\\json-links-" + QString::number(id) + ".txt" );
+    file = new QFile( "C:\\Users\\amorris\\json-links-" + QString::number( id ) + ".txt" );
 
     if ( !file->open( QIODevice::ReadOnly ) )
     {
@@ -100,9 +96,7 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
     }
 
     link_text = file->readAll();
-
-
-}
+  }
 
   structure = Structure::create_structure( id, location_text, link_text );
 

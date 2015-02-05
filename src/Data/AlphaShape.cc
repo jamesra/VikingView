@@ -13,11 +13,9 @@
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 
-
 #include <vtkPolyDataWriter.h>
 
 //#include <vtkXMLPolyDataWriter.h>
-
 
 #include <vtkDataSetWriter.h>
 
@@ -112,7 +110,6 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
         facets[i].first->vertex( indices[2] )->point() << "\n";
 
       ind << "3 " << 3 * i << " " << 3 * i + 1 << " " << 3 * i + 2 << "\n";
-
 
       for ( int index = 0; index < 3; index++ )
 

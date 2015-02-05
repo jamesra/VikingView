@@ -14,7 +14,7 @@ class PointSampler
 {
 
 public:
-  PointSampler(Structure *structure);
+  PointSampler( Structure* structure );
   ~PointSampler();
 
   std::list<Point> sample_points();
@@ -22,10 +22,6 @@ public:
 private:
 
   Structure* structure_;
-
-
-
 };
-
 
 #endif /* VIKING_DATA_POINTSAMPLER_H */

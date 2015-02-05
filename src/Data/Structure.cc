@@ -40,6 +40,12 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
     n.radius = item["Radius"].toDouble();
     n.id = item["ID"].toLongLong();
 
+    if ( n.z == 56 || n.z == 8 || n.z == 22 || n.z == 81 || n.z == 72 || n.z == 60 )
+    {
+      continue;
+    }
+
+    // scale
     n.x = n.x * units_per_pixel;
     n.y = n.y * units_per_pixel;
     n.z = n.z * units_per_section;
