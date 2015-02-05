@@ -31,8 +31,13 @@ public:
 
 public Q_SLOTS:
 
+  void on_action_quit_triggered();
+
   void on_add_button_clicked();
   void on_delete_button_clicked();
+
+  void on_opacity_slider_valueChanged();
+  void on_sampling_slider_valueChanged();
 
 private:
 

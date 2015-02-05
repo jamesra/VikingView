@@ -128,3 +128,22 @@ void VikingViewApp::update_table()
 
   this->ui_->table_widget->setSelectionBehavior( QAbstractItemView::SelectRows );
 }
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_opacity_slider_valueChanged()
+{
+  std::cerr << "opacity now : " << this->ui_->opacity_slider->value() << "\n";
+  this->viewer_->set_opacity( this->ui_->opacity_slider->value() / 100.0 );
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_sampling_slider_valueChanged()
+{
+  std::cerr << "sampling now : " << this->ui_->sampling_slider->value() << "\n";
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_action_quit_triggered()
+{
+  this->close();
+}

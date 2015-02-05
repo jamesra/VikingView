@@ -26,6 +26,7 @@ std::list<Point> PointSampler::sample_points()
   int num_radii = 2;
   int num_points = 5;
 
+  // spheres
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
 
@@ -59,6 +60,10 @@ std::list<Point> PointSampler::sample_points()
       }
     }
   }
+
+  // cylinders
+
+
 
   std::cerr << "Sampled " << points.size() << " points\n";
 

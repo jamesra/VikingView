@@ -64,8 +64,6 @@ vtkSmartPointer<vtkRenderer> Viewer::get_renderer()
   return this->renderer_;
 }
 
-
-
 //-----------------------------------------------------------------------------
 void Viewer::set_render_window( vtkRenderWindow* render_window )
 {
@@ -98,11 +96,21 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
 
     this->renderer_->AddActor( actor );
 
+    this->surface_actors_.append( actor );
     //this->update_actors();
     //this->renderer_->SetBackground( .3, .6, .3 ); // Background color green
   }
 
   this->renderer_->ResetCamera();
   this->renderer_->Render();
+  this->renderer_->GetRenderWindow()->Render();
+}
+
+//-----------------------------------------------------------------------------
+void Viewer::set_opacity( float opacity )
+{
+  foreach( vtkSmartPointer<vtkActor> actor, this->surface_actors_ ) {
+    actor->GetProperty()->SetOpacity( opacity );
+  }
   this->renderer_->GetRenderWindow()->Render();
 }

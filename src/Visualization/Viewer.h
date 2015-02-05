@@ -40,11 +40,13 @@ public:
   void set_renderer( vtkSmartPointer<vtkRenderer> renderer );
   vtkSmartPointer<vtkRenderer> get_renderer();
 
-  void display_structures( QList<QSharedPointer<Structure> > structures);
+  void display_structures( QList<QSharedPointer<Structure> > structures );
 
   void clear_viewer();
 
   void reset_camera();
+
+  void set_opacity( float opacity );
 
 private:
 
