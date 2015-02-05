@@ -7,6 +7,14 @@
 #include <vtkMassProperties.h>
 
 //-----------------------------------------------------------------------------
+Structure::Structure()
+{}
+
+//-----------------------------------------------------------------------------
+Structure::~Structure()
+{}
+
+//-----------------------------------------------------------------------------
 QSharedPointer<Structure> Structure::create_structure( int id, QString location_text, QString link_text )
 {
 
@@ -40,16 +48,17 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
     structure->node_map_[n.id] = n;
   }
 
+  foreach( QVariant var, link_list ) {
+    Link l;
+    QMap<QString, QVariant> item = var.toMap();
+
+    l.a = item["A"].toLongLong();
+    l.b = item["B"].toLongLong();
+    structure->links_.append( l );
+  }
+
   return structure;
 }
-
-//-----------------------------------------------------------------------------
-Structure::Structure()
-{}
-
-//-----------------------------------------------------------------------------
-Structure::~Structure()
-{}
 
 //-----------------------------------------------------------------------------
 NodeMap Structure::get_node_map()
@@ -105,11 +114,15 @@ QString Structure::get_center_of_mass_string()
   center_of_mass->Update();
 
   double center[3];
-  center_of_mass->GetCenter(center);
+  center_of_mass->GetCenter( center );
 
-  QString str = QString::number(center[0]) + ", " + QString::number(center[1]) + ", " + QString::number(center[2]);
+  QString str = QString::number( center[0] ) + ", " + QString::number( center[1] ) + ", " + QString::number( center[2] );
 
   return str;
+}
 
-  
+//--------------------------------
+QList<Link> Structure::get_links()
+{
+  return this->links_;
 }

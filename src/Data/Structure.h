@@ -21,6 +21,12 @@ public:
 typedef std::map<long, Node> NodeMap;
 
 
+class Link
+{
+public:
+  long a, b;
+};
+
 //! Maintains data a structure (e.g. cell)
 class Structure
 {
@@ -32,6 +38,8 @@ public:
   static QSharedPointer<Structure> create_structure(int id, QString location_text, QString link_text);
 
   NodeMap get_node_map();
+
+  QList<Link> get_links();
 
   vtkSmartPointer<vtkPolyData> get_mesh();
 
@@ -48,7 +56,7 @@ private:
   int id_;
   NodeMap node_map_;
 
-
+  QList<Link> links_;
   vtkSmartPointer<vtkPolyData> mesh_;
 
 };
