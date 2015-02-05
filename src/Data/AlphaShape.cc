@@ -150,12 +150,12 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
   polydata->SetPoints( vtk_pts );
   polydata->SetPolys( vtk_triangles );
 
-  vtkSmartPointer<vtkPolyDataWriter> writer4 = vtkSmartPointer<vtkPolyDataWriter>::New();
-  writer4->SetFileName( "C:\\Users\\amorris\\file.vtk" );
-  writer4->SetInputData( polydata );
-//writer4->SetInputConnection( geometry->GetOutputPort() );
-  writer4->Write();
-
+/*
+   vtkSmartPointer<vtkPolyDataWriter> writer4 = vtkSmartPointer<vtkPolyDataWriter>::New();
+   writer4->SetFileName( "C:\\Users\\amorris\\file.vtk" );
+   writer4->SetInputData( polydata );
+   writer4->Write();
+ */
   return polydata;
 }
 

@@ -5,28 +5,27 @@
 
 #include <vtkMath.h>
 
-//#define M_PI           3.14159265358979323846  /* pi */
-
+//-----------------------------------------------------------------------------
 PointSampler::PointSampler( Structure* structure )
 {
   this->structure_ = structure;
 }
 
+//-----------------------------------------------------------------------------
 PointSampler::~PointSampler()
 {}
 
+//-----------------------------------------------------------------------------
 std::list<Point> PointSampler::sample_points()
 {
+  int num_radii = 2;
+  int num_points = 5;
+  int num_pts_circle = 5;
+  int num_pts_line = 5;
 
   NodeMap node_map = this->structure_->get_node_map();
 
-  // links
-  // ....
-
   std::list<Point> points;
-
-  int num_radii = 2;
-  int num_points = 5;
 
   // spheres
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
@@ -68,9 +67,6 @@ std::list<Point> PointSampler::sample_points()
   //std::ofstream out;
   //out.open( "C:\\Users\\amorris\\points.out" );
 
-  int num_pts_circle = 5;
-  int num_pts_line = 5;
-  num_radii = 2;
   foreach( Link link, this->structure_->get_links() ) {
 
     if ( node_map.find( link.a ) == node_map.end() || node_map.find( link.b ) == node_map.end() )
