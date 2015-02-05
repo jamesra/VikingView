@@ -84,26 +84,26 @@ int main( int argc, char** argv )
   try {
 
     //cgal_main(argc, argv);
-    
+
     std::cerr << "VikingView initializing...\n";
 
     QApplication app( argc, argv );
-    
+
     QSharedPointer<VikingViewApp> studio_app =
       QSharedPointer<VikingViewApp>( new VikingViewApp( argc, argv ) );
 
     studio_app->show();
     /*
-      
-    // do this after "show" for mac initialization
-    studio_app->initialize_vtk();
 
-    if ( argc == 2 )
-    {
-      studio_app->open_project( QString( argv[1] ) );
-    }
+       // do this after "show" for mac initialization
+       studio_app->initialize_vtk();
 
-    */
+       if ( argc == 2 )
+       {
+       studio_app->open_project( QString( argv[1] ) );
+       }
+
+     */
     return app.exec();
   }
   catch ( std::exception e )

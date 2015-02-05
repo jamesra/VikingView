@@ -7,8 +7,6 @@
 
 #include <vtkSmartPointer.h>
 
-
-
 class vtkPolyData;
 
 class Node
@@ -20,7 +18,6 @@ public:
 
 typedef std::map<long, Node> NodeMap;
 
-
 class Link
 {
 public:
@@ -31,11 +28,9 @@ public:
 class Structure
 {
 
-public:
-  ~Structure();
+public: ~Structure();
 
-
-  static QSharedPointer<Structure> create_structure(int id, QString location_text, QString link_text);
+  static QSharedPointer<Structure> create_structure( int id, QString location_text, QString link_text );
 
   NodeMap get_node_map();
 
@@ -58,8 +53,6 @@ private:
 
   QList<Link> links_;
   vtkSmartPointer<vtkPolyData> mesh_;
-
 };
-
 
 #endif /* VIKING_DATA_STRUCTURE_H */
