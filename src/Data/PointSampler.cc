@@ -19,16 +19,20 @@ PointSampler::~PointSampler()
 std::list<Point> PointSampler::sample_points()
 {
 
-  int num_radii = 2;
+  
+  int num_radii = 3;
   int num_points = 15;
-  int num_pts_circle = 5;
-  int num_pts_line = 5;
+  int num_pts_circle = 10;
+  int num_pts_line = 10;
+  
+
   /*
      int num_radii = 3;
-     int num_points = 10;
-     int num_pts_circle = 25;
-     int num_pts_line = 5;
-   */
+     int num_points = 5;
+     int num_pts_circle = 5;
+     int num_pts_line = 3;
+  */
+  
   NodeMap node_map = this->structure_->get_node_map();
 
   std::list<Point> points;

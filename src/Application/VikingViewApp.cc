@@ -29,7 +29,6 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
 
-  this->viewer_ = new Viewer();
 
 }
 
@@ -149,5 +148,6 @@ void VikingViewApp::on_action_quit_triggered()
 
 void VikingViewApp::initialize_vtk()
 {
+  this->viewer_ = new Viewer();
   this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
 }

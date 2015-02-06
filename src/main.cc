@@ -88,12 +88,15 @@ int main( int argc, char** argv )
     std::cerr << "VikingView initializing...\n";
 
     QApplication app( argc, argv );
+    std::cerr << "app...\n";
 
     QSharedPointer<VikingViewApp> studio_app =
       QSharedPointer<VikingViewApp>( new VikingViewApp( argc, argv ) );
 
+    std::cerr << "show...\n";
     studio_app->show();
 
+    std::cerr << "initvtk...\n";
     studio_app->initialize_vtk();
     /*
 

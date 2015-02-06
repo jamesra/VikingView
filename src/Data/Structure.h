@@ -4,6 +4,7 @@
 #include <map>
 
 #include <QSharedPointer.h>
+#include <QColor.h>
 
 #include <vtkSmartPointer.h>
 
