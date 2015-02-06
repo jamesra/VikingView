@@ -18,11 +18,17 @@ PointSampler::~PointSampler()
 //-----------------------------------------------------------------------------
 std::list<Point> PointSampler::sample_points()
 {
+
   int num_radii = 2;
-  int num_points = 5;
+  int num_points = 15;
   int num_pts_circle = 5;
   int num_pts_line = 5;
-
+  /*
+     int num_radii = 3;
+     int num_points = 10;
+     int num_pts_circle = 25;
+     int num_pts_line = 5;
+   */
   NodeMap node_map = this->structure_->get_node_map();
 
   std::list<Point> points;
@@ -33,9 +39,18 @@ std::list<Point> PointSampler::sample_points()
 
     Node n = it->second;
 
-    for ( int r = 0; r < num_radii; r++ )
+    for ( int r = 1; r <= num_radii; r++ )
     {
       float radius = n.radius * (float)r / (float)num_radii;
+
+      int this_num_points = ( radius * radius * num_points );
+
+      std::cerr << this_num_points << "\n";
+
+      if ( this_num_points < 2 )
+      {
+        this_num_points = 2;
+      }
 
       for ( int i = 0; i < num_points; i++ )
       {

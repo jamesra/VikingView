@@ -44,6 +44,10 @@ public: ~Structure();
 
   int get_id();
 
+  void set_color(QColor color);
+
+  QColor get_color();
+
 private:
 
   Structure(); // private
@@ -53,6 +57,11 @@ private:
 
   QList<Link> links_;
   vtkSmartPointer<vtkPolyData> mesh_;
+
+  QColor color_;
+
+//  float color_[3];
+
 };
 
 #endif /* VIKING_DATA_STRUCTURE_H */

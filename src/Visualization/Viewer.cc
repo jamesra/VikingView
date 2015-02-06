@@ -89,7 +89,11 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     mapper->SetInputConnection( normals->GetOutputPort() );
 
     actor->SetMapper( mapper );
-    actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
+
+    QColor color = s->get_color();
+
+    //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
+    actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
     actor->GetProperty()->SetSpecular( 0.2 );
     actor->GetProperty()->SetSpecularPower( 15 );
     mapper->ScalarVisibilityOff();

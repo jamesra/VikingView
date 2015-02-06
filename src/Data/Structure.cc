@@ -5,10 +5,14 @@
 
 #include <vtkCenterOfMass.h>
 #include <vtkMassProperties.h>
+#include <vtkWindowedSincPolyDataFilter.h>
+#include <vtkCleanPolyData.h>
 
 //-----------------------------------------------------------------------------
 Structure::Structure()
-{}
+{
+  this->color_ = QColor( 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ) );
+}
 
 //-----------------------------------------------------------------------------
 Structure::~Structure()
@@ -82,7 +86,24 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 
     AlphaShape alpha_shape;
     alpha_shape.set_points( points );
-    this->mesh_ = alpha_shape.get_mesh();
+
+    vtkSmartPointer<vtkPolyData> poly_data = alpha_shape.get_mesh();
+
+/*
+    vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+    clean->SetInputData( poly_data );
+    clean->Update();
+    poly_data = clean->GetOutput();
+ */
+
+    vtkSmartPointer<vtkWindowedSincPolyDataFilter> smooth = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
+    smooth->SetInputData( poly_data );
+    smooth->SetPassBand( 0.15 );
+    smooth->SetNumberOfIterations( 20 );
+    smooth->Update();
+    poly_data = smooth->GetOutput();
+
+    this->mesh_ = poly_data;
   }
 
   return this->mesh_;
@@ -127,8 +148,20 @@ QString Structure::get_center_of_mass_string()
   return str;
 }
 
-//--------------------------------
+//-----------------------------------------------------------------------------
 QList<Link> Structure::get_links()
 {
   return this->links_;
+}
+
+//-----------------------------------------------------------------------------
+void Structure::set_color( QColor color )
+{
+  this->color_ = color;
+}
+
+//-----------------------------------------------------------------------------
+QColor Structure::get_color()
+{
+  return this->color_;
 }
