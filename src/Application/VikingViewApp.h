@@ -27,6 +27,8 @@ public:
   VikingViewApp( int argc, char** argv );
   ~VikingViewApp();
 
+  void initialize_vtk();
+
   //virtual void closeEvent( QCloseEvent* event );
 
 public Q_SLOTS:

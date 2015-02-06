@@ -31,7 +31,6 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
 
   this->viewer_ = new Viewer();
 
-  this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
 }
 
 //---------------------------------------------------------------------------
@@ -146,4 +145,9 @@ void VikingViewApp::on_sampling_slider_valueChanged()
 void VikingViewApp::on_action_quit_triggered()
 {
   this->close();
+}
+
+void VikingViewApp::initialize_vtk()
+{
+  this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
 }

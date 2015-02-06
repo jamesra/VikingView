@@ -93,6 +93,8 @@ int main( int argc, char** argv )
       QSharedPointer<VikingViewApp>( new VikingViewApp( argc, argv ) );
 
     studio_app->show();
+
+    studio_app->initialize_vtk();
     /*
 
        // do this after "show" for mac initialization
