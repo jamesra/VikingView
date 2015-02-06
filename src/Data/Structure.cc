@@ -59,12 +59,28 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
   }
 
   foreach( QVariant var, link_list ) {
-    Link l;
+    Link link;
     QMap<QString, QVariant> item = var.toMap();
 
-    l.a = item["A"].toLongLong();
-    l.b = item["B"].toLongLong();
-    structure->links_.append( l );
+    link.a = item["A"].toLongLong();
+    link.b = item["B"].toLongLong();
+
+
+    if ( structure->node_map_.find( link.a ) == structure->node_map_.end() 
+      || structure->node_map_.find( link.b ) == structure->node_map_.end() )
+    {
+      continue;
+    }
+
+
+    structure->node_map_[link.a].linked_nodes.append(link.b);
+    structure->node_map_[link.b].linked_nodes.append(link.a);
+
+    structure->links_.append( link );
+
+
+
+
   }
 
   return structure;
@@ -96,13 +112,14 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     poly_data = clean->GetOutput();
  */
 
+/*
     vtkSmartPointer<vtkWindowedSincPolyDataFilter> smooth = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
     smooth->SetInputData( poly_data );
     smooth->SetPassBand( 0.15 );
     smooth->SetNumberOfIterations( 20 );
     smooth->Update();
     poly_data = smooth->GetOutput();
-
+*/
     this->mesh_ = poly_data;
   }
 

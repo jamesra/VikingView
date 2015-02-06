@@ -21,6 +21,9 @@ public:
 
 private:
 
+
+  static void sample_sphere(double radius, double x, double y, double z, std::list<Point> &points);
+
   Structure* structure_;
 };
 

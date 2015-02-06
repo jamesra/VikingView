@@ -19,20 +19,17 @@ PointSampler::~PointSampler()
 std::list<Point> PointSampler::sample_points()
 {
 
-  
-  int num_radii = 3;
-  int num_points = 15;
-  int num_pts_circle = 10;
-  int num_pts_line = 10;
-  
-
   /*
      int num_radii = 3;
-     int num_points = 5;
-     int num_pts_circle = 5;
-     int num_pts_line = 3;
-  */
-  
+     int num_points = 15;
+     int num_pts_circle = 10;
+     int num_pts_line = 10;
+   */
+
+  int num_radii = 1;
+  int num_pts_circle = 25;
+  int num_pts_line = 10;
+
   NodeMap node_map = this->structure_->get_node_map();
 
   std::list<Point> points;
@@ -43,42 +40,12 @@ std::list<Point> PointSampler::sample_points()
 
     Node n = it->second;
 
-    for ( int r = 1; r <= num_radii; r++ )
+    if ( n.linked_nodes.size() != 1 )
     {
-      float radius = n.radius * (float)r / (float)num_radii;
-
-      int this_num_points = ( radius * radius * num_points );
-
-      std::cerr << this_num_points << "\n";
-
-      if ( this_num_points < 2 )
-      {
-        this_num_points = 2;
-      }
-
-      for ( int i = 0; i < num_points; i++ )
-      {
-        float theta = (float)i * 2 * M_PI / (float)num_points;
-
-        for ( int j = 0; j < num_points; j++ )
-        {
-
-          float ratio = 2 * (float)j / ( (float)num_points - 1 );
-
-          float u = -radius + ( ratio * radius );
-
-          float radius_squared = radius * radius;
-          float u_squared = u * u;
-
-          float this_x = n.x + sqrt( radius_squared - u_squared ) * cos( theta );
-          float this_y = n.y + sqrt( radius_squared - u_squared ) * sin( theta );
-          float this_z = n.z + u;
-
-          Point p( this_x, this_y, this_z );
-          points.push_back( p );
-        }
-      }
+      continue;
     }
+
+    PointSampler::sample_sphere( n.radius, n.x, n.y, n.z, points );
   }
 
   // cylinders
@@ -141,6 +108,13 @@ std::list<Point> PointSampler::sample_points()
       double n1_radius = n1.radius * ( r / this_num_radii );
       double n2_radius = n2.radius * ( r / this_num_radii );
 
+      double avg_radius = ( n1_radius + n2_radius ) / 2.0;
+      this_num_circle = num_pts_circle * avg_radius;
+      if ( this_num_circle < 3 )
+      {
+        this_num_circle = 3;
+      }
+
       for ( double i = 0; i < this_num_circle; i++ )
       {
         double theta = (double)i * 2 * M_PI / this_num_circle;
@@ -169,16 +143,53 @@ std::list<Point> PointSampler::sample_points()
           {
             std::cerr << "oh no, break!\n";
           }
-
-          //out << this_x << " " << this_y << " " << this_z << "\n";
         }
       }
     }
   }
 
-  // out.close();
+  std::ofstream out;
+  out.open( "C:\\Users\\amorris\\points.asc" );
+  for ( std::list<Point>::iterator it = points.begin(); it != points.end(); ++it )
+  {
+    out << ( *it ).x() << " " << ( *it ).y() << " " << ( *it ).z() << "\n";
+  }
+
+  out.close();
 
   std::cerr << "Sampled " << points.size() << " points\n";
 
   return points;
+}
+
+//-----------------------------------------------------------------------------
+void PointSampler::sample_sphere( double radius, double ox, double oy, double oz, std::list<Point> &points )
+{
+
+  int rnd = 1;
+
+  int samples = 500 * radius;
+
+  if ( samples < 10 )
+  {
+    samples = 10;
+  }
+
+  double offset = 2.0 / (double)samples;
+
+  double increment = M_PI * ( 3.0 - sqrt( 5.0 ) );
+
+  for ( int i = 0; i < samples; i++ )
+  {
+    double y = ( ( i * offset ) - 1 ) + ( offset / 2 );
+    double r = sqrt( 1 - pow( y, 2 ) );
+
+    double phi = ( ( i + rnd ) % samples ) * increment;
+
+    double x = cos( phi ) * r;
+    double z = sin( phi ) * r;
+
+    Point p( ox + ( x * radius ), oy + ( y * radius ), oz + ( z * radius ) );
+    points.push_back( p );
+  }
 }
