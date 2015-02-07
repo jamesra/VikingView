@@ -16,6 +16,7 @@ public:
   double x, y, z, radius;
   long id;
   QList<int> linked_nodes;
+  long graph_id;
 };
 
 typedef std::map<long, Node> NodeMap;

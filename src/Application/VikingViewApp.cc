@@ -130,14 +130,14 @@ void VikingViewApp::update_table()
 //---------------------------------------------------------------------------
 void VikingViewApp::on_opacity_slider_valueChanged()
 {
-  std::cerr << "opacity now : " << this->ui_->opacity_slider->value() << "\n";
+//  std::cerr << "opacity now : " << this->ui_->opacity_slider->value() << "\n";
   this->viewer_->set_opacity( this->ui_->opacity_slider->value() / 100.0 );
 }
 
 //---------------------------------------------------------------------------
 void VikingViewApp::on_sampling_slider_valueChanged()
 {
-  std::cerr << "sampling now : " << this->ui_->sampling_slider->value() << "\n";
+//  std::cerr << "sampling now : " << this->ui_->sampling_slider->value() << "\n";
 }
 
 //---------------------------------------------------------------------------

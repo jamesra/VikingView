@@ -27,8 +27,10 @@ std::list<Point> PointSampler::sample_points()
    */
 
   int num_radii = 1;
-  int num_pts_circle = 25;
-  int num_pts_line = 10;
+  int num_pts_circle = 50;
+  int num_pts_line = 20;
+  //int num_pts_circle = 3;
+  //int num_pts_line = 2;
 
   NodeMap node_map = this->structure_->get_node_map();
 
@@ -102,6 +104,21 @@ std::list<Point> PointSampler::sample_points()
 
     double this_num_circle = num_pts_circle;
     double this_num_radii = num_radii;
+
+    double avg_overall_radius = ( n1.radius + n2.radius ) / 2.0;
+
+    this_num_radii = 3 * avg_overall_radius;
+    if ( this_num_radii < 1 )
+    {
+      this_num_radii = 1;
+    }
+    else
+    {
+      //std::cerr << "rad = " << this_num_radii << "\n";
+    }
+
+    this_num_radii = (int)this_num_radii;
+
 
     for ( double r = 1; r <= this_num_radii; r++ )
     {

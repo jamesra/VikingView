@@ -45,6 +45,7 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
   std::cout << "Alpha shape computed in REGULARIZED mode by default"
             << std::endl;
 
+  //float alpha = 0.25;
   float alpha = -1;
   if ( alpha != -1 )
   {
