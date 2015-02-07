@@ -47,7 +47,7 @@ std::list<Point> PointSampler::sample_points()
       continue;
     }
 
-    PointSampler::sample_sphere( n.radius, n.x, n.y, n.z, points );
+    // PointSampler::sample_sphere( n.radius, n.x, n.y, n.z, points );
   }
 
   // cylinders
@@ -119,7 +119,6 @@ std::list<Point> PointSampler::sample_points()
 
     this_num_radii = (int)this_num_radii;
 
-
     for ( double r = 1; r <= this_num_radii; r++ )
     {
       double n1_radius = n1.radius * ( r / this_num_radii );
@@ -156,12 +155,69 @@ std::list<Point> PointSampler::sample_points()
           Point p( this_x, this_y, this_z );
           //points.push_back( p );
 
+          //PointSampler::sample_sphere( 1.0, this_x, this_y, this_z, points );
+
           if ( this_x == 0 )
           {
             std::cerr << "oh no, break!\n";
           }
         }
       }
+    }
+  }
+
+  foreach( Link link, this->structure_->get_links() ) {
+
+    if ( node_map.find( link.a ) == node_map.end() || node_map.find( link.b ) == node_map.end() )
+    {
+      continue;
+    }
+
+    Node n1 = node_map[link.a];
+    Node n2 = node_map[link.b];
+
+    double p1[3], p2[3];
+
+    p1[0] = n1.x;
+    p1[1] = n1.y;
+    p1[2] = n1.z;
+    p2[0] = n2.x;
+    p2[1] = n2.y;
+    p2[2] = n2.z;
+
+    double vec[3];
+    vec[0] = p1[0] - p2[0];
+    vec[1] = p1[1] - p2[1];
+    vec[2] = p1[2] - p2[2];
+
+    double squared_distance = vtkMath::Distance2BetweenPoints( p1, p2 );
+    double distance = sqrt( squared_distance );
+
+    double num_steps = (int)( distance * 5 );
+
+    if ( num_steps < 3 )
+    {
+      num_steps = 3;
+    }
+
+    //double n1_radius = n1.radius * ( r / this_num_radii );
+    //double n2_radius = n2.radius * ( r / this_num_radii );
+
+    for ( int step = 0; step < num_steps; step++ )
+    {
+      double ratio = (double)step / ( num_steps - 1 );
+      double inv_ratio = 1 - ratio;
+
+      double radius = ( n1.radius * ratio ) + ( n2.radius * inv_ratio );
+
+      double this_x = n1.x * ratio + n2.x * inv_ratio;
+      double this_y = n1.y * ratio + n2.y * inv_ratio;
+      double this_z = n1.z * ratio + n2.z * inv_ratio;
+
+      PointSampler::sample_sphere( radius, this_x, this_y, this_z, points );
+
+      //Point p( this_x, this_y, this_z );
+      //points.push_back( p );
     }
   }
 
@@ -185,7 +241,7 @@ void PointSampler::sample_sphere( double radius, double ox, double oy, double oz
 
   int rnd = 1;
 
-  int samples = 500 * radius;
+  int samples = 100 * radius;
 
   if ( samples < 10 )
   {

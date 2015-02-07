@@ -12,6 +12,10 @@
 #include <vtkCellArray.h>
 #include <vtkFillHolesFilter.h>
 #include <vtkPolyDataNormals.h>
+#include <vtkSmoothPolyDataFilter.h>
+#include <vtkTriangleFilter.h>
+//#include <vtkFeatureVertices.h>
+#include <vtkLoopSubdivisionFilter.h>
 
 #include <vtkMath.h>
 
@@ -207,16 +211,14 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 
     vtkSmartPointer<vtkPolyData> poly_data = alpha_shape.get_mesh();
 
-
-
-
     // clean
+    std::cerr << "Number of points before cleaning: " << poly_data->GetNumberOfPoints() << "\n";
     vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
     clean->SetInputData( poly_data );
+    clean->SetTolerance( 0.00001 );
     clean->Update();
     poly_data = clean->GetOutput();
-
-
+    std::cerr << "Number of points after cleaning: " << poly_data->GetNumberOfPoints() << "\n";
 
     vtkSmartPointer<vtkFeatureEdges> features = vtkSmartPointer<vtkFeatureEdges>::New();
     features->SetInputData( poly_data );
@@ -293,25 +295,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
     std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
 
-
-    // fill holes
-    vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
-    fill_holes->SetInputData( poly_data );
-    //
-    //fill_holes->SetHoleSize( 300000 );
-    fill_holes->Update();
-    poly_data = fill_holes->GetOutput();
-
-
-    // Make the triangle windong order consistent
-    vtkSmartPointer<vtkPolyDataNormals> normals =
-      vtkSmartPointer<vtkPolyDataNormals>::New();
-    normals->SetInputData(poly_data);
-    normals->ConsistencyOn();
-    normals->SplittingOff();
-    normals->Update();
-    poly_data = normals->GetOutput();
-
+    vtkSmartPointer< vtkTriangleFilter > triangle_filter =
+      vtkSmartPointer< vtkTriangleFilter >::New();
+    triangle_filter->SetInputData( poly_data );
+    triangle_filter->Update();
+    poly_data = triangle_filter->GetOutput();
 
     vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
     writer->SetFileName( "Z:\\shared\\file.stl" );
@@ -319,21 +307,67 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     writer->Write();
 
 /*
+    // fill holes
+    vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
+    fill_holes->SetInputData( poly_data );
+    fill_holes->SetHoleSize( 300 );
+    fill_holes->Update();
+    poly_data = fill_holes->GetOutput();
+
+
+
+ */
+
     // clean
-    vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+    clean = vtkSmartPointer<vtkCleanPolyData>::New();
     clean->SetInputData( poly_data );
     clean->Update();
     poly_data = clean->GetOutput();
-*/
-/*
+
     // smooth
+
+/*
+
     vtkSmartPointer<vtkWindowedSincPolyDataFilter> smooth = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
     smooth->SetInputData( poly_data );
-    smooth->SetPassBand( 0.05 );
-    smooth->SetNumberOfIterations( 20 );
+    smooth->SetPassBand( 0.1 );
+    smooth->SetNumberOfIterations( 200 );
+    smooth->FeatureEdgeSmoothingOn();
+    smooth->NonManifoldSmoothingOn();
     smooth->Update();
     poly_data = smooth->GetOutput();
-*/
+ */
+
+    vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
+    subdivision->SetInputData( poly_data );
+    subdivision->SetNumberOfSubdivisions( 1 );
+    subdivision->Update();
+    poly_data = subdivision->GetOutput();
+
+    // Make the triangle winding order consistent
+    vtkSmartPointer<vtkPolyDataNormals> normals =
+      vtkSmartPointer<vtkPolyDataNormals>::New();
+    normals->SetInputData( poly_data );
+    normals->ConsistencyOn();
+    normals->SplittingOff();
+    normals->Update();
+    poly_data = normals->GetOutput();
+
+    vtkSmartPointer<vtkSmoothPolyDataFilter> smooth = vtkSmartPointer<vtkSmoothPolyDataFilter>::New();
+    smooth->SetInputData( poly_data );
+    smooth->SetNumberOfIterations( 200 );
+    smooth->Update();
+    poly_data = smooth->GetOutput();
+
+
+    // Make the triangle winding order consistent
+    normals = vtkSmartPointer<vtkPolyDataNormals>::New();
+    normals->SetInputData( poly_data );
+    normals->ConsistencyOn();
+    normals->SplittingOff();
+    normals->Update();
+    poly_data = normals->GetOutput();
+
 
     this->mesh_ = poly_data;
   }
