@@ -96,6 +96,8 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
     actor->GetProperty()->SetSpecular( 0.2 );
     actor->GetProperty()->SetSpecularPower( 15 );
+    actor->GetProperty()->BackfaceCullingOn();
+
     mapper->ScalarVisibilityOff();
 
     this->renderer_->AddActor( actor );
