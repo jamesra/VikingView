@@ -41,6 +41,9 @@ public Q_SLOTS:
   void on_opacity_slider_valueChanged();
   void on_sampling_slider_valueChanged();
 
+  void on_auto_view_button_clicked();
+  void on_cutting_plane_button_clicked();
+
 private:
 
   void update_table();

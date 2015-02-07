@@ -46,6 +46,8 @@ public:
 
   void reset_camera();
 
+  void redraw();
+
   void set_opacity( float opacity );
 
 private:

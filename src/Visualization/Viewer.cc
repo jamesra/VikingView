@@ -120,3 +120,11 @@ void Viewer::set_opacity( float opacity )
   }
   this->renderer_->GetRenderWindow()->Render();
 }
+
+//-----------------------------------------------------------------------------
+void Viewer::redraw()
+{
+  this->renderer_->Render();
+  this->renderer_->GetRenderWindow()->Render();
+
+}

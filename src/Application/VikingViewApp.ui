@@ -14,7 +14,7 @@
    <string>VikingView</string>
   </property>
   <property name="windowIcon">
-   <iconset>
+   <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
     <normaloff>:/Studio/Images/shapes-icon.png</normaloff>:/Studio/Images/shapes-icon.png</iconset>
   </property>
   <property name="styleSheet">
@@ -452,6 +452,47 @@ QPushButton {
           <number>3</number>
          </property>
          <item>
+          <widget class="QToolButton" name="auto_view_button">
+           <property name="toolTip">
+            <string>Autoview</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../Resources/VikingView.qrc">
+             <normaloff>:/VikingView/Images/AutoViewOff.png</normaloff>:/VikingView/Images/AutoViewOff.png</iconset>
+           </property>
+           <property name="checkable">
+            <bool>false</bool>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QToolButton" name="cutting_plane_button">
+           <property name="toolTip">
+            <string>Autoview</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../Resources/VikingView.qrc">
+             <normaloff>:/VikingView/Images/CuttingPlaneOff.png</normaloff>
+             <normalon>:/VikingView/Images/CuttingPlaneOn.png</normalon>:/VikingView/Images/CuttingPlaneOff.png</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoRaise">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="horizontalSpacer">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
@@ -827,7 +868,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
      <normaloff>:/Studio/Images/tools.png</normaloff>:/Studio/Images/tools.png</iconset>
    </property>
    <property name="text">
@@ -839,7 +880,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
      <normaloff>:/Studio/Images/data.png</normaloff>:/Studio/Images/data.png</iconset>
    </property>
    <property name="text">
@@ -851,7 +892,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
      <normaloff>:/Studio/Images/gear2.png</normaloff>:/Studio/Images/gear2.png</iconset>
    </property>
    <property name="text">
@@ -863,7 +904,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset>
+    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
      <normaloff>:/Studio/Images/chart.png</normaloff>:/Studio/Images/chart.png</iconset>
    </property>
    <property name="text">
@@ -945,6 +986,7 @@ QPushButton {
  </customwidgets>
  <resources>
   <include location="../Resources/VikingView.qrc"/>
+  <include location="../../../studio/src/Resources/ShapeWorksStudio.qrc"/>
  </resources>
  <connections/>
 </ui>

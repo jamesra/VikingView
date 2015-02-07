@@ -28,8 +28,6 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
 {
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
-
-
 }
 
 //---------------------------------------------------------------------------
@@ -146,8 +144,20 @@ void VikingViewApp::on_action_quit_triggered()
   this->close();
 }
 
+//---------------------------------------------------------------------------
 void VikingViewApp::initialize_vtk()
 {
   this->viewer_ = new Viewer();
   this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
 }
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_auto_view_button_clicked()
+{
+  this->viewer_->reset_camera();
+  this->viewer_->redraw();
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_cutting_plane_button_clicked()
+{}
