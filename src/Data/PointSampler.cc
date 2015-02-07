@@ -154,7 +154,7 @@ std::list<Point> PointSampler::sample_points()
           double this_z = circ1_z * ratio + circ2_z * inv_ratio;
 
           Point p( this_x, this_y, this_z );
-          points.push_back( p );
+          //points.push_back( p );
 
           if ( this_x == 0 )
           {

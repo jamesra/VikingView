@@ -209,6 +209,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 
 
 
+
     // clean
     vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
     clean->SetInputData( poly_data );
@@ -297,7 +298,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
     fill_holes->SetInputData( poly_data );
     //
-    fill_holes->SetHoleSize( 300000 );
+    //fill_holes->SetHoleSize( 300000 );
     fill_holes->Update();
     poly_data = fill_holes->GetOutput();
 
@@ -310,6 +311,12 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     normals->SplittingOff();
     normals->Update();
     poly_data = normals->GetOutput();
+
+
+    vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
+    writer->SetFileName( "Z:\\shared\\file.stl" );
+    writer->SetInputData( poly_data );
+    writer->Write();
 
 /*
     // clean
@@ -327,11 +334,6 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     smooth->Update();
     poly_data = smooth->GetOutput();
 */
-    vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
-
-    writer->SetFileName( "Z:\\shared\\file.stl" );
-    writer->SetInputData( poly_data );
-    writer->Write();
 
     this->mesh_ = poly_data;
   }

@@ -102,7 +102,7 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
       };
 
       /// according to the encoding of vertex indices, this is needed to get
-      /// a consistent orienation
+      /// a consistent orientation
       if ( facets[i].second % 2 == 0 ) { std::swap( indices[0], indices[1] ); }
 
       pts <<
