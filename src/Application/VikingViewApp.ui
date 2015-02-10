@@ -525,13 +525,6 @@ QPushButton {
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="separator"/>
-    <addaction name="separator"/>
-    <addaction name="action_recent1"/>
-    <addaction name="action_recent2"/>
-    <addaction name="action_recent3"/>
-    <addaction name="action_recent4"/>
-    <addaction name="separator"/>
     <addaction name="action_quit"/>
    </widget>
    <widget class="QMenu" name="menuOptions">
@@ -793,7 +786,7 @@ QPushButton {
               </widget>
              </item>
              <item row="1" column="0">
-              <widget class="QLabel" name="label_3">
+              <widget class="QLabel" name="sampling_label">
                <property name="text">
                 <string>Sampling</string>
                </property>
