@@ -16,6 +16,9 @@ class vtkImageActor;
 class Viewer;
 class vtkPolyDataMapper;
 class vtkActor;
+class vtkImplicitPlaneWidget2;
+class vtkImplicitPlaneRepresentation;
+class vtkIPWCallback;
 
 class Structure;
 
@@ -66,6 +69,11 @@ private:
   QList<vtkSmartPointer<vtkActor> > surface_actors_;
 
   vtkSmartPointer<vtkLookupTable>          lut_;
+
+  vtkSmartPointer<vtkImplicitPlaneWidget2> plane_widget_;
+  vtkSmartPointer<vtkImplicitPlaneRepresentation> imp_plane_rep_;
+  vtkSmartPointer<vtkIPWCallback> callback_;
+  vtkSmartPointer<vtkPlane> plane;
 
   //vtkSmartPointer<StudioInteractorStyle>   style_;
 

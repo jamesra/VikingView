@@ -31,32 +31,26 @@
 
 #include <Visualization/Viewer.h>
 
-
-
-
 // Callback for the interaction
 // This does the actual work: updates the vtkPlane implicit function.
 // This in turn causes the pipeline to update and clip the object.
 class vtkIPWCallback : public vtkCommand
 {
 public:
-  static vtkIPWCallback *New() 
+  static vtkIPWCallback* New()
   { return new vtkIPWCallback; }
-  virtual void Execute(vtkObject *caller, unsigned long, void*)
+  virtual void Execute( vtkObject* caller, unsigned long, void* )
   {
-    vtkImplicitPlaneWidget2 *planeWidget = 
-      reinterpret_cast<vtkImplicitPlaneWidget2*>(caller);
-    vtkImplicitPlaneRepresentation *rep = 
-      reinterpret_cast<vtkImplicitPlaneRepresentation*>(planeWidget->GetRepresentation());
-    rep->GetPlane(this->Plane);
+    vtkImplicitPlaneWidget2* plane_widget =
+      reinterpret_cast<vtkImplicitPlaneWidget2*>( caller );
+    vtkImplicitPlaneRepresentation* rep =
+      reinterpret_cast<vtkImplicitPlaneRepresentation*>( plane_widget->GetRepresentation() );
+    rep->GetPlane( this->Plane );
   }
-  vtkIPWCallback():Plane(0),Actor(0) {}
-  vtkPlane *Plane;
-  vtkActor *Actor;
+  vtkIPWCallback() : Plane( 0 ), Actor( 0 ) {}
+  vtkPlane* Plane;
+  vtkActor* Actor;
 };
-
-
-
 
 //-----------------------------------------------------------------------------
 Viewer::Viewer()
@@ -64,9 +58,6 @@ Viewer::Viewer()
   this->renderer_ = vtkSmartPointer<vtkRenderer>::New();
 
   this->visible_ = false;
-
-
-
 }
 
 //-----------------------------------------------------------------------------
@@ -127,7 +118,7 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     QColor color = s->get_color();
 
     //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
-    actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+    actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0 );
     actor->GetProperty()->SetSpecular( 0.2 );
     actor->GetProperty()->SetSpecularPower( 15 );
     actor->GetProperty()->BackfaceCullingOn();
@@ -137,8 +128,7 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     this->renderer_->AddActor( actor );
 
     this->surface_actors_.append( actor );
-    //this->update_actors();
-    //this->renderer_->SetBackground( .3, .6, .3 ); // Background color green
+    this->surface_mappers_.append( mapper );
   }
 
   this->renderer_->ResetCamera();
@@ -160,48 +150,59 @@ void Viewer::redraw()
 {
   this->renderer_->Render();
   this->renderer_->GetRenderWindow()->Render();
-
 }
 
 //-----------------------------------------------------------------------------
 void Viewer::set_clipping_plane( bool clip )
 {
+  if ( !clip )
+  {
 
-if (!clip)
-{
+    for ( int i = 0; i < this->surface_mappers_.size(); i++ )
+    {
+      this->surface_mappers_[i]->RemoveAllClippingPlanes();
+    }
 
+    if ( this->plane_widget_ )
+    {
+      this->plane_widget_->Off();
+    }
+  }
+  else
+  {
 
-}
+    plane = vtkSmartPointer<vtkPlane>::New();
 
-std::cerr << "cutting plane!\n";
-  // Setup a visualization pipeline
-  vtkSmartPointer<vtkPlane> plane =
-    vtkSmartPointer<vtkPlane>::New();
+    callback_ = vtkSmartPointer<vtkIPWCallback>::New();
+    callback_->Plane = plane;
 
+    imp_plane_rep_ = vtkSmartPointer<vtkImplicitPlaneRepresentation>::New();
+    imp_plane_rep_->SetPlaceFactor( 1.25 ); // This must be set prior to placing the widget
 
+    double bounds[6];
+    this->renderer_->ComputeVisiblePropBounds( bounds );
 
-  // The callback will do the work
-  vtkSmartPointer<vtkIPWCallback> myCallback = 
-    vtkSmartPointer<vtkIPWCallback>::New();
-  myCallback->Plane = plane;
-  //myCallback->Actor = actor;
+    double center[3];
+    center[0] = ( bounds[0] + bounds[1] ) / 2.0;
+    center[1] = ( bounds[2] + bounds[3] ) / 2.0;
+    center[2] = ( bounds[4] + bounds[5] ) / 2.0;
 
-  vtkSmartPointer<vtkImplicitPlaneRepresentation> rep = 
-    vtkSmartPointer<vtkImplicitPlaneRepresentation>::New();
-  rep->SetPlaceFactor(1.25); // This must be set prior to placing the widget
-  rep->PlaceWidget(this->surface_actors_[0]->GetBounds());
-  rep->SetNormal(plane->GetNormal());
-  rep->SetOrigin(0,0,50); //this doesn't seem to work?
+    imp_plane_rep_->PlaceWidget( bounds );
+    imp_plane_rep_->SetNormal( plane->GetNormal() );
+    imp_plane_rep_->SetOrigin( center );
+    imp_plane_rep_->GetPlane( this->plane );
 
+    for ( int i = 0; i < this->surface_mappers_.size(); i++ )
+    {
+      this->surface_mappers_[i]->AddClippingPlane( plane );
+    }
 
-  this->surface_mappers_[0]->AddClippingPlane( plane );
+    plane_widget_ = vtkSmartPointer<vtkImplicitPlaneWidget2>::New();
+    plane_widget_->SetInteractor( this->renderer_->GetRenderWindow()->GetInteractor() );
+    plane_widget_->SetRepresentation( imp_plane_rep_ );
+    plane_widget_->AddObserver( vtkCommand::InteractionEvent, callback_ );
+    plane_widget_->On();
+  }
 
-  vtkSmartPointer<vtkImplicitPlaneWidget2> planeWidget =
-    vtkSmartPointer<vtkImplicitPlaneWidget2>::New();
-  planeWidget->SetInteractor(this->renderer_->GetRenderWindow()->GetInteractor());
-  planeWidget->SetRepresentation(rep);
-  planeWidget->AddObserver(vtkCommand::InteractionEvent,myCallback);
-  planeWidget->On();
-
-
+  this->redraw();
 }
