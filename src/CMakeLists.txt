@@ -62,11 +62,6 @@ FIND_PACKAGE(CGAL REQUIRED)
 MESSAGE(STATUS "** USE_CGAL_FILE: ${USE_CGAL_FILE}")
 
 
-#IF (CGAL_FOUND)
-#  INCLUDE (${USE_CGAL_FILE})
-#ENDIF(CGAL_FOUND)
-
-
 if ( CGAL_FOUND )
   include( ${CGAL_USE_FILE} )
 ENDIF( CGAL_FOUND )
@@ -75,11 +70,13 @@ MESSAGE(STATUS "** CGAL_DIR: ${CGAL_DIR}")
 MESSAGE(STATUS "** CGAL_LIBRARIES: ${CGAL_LIBRARIES}")
 
 
+
+
 #set( Boost_DEBUG TRUE )
 #SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
 #SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 #set( Boost_USE_STATIC_LIBS ON )
-#FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem thread)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem thread)
 #link_directories ( ${Boost_LIBRARY_DIRS} )
 #include_directories ( ${Boost_INCLUDE_DIRS} )
 
@@ -88,6 +85,8 @@ MESSAGE(STATUS "** CGAL_LIBRARIES: ${CGAL_LIBRARIES}")
 #MESSAGE(STATUS "** Boost Libraries: ${Boost_LIBRARIES}")
 
 SET(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+
 
 #ADD_DEFINITIONS( -Wall )
 
@@ -249,10 +248,6 @@ SET( VIKING_VIEW_RCS
 SOURCE_GROUP("Application" FILES ${VIKING_VIEW_APPLICATION_SRCS} ${VIKING_VIEW_APPLICATION_HDRS} ${VIKING_VIEW_APPLICATION_UIS})
 SOURCE_GROUP("Visualization" FILES ${VIKING_VIEW_VISUALIZATION_SRCS} ${VIKING_VIEW_VISUALIZATION_HDRS})
 SOURCE_GROUP("Data" FILES ${VIKING_VIEW_DATA_SRCS} ${VIKING_VIEW_DATA_HDRS})
-SOURCE_GROUP("Groom" FILES ${VIKING_VIEW_GROOM_SRCS} ${VIKING_VIEW_GROOM_HDRS} ${VIKING_VIEW_GROOM_UIS})
-SOURCE_GROUP("Optimize" FILES ${VIKING_VIEW_OPTIMIZE_SRCS} ${VIKING_VIEW_OPTIMIZE_HDRS} ${VIKING_VIEW_OPTIMIZE_UIS})
-SOURCE_GROUP("Analysis" FILES ${VIKING_VIEW_ANALYSIS_SRCS} ${VIKING_VIEW_ANALYSIS_HDRS} ${VIKING_VIEW_ANALYSIS_UIS})
-SOURCE_GROUP("TinyXML" FILES ${TINYXML_SRCS} ${TINYXML_HRDS})
 
 # this command will generate rules that will run rcc on all files from VIKING_VIEW_RCS
 # in result VIKING_VIEW_RC_SRCS variable will contain paths to files produced by rcc
@@ -280,35 +275,6 @@ ENDIF(USE_PRECOMPILED_HEADERS)
 # (CMAKE_BINARY_DIR holds a path to the build directory)
 INCLUDE_DIRECTORIES( ${CMAKE_BINARY_DIR} )
 #INCLUDE_DIRECTORIES( ${CMAKE_CURRENT_BINARY_DIR} )
-
-
-# optionally build the test files
-IF ( BUILD_TESTS )
-
-  INCLUDE(CTest)
-  ENABLE_TESTING()
-
-  # ADD_TEST(QuantTest QuantTest "${CMAKE_CURRENT_SOURCE_DIR}")
-  # ADD_EXECUTABLE(QuantTest test/quanttest.cc)
-  # TARGET_LINK_LIBRARIES(QuantTest ${ITK_LIBRARIES})
-
-  # ADD_TEST(HistTestNormal HistTestNormal "${CMAKE_CURRENT_SOURCE_DIR}")
-  # ADD_EXECUTABLE(HistTestNormal test/histtest_normal.cc)
-  # TARGET_LINK_LIBRARIES(HistTestNormal ${ITK_LIBRARIES})
-
-  # ADD_TEST(HistTestMasked HistTestMasked "${CMAKE_CURRENT_SOURCE_DIR}")
-  # ADD_EXECUTABLE(HistTestMasked test/histtest_masked.cc)
-  # TARGET_LINK_LIBRARIES(HistTestMasked ${ITK_LIBRARIES})
-
-  # ADD_TEST(HistTestThresholded HistTestThresholded "${CMAKE_CURRENT_SOURCE_DIR}")
-  # ADD_EXECUTABLE(HistTestThresholded test/histtest_thresholded.cc)
-  # TARGET_LINK_LIBRARIES(HistTestThresholded ${ITK_LIBRARIES})
-
-  # ADD_TEST(HistTestMaskedThresholded HistTestMaskedThresholded "${CMAKE_CURRENT_SOURCE_DIR}")
-  # ADD_EXECUTABLE(HistTestMaskedThresholded test/histtest_masked_thresholded.cc)
-  # TARGET_LINK_LIBRARIES(HistTestMaskedThresholded ${ITK_LIBRARIES})
-
-ENDIF(BUILD_TESTS)
 
 # For Apple set the icns file containing icons
 IF(APPLE)
@@ -349,139 +315,6 @@ TARGET_LINK_LIBRARIES( VikingView
   )
 
 
-
-# INSTALLATION AND PACKAGING
-SET(plugin_dest_dir bin)
-SET(qtconf_dest_dir bin)
-SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/VikingView")
-IF(APPLE)
-  SET(plugin_dest_dir VikingView.app/Contents/MacOS)
-  SET(qtconf_dest_dir VikingView.app/Contents/Resources)
-  SET(contents_dest_dir VikingView.app/Contents)
-  SET(APPS "\${CMAKE_INSTALL_PREFIX}/VikingView.app")
-ENDIF(APPLE)
-IF(WIN32)
-  SET(APPS "\${CMAKE_INSTALL_PREFIX}/bin/VikingView.exe")
-ENDIF(WIN32)
-
-
-
-#--------------------------------------------------------------------------------
-# Install the VIKING_VIEW application, on Apple, the bundle is at the root of the
-# install tree, and on other platforms it'll go into the bin directory.
-INSTALL(TARGETS VikingView
-    BUNDLE DESTINATION . COMPONENT Runtime
-    RUNTIME DESTINATION bin COMPONENT Runtime
-    )
-
-#--------------------------------------------------------------------------------
-# Install needed Qt plugins by copying directories from the qt installation
-# One can cull what gets copied by using 'REGEX "..." EXCLUDE'
-INSTALL(DIRECTORY "${QT_PLUGINS_DIR}/imageformats" DESTINATION ${plugin_dest_dir}/plugins COMPONENT Runtime)
-
-#--------------------------------------------------------------------------------
-# Install needed Qt .nib files and others
-IF(APPLE)
-INSTALL(DIRECTORY "${QT_QTGUI_LIBRARY_RELEASE}/Versions/Current/Resources" DESTINATION ${contents_dest_dir} COMPONENT Runtime)
-ENDIF(APPLE)
-
-
-
-#--------------------------------------------------------------------------------
-# install a qt.conf file
-# this inserts some cmake code into the install script to write the file
-INSTALL(CODE "
-    file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")
-    " COMPONENT Runtime)
-
-
-#--------------------------------------------------------------------------------
-# Use BundleUtilities to get all other dependencies for the application to work.
-# It takes a bundle or executable along with possible plugins and inspects it
-# for dependencies.  If they are not system dependencies, they are copied.
-
-# directories to look for dependencies
-SET(DIRS ${QT_LIBRARY_DIRS})
-
-# Now the work of copying dependencies into the bundle/package
-# The quotes are escaped and variables to use at install time have their $ escaped
-# An alternative is the do a configure_file() on a script and use install(SCRIPT  ...).
-# Note that the image plugins depend on QtSvg and QtXml, and it got those copied
-# over.
-INSTALL(CODE "
-    file(GLOB_RECURSE QTPLUGINS
-      \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
-    include(BundleUtilities)
-    fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
-    " COMPONENT Runtime)
-
-
-# To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
-# where CPackConfig.cmake is created by including CPack
-# And then there's ways to customize this as well
-set(CPACK_BINARY_DRAGNDROP ON)
-include(CPack)
-
-
-# Grab the source code files for installation
-#IF(INSTALL_SOURCE)
-# FILE(GLOB root_files "*.h" "*.txx" "*.cxx" "*.txt")
-# INSTALL(FILES ${root_files}          DESTINATION source)
-# FILE(GLOB test_files "test/*.h" "test/*.txx" "test/*.cxx" "test/*.txt")
-# INSTALL(FILES ${test_files}          DESTINATION source/test)
-#ENDIF(INSTALL_SOURCE)
-
-INSTALL(FILES README.txt DESTINATION .)
-
-# Install test images and help files in the bin directory
-#IF (INSTALL_TEST_FILES)
-#  SET(TEST_DATA   
-#  list of files here ...
-# )
-#  INSTALL(FILES ${TEST_DATA} DESTINATION bin)
-#ENDIF(INSTALL_TEST_FILES)
-
-
-
-# Install the necessary shared ITK Dlls
-# TODO: Assumes the install or package is a Release build.  Need to add logic
-# to find debug vs shared builds and switch on Mac or Windows.s 
-#IF (BUILD_SHARED_LIBS)
-#  INSTALL(FILES ${ITK_LIBRARY_DIRS}/Release/ITKCommon.dll DESTINATION bin)
-#  INSTALL(FILES ${ITK_LIBRARY_DIRS}/Debug/ITKCommon.dll DESTINATION bin)
-#ENDIF(BUILD_SHARED_LIBS)
-
-
-# CPACK CONFIGURATION
-#INCLUDE(InstallRequiredSystemLibraries)
-
-#SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "VikingView Research Sandbox")
-#SET(CPACK_PACKAGE_VENDOR "CARMA Center Image Processing Division")
-#SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/PackageDescription.txt")
-#SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
-#SET(CPACK_PACKAGE_VERSION_MAJOR "0")
-#SET(CPACK_PACKAGE_VERSION_MINOR "1")
-#SET(CPACK_PACKAGE_VERSION_PATCH "0")
-#SET(CPACK_PACKAGE_INSTALL_DIRECTORY "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PA#CKAGE_VERSION_PATCH}")
-#IF(WIN32 AND NOT UNIX)
-#  # There is a bug in NSI that does not handle full unix paths properly. Make
-#  # sure there is at least one set of four (4) backlashes.
-#  #  SET(CPACK_PACKAGE_ICON "${CMake_SOURCE_DIR}/Utilities/Release\\\\InstallIcon.bmp")
-#  #  SET(CPACK_NSIS_INSTALLED_ICON_NAME "bin\\\\MyExecutable.exe")
-#  SET(CPACK_NSIS_DISPLAY_NAME "${CPACK_PACKAGE_INSTALL_DIRECTORY} VikingView Research Sandbox")
-#  #  SET(CPACK_NSIS_HELP_LINK "http:\\\\\\\\www.my-project-home-page.org")
-#  #  SET(CPACK_NSIS_URL_INFO_ABOUT "http:\\\\\\\\www.my-personal-home-page.com")
-#  #  SET(CPACK_NSIS_CONTACT "me@my-personal-home-page.com")
-#  SET(CPACK_NSIS_MODIFY_PATH ON)
-#ELSE(WIN32 AND NOT UNIX)
-#  #  SET(CPACK_STRIP_FILES "bin/MyExecutable")
-#    SET(CPACK_SOURCE_STRIP_FILES "")
-#ENDIF(WIN32 AND NOT UNIX)
-
-#SET(CPACK_PACKAGE_EXECUTABLES )
-#INCLUDE(CPack)
-
-
 #-- Add an Option to toggle the generation of the API documentation
 option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
 if(BUILD_DOCUMENTATION)
@@ -520,3 +353,105 @@ IF (WIN32 AND MSVC)
   SET(CMAKE_CXX_FLAGS "/Oi ${CMAKE_CXX_FLAGS} /MP4 /Zm250")
   MESSAGE(STATUS "** WINDOWS OPTIONS")
 ENDIF (WIN32 AND MSVC)
+
+
+
+# INSTALLATION AND PACKAGING
+include(InstallRequiredSystemLibraries)
+
+set(plugin_dest_dir bin)
+set(qtconf_dest_dir bin)
+set(APPS "\${CMAKE_INSTALL_PREFIX}/bin/VikingView")
+if(APPLE)
+  set(plugin_dest_dir VikingView.app/Contents/MacOS)
+  set(qtconf_dest_dir VikingView.app/Contents/Resources)
+  set(contents_dest_dir VikingView.app/Contents)
+  set(APPS "\${CMAKE_INSTALL_PREFIX}/VikingView.app")
+endif(APPLE)
+if(WIN32)
+  set(APPS "\${CMAKE_INSTALL_PREFIX}/bin/VikingView.exe")
+endif(WIN32)
+
+
+
+#--------------------------------------------------------------------------------
+# Install the VIKINGVIEW application, on Apple, the bundle is at the root of the
+# install tree, and on other platforms it'll go into the bin directory.
+install(TARGETS VikingView
+    BUNDLE DESTINATION . COMPONENT Runtime
+    RUNTIME DESTINATION bin COMPONENT Runtime
+    )
+
+#--------------------------------------------------------------------------------
+# Install needed Qt plugins by copying directories from the qt installation
+# One can cull what gets copied by using 'REGEX "..." EXCLUDE'
+#install(DIRECTORY "${QT_PLUGINS_DIR}/imageformats" DESTINATION ${plugin_dest_dir}/plugins COMPONENT Runtime)
+
+#--------------------------------------------------------------------------------
+# Install needed Qt .nib files and others
+if(APPLE)
+  install(DIRECTORY "${QT_QTGUI_LIBRARY_RELEASE}/Versions/Current/Resources" DESTINATION ${contents_dest_dir} COMPONENT Runtime)
+endif(APPLE)
+
+#--------------------------------------------------------------------------------
+# install a qt.conf file
+# this inserts some cmake code into the install script to write the file
+install(CODE "
+   file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")
+    " COMPONENT Runtime)
+
+
+
+MESSAGE(STATUS "Boost Library Dir " ${Boost_LIBRARY_DIR})
+
+#--------------------------------------------------------------------------------
+# Use BundleUtilities to get all other dependencies for the application to work.
+# It takes a bundle or executable along with possible plugins and inspects it
+# for dependencies.  If they are not system dependencies, they are copied.
+
+# directories to look for dependencies
+set(DIRS ${QT_LIBRARY_DIRS} ${CGAL_DIR}/../auxiliary/gmp/lib ${CGAL_DIR}/bin ${BOOST_LIBRARYDIR} ${QT_PLUGINS_DIR})
+
+# Now the work of copying dependencies into the bundle/package
+# The quotes are escaped and variables to use at install time have their $ escaped
+# An alternative is the do a configure_file() on a script and use install(SCRIPT  ...).
+# Note that the image plugins depend on QtSvg and QtXml, and it got those copied
+# over.  
+
+# fixup_bundle will run the appropriate install_name_tool
+# commands on each of the dependencies of the main executable and the
+# plugin libraries.  
+#
+# install_name_tool is used to point any non-system
+# dynamically-loaded libraries to the appropriate libraries in the
+# distribution
+#
+# fixup_bundle also grabs the appropriate parts of the qt framework
+# (by following dependencies) and installs them in the distribution
+# 
+install(CODE "
+    file(GLOB_RECURSE QTPLUGINS
+      \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
+    include(BundleUtilities)
+    fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
+    " COMPONENT Runtime)
+
+# To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
+# where CPackConfig.cmake is created by including CPack
+# And then there's ways to customize this as well
+set(CPACK_BINARY_DRAGNDROP ON)
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "VikingView")
+set(CPACK_PACKAGE_VENDOR "University of Utah")
+#set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/PackageDescription.txt")
+#set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+set(CPACK_PACKAGE_EXECUTABLES "VikingView" "VikingView")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
+
+
+set(CPACK_BUILD_CONFIG "Release")
+
+include(CPack)
