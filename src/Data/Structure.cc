@@ -94,7 +94,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
 
   // identify all subgraphs
 
-  long id = 0;
+  long max_count = 0;
 
   for ( NodeMap::iterator it = structure->node_map_.begin(); it != structure->node_map_.end(); ++it )
   {
@@ -102,8 +102,8 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
 
     if ( n.graph_id == -1 )
     {
-      id++;
-      n.graph_id = id;
+      max_count++;
+      n.graph_id = max_count;
       structure->node_map_[it->first] = n;
 
       QList<int> connections = n.linked_nodes;
@@ -117,7 +117,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
 
         if ( child.graph_id == -1 )
         {
-          child.graph_id = id;
+          child.graph_id = max_count;
           connections.append( child.linked_nodes );
           structure->node_map_[node] = child;  // write back
         }
@@ -125,7 +125,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
     }
   }
 
-  std::cerr << "Found " << id << " graphs\n";
+  std::cerr << "Found " << max_count << " graphs\n";
 
   // create links between graphs
 
