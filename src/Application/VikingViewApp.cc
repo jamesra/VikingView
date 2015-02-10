@@ -7,6 +7,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QUrl>
+#include <QProgressDialog>
 
 // vtk
 #include <vtkRenderWindow.h>
