@@ -79,13 +79,23 @@ void VikingViewApp::on_delete_button_clicked()
 void VikingViewApp::load_structure( int id )
 {
 
+  QProgressDialog progress( "Loading data...", "Abort", 0, 4, this );
+  progress.setWindowModality( Qt::WindowModal );
+  progress.setMinimumDuration( 500 );
+
+  progress.setValue(1);
   Downloader downloader;
   QSharedPointer<Structure> structure = downloader.download_structure( id );
 
   this->structures_.append( structure );
+  progress.setValue(2);
 
   this->viewer_->display_structures( this->structures_ );
+  progress.setValue(3);
+
   this->update_table();
+
+  this->viewer_->redraw();
 
   return;
 }
