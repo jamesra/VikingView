@@ -301,10 +301,13 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     triangle_filter->Update();
     poly_data = triangle_filter->GetOutput();
 
+/*
     vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
     writer->SetFileName( "Z:\\shared\\file.stl" );
     writer->SetInputData( poly_data );
     writer->Write();
+*/
+
 
 /*
     // fill holes

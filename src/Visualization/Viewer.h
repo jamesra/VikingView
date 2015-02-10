@@ -50,6 +50,8 @@ public:
 
   void set_opacity( float opacity );
 
+void set_clipping_plane( bool clip);
+
 private:
 
   bool visible_;

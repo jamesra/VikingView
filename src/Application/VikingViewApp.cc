@@ -160,4 +160,6 @@ void VikingViewApp::on_auto_view_button_clicked()
 
 //---------------------------------------------------------------------------
 void VikingViewApp::on_cutting_plane_button_clicked()
-{}
+{
+  this->viewer_->set_clipping_plane(this->ui_->cutting_plane_button->isChecked());
+}

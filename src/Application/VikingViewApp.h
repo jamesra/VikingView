@@ -29,6 +29,8 @@ public:
 
   void initialize_vtk();
 
+  void load_structure( int id );
+
   //virtual void closeEvent( QCloseEvent* event );
 
 public Q_SLOTS:
@@ -48,7 +50,6 @@ private:
 
   void update_table();
 
-  void load_structure( int id );
 
   void import_json( QString json_text );
 

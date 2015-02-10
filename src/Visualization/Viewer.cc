@@ -22,10 +22,41 @@
 #include <vtkPolyDataMapper.h>
 
 #include <vtkPolyDataNormals.h>
+#include <vtkImplicitPlaneRepresentation.h>
+#include <vtkImplicitPlaneWidget2.h>
+#include <vtkCommand.h>
+#include <vtkPlane.h>
 
 #include <Data/Structure.h>
 
 #include <Visualization/Viewer.h>
+
+
+
+
+// Callback for the interaction
+// This does the actual work: updates the vtkPlane implicit function.
+// This in turn causes the pipeline to update and clip the object.
+class vtkIPWCallback : public vtkCommand
+{
+public:
+  static vtkIPWCallback *New() 
+  { return new vtkIPWCallback; }
+  virtual void Execute(vtkObject *caller, unsigned long, void*)
+  {
+    vtkImplicitPlaneWidget2 *planeWidget = 
+      reinterpret_cast<vtkImplicitPlaneWidget2*>(caller);
+    vtkImplicitPlaneRepresentation *rep = 
+      reinterpret_cast<vtkImplicitPlaneRepresentation*>(planeWidget->GetRepresentation());
+    rep->GetPlane(this->Plane);
+  }
+  vtkIPWCallback():Plane(0),Actor(0) {}
+  vtkPlane *Plane;
+  vtkActor *Actor;
+};
+
+
+
 
 //-----------------------------------------------------------------------------
 Viewer::Viewer()
@@ -33,6 +64,9 @@ Viewer::Viewer()
   this->renderer_ = vtkSmartPointer<vtkRenderer>::New();
 
   this->visible_ = false;
+
+
+
 }
 
 //-----------------------------------------------------------------------------
@@ -126,5 +160,48 @@ void Viewer::redraw()
 {
   this->renderer_->Render();
   this->renderer_->GetRenderWindow()->Render();
+
+}
+
+//-----------------------------------------------------------------------------
+void Viewer::set_clipping_plane( bool clip )
+{
+
+if (!clip)
+{
+
+
+}
+
+std::cerr << "cutting plane!\n";
+  // Setup a visualization pipeline
+  vtkSmartPointer<vtkPlane> plane =
+    vtkSmartPointer<vtkPlane>::New();
+
+
+
+  // The callback will do the work
+  vtkSmartPointer<vtkIPWCallback> myCallback = 
+    vtkSmartPointer<vtkIPWCallback>::New();
+  myCallback->Plane = plane;
+  //myCallback->Actor = actor;
+
+  vtkSmartPointer<vtkImplicitPlaneRepresentation> rep = 
+    vtkSmartPointer<vtkImplicitPlaneRepresentation>::New();
+  rep->SetPlaceFactor(1.25); // This must be set prior to placing the widget
+  rep->PlaceWidget(this->surface_actors_[0]->GetBounds());
+  rep->SetNormal(plane->GetNormal());
+  rep->SetOrigin(0,0,50); //this doesn't seem to work?
+
+
+  this->surface_mappers_[0]->AddClippingPlane( plane );
+
+  vtkSmartPointer<vtkImplicitPlaneWidget2> planeWidget =
+    vtkSmartPointer<vtkImplicitPlaneWidget2>::New();
+  planeWidget->SetInteractor(this->renderer_->GetRenderWindow()->GetInteractor());
+  planeWidget->SetRepresentation(rep);
+  planeWidget->AddObserver(vtkCommand::InteractionEvent,myCallback);
+  planeWidget->On();
+
 
 }

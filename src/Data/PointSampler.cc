@@ -19,18 +19,16 @@ PointSampler::~PointSampler()
 std::list<Point> PointSampler::sample_points()
 {
 
-  /*
-     int num_radii = 3;
-     int num_points = 15;
-     int num_pts_circle = 10;
-     int num_pts_line = 10;
-   */
-
+/*
   int num_radii = 1;
   int num_pts_circle = 50;
   int num_pts_line = 20;
-  //int num_pts_circle = 3;
-  //int num_pts_line = 2;
+*/
+
+
+  int num_radii = 1;
+  int num_pts_circle = 5;
+  int num_pts_line = 2;
 
   NodeMap node_map = this->structure_->get_node_map();
 
@@ -55,6 +53,8 @@ std::list<Point> PointSampler::sample_points()
   //std::ofstream out;
   //out.open( "C:\\Users\\amorris\\points.out" );
 
+
+/*
   foreach( Link link, this->structure_->get_links() ) {
 
     if ( node_map.find( link.a ) == node_map.end() || node_map.find( link.b ) == node_map.end() )
@@ -165,6 +165,7 @@ std::list<Point> PointSampler::sample_points()
       }
     }
   }
+*/
 
   foreach( Link link, this->structure_->get_links() ) {
 
@@ -193,15 +194,12 @@ std::list<Point> PointSampler::sample_points()
     double squared_distance = vtkMath::Distance2BetweenPoints( p1, p2 );
     double distance = sqrt( squared_distance );
 
-    double num_steps = (int)( distance * 5 );
+    double num_steps = (int)( distance * num_pts_line );
 
     if ( num_steps < 3 )
     {
       num_steps = 3;
     }
-
-    //double n1_radius = n1.radius * ( r / this_num_radii );
-    //double n2_radius = n2.radius * ( r / this_num_radii );
 
     for ( int step = 0; step < num_steps; step++ )
     {
@@ -241,7 +239,8 @@ void PointSampler::sample_sphere( double radius, double ox, double oy, double oz
 
   int rnd = 1;
 
-  int samples = 100 * radius;
+  //int samples = 100 * radius;
+  int samples = 10 * radius;
 
   if ( samples < 10 )
   {
