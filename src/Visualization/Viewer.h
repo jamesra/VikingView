@@ -12,14 +12,14 @@ class vtkCamera;
 class vtkGlyph3D;
 class vtkSphereSource;
 class vtkImageActor;
-
-class Viewer;
+class vtkPlane;
 class vtkPolyDataMapper;
 class vtkActor;
 class vtkImplicitPlaneWidget2;
 class vtkImplicitPlaneRepresentation;
 class vtkIPWCallback;
 
+class Viewer;
 class Structure;
 
 typedef QSharedPointer< Viewer > ViewerHandle;
