@@ -46,7 +46,7 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
             << std::endl;
 
   float alpha = -1;
-  //alpha = 0.50;
+  alpha = 0.50;
   if ( alpha != -1 )
   {
     std::cout << "Using Alpha = " << alpha << "\n";

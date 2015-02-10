@@ -79,7 +79,7 @@ int main( int argc, char** argv )
 
 #ifdef WIN32
   ::SetErrorMode( 0 );
-  RedirectIOToConsole2();
+  //  RedirectIOToConsole2();
 #endif
   try {
 
@@ -96,7 +96,7 @@ int main( int argc, char** argv )
 
     studio_app->initialize_vtk();
 
-    studio_app->load_structure(180);
+    //    studio_app->load_structure(180);
     /*
 
        // do this after "show" for mac initialization

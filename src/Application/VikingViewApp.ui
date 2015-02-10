@@ -681,7 +681,7 @@ QPushButton {
                 <string>Add</string>
                </property>
                <property name="statusTip">
-                <string>Add images</string>
+                <string>Add Structures</string>
                </property>
                <property name="text">
                 <string/>

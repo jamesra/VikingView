@@ -149,6 +149,7 @@ void VikingViewApp::initialize_vtk()
 {
   this->viewer_ = new Viewer();
   this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
+  this->viewer_->redraw();
 }
 
 //---------------------------------------------------------------------------
