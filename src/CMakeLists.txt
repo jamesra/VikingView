@@ -389,9 +389,9 @@ install(TARGETS VikingView
 
 #--------------------------------------------------------------------------------
 # Install needed Qt .nib files and others
-if(APPLE)
-  install(DIRECTORY "${QT_QTGUI_LIBRARY_RELEASE}/Versions/Current/Resources" DESTINATION ${contents_dest_dir} COMPONENT Runtime)
-endif(APPLE)
+#if(APPLE)
+#  install(DIRECTORY "${QT_QTGUI_LIBRARY_RELEASE}/Versions/Current/Resources" DESTINATION ${contents_dest_dir} COMPONENT Runtime)
+#endif(APPLE)
 
 #--------------------------------------------------------------------------------
 # install a qt.conf file
