@@ -21,7 +21,6 @@
 #include <vtkCell.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkAxesActor.h>
-
 #include <vtkPolyDataNormals.h>
 #include <vtkImplicitPlaneRepresentation.h>
 #include <vtkImplicitPlaneWidget2.h>
@@ -30,6 +29,8 @@
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkCamera.h>
+
+#include <QKeyEvent>
 
 #include <Data/Structure.h>
 
