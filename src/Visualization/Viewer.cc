@@ -20,12 +20,16 @@
 #include <vtkCellPicker.h>
 #include <vtkCell.h>
 #include <vtkPolyDataMapper.h>
+#include <vtkAxesActor.h>
 
 #include <vtkPolyDataNormals.h>
 #include <vtkImplicitPlaneRepresentation.h>
 #include <vtkImplicitPlaneWidget2.h>
 #include <vtkCommand.h>
 #include <vtkPlane.h>
+#include <vtkOrientationMarkerWidget.h>
+#include <vtkRenderWindowInteractor.h>
+#include <vtkCamera.h>
 
 #include <Data/Structure.h>
 
@@ -53,11 +57,92 @@ public:
 };
 
 //-----------------------------------------------------------------------------
+class OrientationController : public vtkCommand
+{
+public:
+  static OrientationController* New()
+  { return new OrientationController; }
+
+  OrientationController()
+  {}
+
+  void Execute( vtkObject* obj, unsigned long event_id, void* call_data )
+  {
+    // get QKeyEvent
+    QKeyEvent* key_event = static_cast<QKeyEvent*>( call_data );
+
+    if ( event_id == vtkCommand::KeyPressEvent )
+    {
+      if ( key_event->modifiers() & Qt::ShiftModifier )
+      {
+
+        vtkCamera* camera = this->viewer_->get_renderer()->GetActiveCamera();
+
+        float distance = camera->GetDistance();
+        float parallel_scale = camera->GetParallelScale();
+
+        // snap to axis
+        if ( key_event->key() == Qt::Key_A )
+        {
+          camera->SetPosition( 0, -1, 0 );
+          camera->SetViewUp( 0, 0, 1 );
+        }
+        else if ( key_event->key() == Qt::Key_P )
+        {
+          camera->SetPosition( 0, 1, 0 );
+          camera->SetViewUp( 0, 0, 1 );
+        }
+        else if ( key_event->key() == Qt::Key_R )
+        {
+          camera->SetPosition( -1, 0, 0 );
+          camera->SetViewUp( 0, 0, 1 );
+        }
+        else if ( key_event->key() == Qt::Key_L )
+        {
+          camera->SetPosition( 1, 0, 0 );
+          camera->SetViewUp( 0, 0, 1 );
+        }
+        else if ( key_event->key() == Qt::Key_S )
+        {
+          camera->SetPosition( 0, 0, 1 );
+          camera->SetViewUp( 0, 1, 0 );
+        }
+        else if ( key_event->key() == Qt::Key_I )
+        {
+          camera->SetPosition( 0, 0, -1 );
+          camera->SetViewUp( 0, -1, 0 );
+        }
+
+        camera->SetFocalPoint( 0, 0, 0 );
+        camera->ComputeViewPlaneNormal();
+        camera->OrthogonalizeViewUp();
+
+        this->viewer_->get_renderer()->ResetCamera();
+
+        double vn[3], center[3];
+        camera->GetFocalPoint( center );
+        camera->GetViewPlaneNormal( vn );
+        camera->SetPosition( center[0] + distance * vn[0], center[1] + distance * vn[1], center[2] + distance * vn[2] );
+        camera->SetParallelScale( parallel_scale );
+
+        this->viewer_->get_renderer()->ResetCameraClippingRange();
+        this->viewer_->redraw();
+      }
+    }
+  }
+
+  Viewer* viewer_;
+};
+
+//-----------------------------------------------------------------------------
 Viewer::Viewer()
 {
   this->renderer_ = vtkSmartPointer<vtkRenderer>::New();
 
   this->visible_ = false;
+
+  this->orientation_controller_ = vtkSmartPointer<OrientationController>::New();
+  this->orientation_controller_->viewer_ = this;
 }
 
 //-----------------------------------------------------------------------------
@@ -93,6 +178,19 @@ vtkSmartPointer<vtkRenderer> Viewer::get_renderer()
 void Viewer::set_render_window( vtkRenderWindow* render_window )
 {
   render_window->AddRenderer( this->renderer_ );
+
+  vtkSmartPointer<vtkAxesActor> axes =
+    vtkSmartPointer<vtkAxesActor>::New();
+
+  this->orientation_widget_ = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+  this->orientation_widget_->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+  this->orientation_widget_->SetOrientationMarker( axes );
+  this->orientation_widget_->SetInteractor( render_window->GetInteractor() );
+  this->orientation_widget_->SetViewport( 0.80, 0.80, 1, 1 );
+  this->orientation_widget_->SetEnabled( 1 );
+  //this->orientation_widget_->InteractiveOn();
+
+  render_window->GetInteractor()->AddObserver( vtkCommand::KeyPressEvent, this->orientation_controller_ );
 }
 
 //-----------------------------------------------------------------------------

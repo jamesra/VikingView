@@ -18,6 +18,9 @@ class vtkActor;
 class vtkImplicitPlaneWidget2;
 class vtkImplicitPlaneRepresentation;
 class vtkIPWCallback;
+class vtkOrientationMarkerWidget;
+
+class OrientationController;
 
 class Viewer;
 class Structure;
@@ -53,7 +56,7 @@ public:
 
   void set_opacity( float opacity );
 
-void set_clipping_plane( bool clip);
+  void set_clipping_plane( bool clip );
 
 private:
 
@@ -75,9 +78,8 @@ private:
   vtkSmartPointer<vtkIPWCallback> callback_;
   vtkSmartPointer<vtkPlane> plane;
 
-  //vtkSmartPointer<StudioInteractorStyle>   style_;
-
-//  vtkSmartPointer<vtkImageActor>           image_actor_;
+  vtkSmartPointer<OrientationController> orientation_controller_;
+  vtkSmartPointer<vtkOrientationMarkerWidget> orientation_widget_;
 };
 
 #endif /* STUDIO_VISUALIZATION_VIEWER_H */

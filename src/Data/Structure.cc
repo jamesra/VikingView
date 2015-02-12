@@ -43,7 +43,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
   QList<QVariant> link_list = map["value"].toList();
 
   float units_per_pixel = 2.18 / 1000.0;
-  float units_per_section = 90.0 / 1000.0;
+  float units_per_section = -(90.0 / 1000.0);
 
   // construct nodes
   foreach( QVariant var, location_list ) {
@@ -266,7 +266,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
       for ( int j = 0; j < list->GetNumberOfIds(); j++ )
       {
         int id = list->GetId( j );
-        for ( int k = 0; k < remove.size(); k++ )
+        for ( unsigned int k = 0; k < remove.size(); k++ )
         {
           if ( id == remove[k] )
           {
