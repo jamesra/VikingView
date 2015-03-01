@@ -82,6 +82,8 @@ public:
         float distance = camera->GetDistance();
         float parallel_scale = camera->GetParallelScale();
 
+	bool found = true;
+	
         // snap to axis
         if ( key_event->key() == Qt::Key_A )
         {
@@ -113,21 +115,28 @@ public:
           camera->SetPosition( 0, 0, -1 );
           camera->SetViewUp( 0, -1, 0 );
         }
+	else
+	{
+	  found = false;
+	}
 
-        camera->SetFocalPoint( 0, 0, 0 );
-        camera->ComputeViewPlaneNormal();
-        camera->OrthogonalizeViewUp();
-
-        this->viewer_->get_renderer()->ResetCamera();
-
-        double vn[3], center[3];
-        camera->GetFocalPoint( center );
-        camera->GetViewPlaneNormal( vn );
-        camera->SetPosition( center[0] + distance * vn[0], center[1] + distance * vn[1], center[2] + distance * vn[2] );
-        camera->SetParallelScale( parallel_scale );
-
-        this->viewer_->get_renderer()->ResetCameraClippingRange();
-        this->viewer_->redraw();
+	if (found)
+	{
+	  camera->SetFocalPoint( 0, 0, 0 );
+	  camera->ComputeViewPlaneNormal();
+	  camera->OrthogonalizeViewUp();
+	  
+	  this->viewer_->get_renderer()->ResetCamera();
+	  
+	  double vn[3], center[3];
+	  camera->GetFocalPoint( center );
+	  camera->GetViewPlaneNormal( vn );
+	  camera->SetPosition( center[0] + distance * vn[0], center[1] + distance * vn[1], center[2] + distance * vn[2] );
+	  camera->SetParallelScale( parallel_scale );
+	  
+	  this->viewer_->get_renderer()->ResetCameraClippingRange();
+	  this->viewer_->redraw();
+	}
       }
     }
   }
