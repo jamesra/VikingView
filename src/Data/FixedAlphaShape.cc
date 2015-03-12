@@ -1,4 +1,4 @@
-#include <Data/AlphaShape.h>
+#include <Data/FixedAlphaShape.h>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_3.h>
@@ -19,63 +19,64 @@
 
 #include <vtkDataSetWriter.h>
 
-typedef CGAL::Exact_predicates_inexact_constructions_kernel Gt;
-typedef CGAL::Tag_true Alpha_cmp_tag;
-
-
-//typedef CGAL::Alpha_shape_vertex_base_3<Gt> Vb;
-//typedef CGAL::Alpha_shape_cell_base_3<Gt> Fb;
-
-typedef CGAL::Alpha_shape_vertex_base_3<Gt,CGAL::Default,Alpha_cmp_tag> Vb;
-typedef CGAL::Alpha_shape_cell_base_3<Gt,CGAL::Default,Alpha_cmp_tag> Fb;
-
-typedef CGAL::Triangulation_data_structure_3<Vb, Fb> Tds;
-//typedef CGAL::Delaunay_triangulation_3<Gt,Tds,CGAL::Fast_location> Triangulation_3;
-typedef CGAL::Delaunay_triangulation_3<Gt, Tds> Triangulation_3;
-
-
-//typedef CGAL::Alpha_shape_3<Triangulation_3> Alpha_shape_3;
-typedef CGAL::Alpha_shape_3<Triangulation_3,Alpha_cmp_tag> Alpha_shape_3;
-typedef Gt::Point_3 Point;
-typedef Alpha_shape_3::Alpha_iterator Alpha_iterator;
 
 
 
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Regular_triangulation_3.h>
+#include <CGAL/Regular_triangulation_euclidean_traits_3.h>
+#include <CGAL/Fixed_alpha_shape_3.h>
+#include <CGAL/Fixed_alpha_shape_vertex_base_3.h>
+#include <CGAL/Fixed_alpha_shape_cell_base_3.h>
+#include <list>
+typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
+typedef CGAL::Regular_triangulation_euclidean_traits_3<K> Gt;
+typedef CGAL::Fixed_alpha_shape_vertex_base_3<Gt> Vb;
+typedef CGAL::Fixed_alpha_shape_cell_base_3<Gt> Fb;
+typedef CGAL::Triangulation_data_structure_3<Vb,Fb> Tds;
+typedef CGAL::Regular_triangulation_3<Gt,Tds> Triangulation_3;
+typedef CGAL::Fixed_alpha_shape_3<Triangulation_3> Fixed_alpha_shape_3;
+typedef Fixed_alpha_shape_3::Cell_handle Cell_handle;
+typedef Fixed_alpha_shape_3::Vertex_handle Vertex_handle;
+typedef Fixed_alpha_shape_3::Facet Facet;
+typedef Fixed_alpha_shape_3::Edge Edge;
+typedef Gt::Weighted_point Weighted_point;
+typedef Gt::Bare_point Bare_point;
 
 
 //-----------------------------------------------------------------------------
-AlphaShape::AlphaShape()
+FixedAlphaShape::FixedAlphaShape()
 {}
 
 //-----------------------------------------------------------------------------
-AlphaShape::~AlphaShape()
+FixedAlphaShape::~FixedAlphaShape()
 {}
 
 //-----------------------------------------------------------------------------
-vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
+vtkSmartPointer<vtkPolyData> FixedAlphaShape::get_mesh()
 {
   // compute alpha shape
-  Alpha_shape_3 as( this->points_.begin(), this->points_.end() );
+  Fixed_alpha_shape_3 as( this->points_.begin(), this->points_.end(), 0 );
   std::cout << "Alpha shape computed in REGULARIZED mode by default"
             << std::endl;
 
-  float alpha = -1;
-  alpha = 0.50;
-  if ( alpha != -1 )
-  {
-    std::cout << "Using Alpha = " << alpha << "\n";
-    as.set_alpha( alpha );
-  }
-  else
-  {
-    // find optimal alpha value
-    Alpha_iterator opt = as.find_optimal_alpha( 1 );
-    std::cout << "Optimal alpha value to get one connected component is "
-              << *opt << std::endl;
-    as.set_alpha( *opt );
+  //float alpha = -1;
+  //alpha = 0.25;
+  //if ( alpha != -1 )
+  //{
+  //  std::cout << "Using Alpha = " << alpha << "\n";
+  //  as.set_alpha( alpha );
+  //}
+  //else
+  //{
+  //  // find optimal alpha value
+  //  Alpha_iterator opt = as.find_optimal_alpha( 1 );
+  //  std::cout << "Optimal alpha value to get one connected component is "
+  //            << *opt << std::endl;
+  //  as.set_alpha( *opt );
 
-    assert( as.number_of_solid_components() == 1 );
-  }
+  //  assert( as.number_of_solid_components() == 1 );
+  //}
 
   vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
 
@@ -83,13 +84,13 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
   vtkSmartPointer<vtkCellArray> vtk_triangles = vtkSmartPointer<vtkCellArray>::New();
 
   /// collect all regular facets
-  std::vector<Alpha_shape_3::Facet> facets;
-  as.get_alpha_shape_facets( std::back_inserter( facets ), Alpha_shape_3::REGULAR );
+  std::vector<Fixed_alpha_shape_3::Facet> facets;
+  as.get_alpha_shape_facets( std::back_inserter( facets ), Fixed_alpha_shape_3::REGULAR );
 
   std::stringstream pts;
   std::stringstream ind;
 
-  std::map<Alpha_shape_3::Vertex_handle, int> vertex_map;
+  std::map<Fixed_alpha_shape_3::Vertex_handle, int> vertex_map;
 
   std::size_t nbf = facets.size();
   int vertex_index = 0;
@@ -97,17 +98,17 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
   for ( std::size_t i = 0; i < nbf; ++i )
   {
 
-    Alpha_shape_3::Facet f = facets[i];
+    Fixed_alpha_shape_3::Facet f = facets[i];
 
     //if ( as.classify( facets[i].first )==Alpha_shape_3::EXTERIOR )
     {
 
       //To have a consistent orientation of the facet, always consider an exterior cell
-      if ( as.classify( facets[i].first ) != Alpha_shape_3::EXTERIOR )
+      if ( as.classify( facets[i].first ) != Fixed_alpha_shape_3::EXTERIOR )
       {
         facets[i] = as.mirror_facet( facets[i] );
       }
-      CGAL_assertion( as.classify( facets[i].first ) == Alpha_shape_3::EXTERIOR );
+      CGAL_assertion( as.classify( facets[i].first ) == Fixed_alpha_shape_3::EXTERIOR );
 
       int indices[3] = {
         ( facets[i].second + 1 ) % 4,
@@ -176,7 +177,7 @@ vtkSmartPointer<vtkPolyData> AlphaShape::get_mesh()
 }
 
 //-----------------------------------------------------------------------------
-void AlphaShape::set_points( std::list<Point> points )
+void FixedAlphaShape::set_points( std::list<Point> points )
 {
   this->points_ = points;
 }

@@ -39,6 +39,9 @@ public: ~Structure();
 
   QList<Link> get_links();
 
+  vtkSmartPointer<vtkPolyData> get_mesh_old();
+  vtkSmartPointer<vtkPolyData> get_mesh_old2();
+
   vtkSmartPointer<vtkPolyData> get_mesh();
 
   double get_volume();

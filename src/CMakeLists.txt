@@ -184,6 +184,7 @@ SET(VIKING_VIEW_APPLICATION_UIS
 SET(VIKING_VIEW_DATA_HDRS
   Data/Json.h
   Data/AlphaShape.h
+  Data/FixedAlphaShape.h
   Data/PointSampler.h
   Data/Downloader.h
   Data/Structure.h
@@ -191,6 +192,7 @@ SET(VIKING_VIEW_DATA_HDRS
 SET(VIKING_VIEW_DATA_SRCS
   Data/Json.cc
   Data/AlphaShape.cc
+  Data/FixedAlphaShape.cc
   Data/PointSampler.cc
   Data/Downloader.cc
   Data/Structure.cc
