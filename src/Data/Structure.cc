@@ -30,6 +30,7 @@
 #include <vtkDecimatePro.h>
 #include <vtkQuadricDecimation.h>
 
+
 #include <vtkButterflySubdivisionFilter.h>
 
 #include <CGAL/IO/Polyhedron_iostream.h>
@@ -672,22 +673,13 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   poly_data->SetPoints( vtk_pts );
   poly_data->SetPolys( vtk_triangles );
 
-/*
-  vtkSmartPointer<vtkDecimatePro> decimate =
-    vtkSmartPointer<vtkDecimatePro>::New();
-  decimate->SetInputData(poly_data);
-  //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
-  decimate->SetTargetReduction(.85); //10% reduction (if there was 100 triangles, now there will be 90)
-  decimate->Update();
-  poly_data = decimate->GetOutput();
-*/
 
   vtkSmartPointer<vtkSmoothPolyDataFilter> smooth;
 
 
-  // decimate triangle
+  
 
-  std::cerr << "Decimate\n";
+  std::cerr << "QuadricDecimation\n";
   vtkSmartPointer<vtkQuadricDecimation> decimate = vtkSmartPointer<vtkQuadricDecimation>::New();
   decimate->SetInputData(poly_data);
   //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
@@ -695,13 +687,34 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   decimate->Update();
   poly_data = decimate->GetOutput();
 
+/*
+  std::cerr << "DecimatePro\n";
+  vtkSmartPointer<vtkDecimatePro> decimate =
+    vtkSmartPointer<vtkDecimatePro>::New();
+  decimate->SetInputData(poly_data);
+  //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
+  decimate->SetTargetReduction(.95); //10% reduction (if there was 100 triangles, now there will be 90)
+  decimate->Update();
+  poly_data = decimate->GetOutput();
+*/
+
+/*
+  vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
+  triangle_filter->SetInputData( poly_data );
+  triangle_filter->Update();
+  poly_data = triangle_filter->GetOutput();
+*/
+
+
+
   vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
   subdivision->SetInputData( poly_data );
   subdivision->SetNumberOfSubdivisions( 2 );
   subdivision->Update();
   poly_data = subdivision->GetOutput();
+  
 
-
+/*
   std::cerr << "Sinc\n";
   vtkSmartPointer<vtkWindowedSincPolyDataFilter> sinc = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
   sinc->SetInputData( poly_data );
@@ -713,6 +726,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   sinc->NormalizeCoordinatesOn();
   sinc->Update();
   poly_data = sinc->GetOutput();
+*/
+
 
 /*
   smooth->SetInputData( poly_data );
@@ -733,7 +748,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 
 
   vtkSmartPointer< vtkTriangleFilter > triangle_filter =
-    vtkSmartPointer< vtkTriangleFilter >::New();
+  vtkSmartPointer< vtkTriangleFilter >::New();
   triangle_filter->SetInputData( poly_data );
   triangle_filter->Update();
   poly_data = triangle_filter->GetOutput();
@@ -771,7 +786,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 */
 
 
-  
+  /*
   smooth = vtkSmartPointer<vtkSmoothPolyDataFilter>::New();
   smooth->SetInputData( poly_data );
   smooth->SetNumberOfIterations( 100 );
@@ -779,7 +794,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   smooth->BoundarySmoothingOn();
   smooth->Update();
   poly_data = smooth->GetOutput();
-  
+  */
 
 /*
   std::cerr << "Sinc\n";
@@ -796,7 +811,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 */
 
 
-
+/*
   std::cerr << "Normals\n";
   // Make the triangle winding order consistent
   vtkSmartPointer<vtkPolyDataNormals> normals =
@@ -806,7 +821,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   normals->SplittingOff();
   normals->Update();
   poly_data = normals->GetOutput();
-
+*/
 
 
   this->mesh_ = poly_data;
