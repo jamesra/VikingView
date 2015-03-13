@@ -54,6 +54,8 @@ public: ~Structure();
 
   QColor get_color();
 
+  vtkSmartPointer<vtkPolyData> recopy_mesh(vtkSmartPointer<vtkPolyData> mesh);
+
 private:
 
   Structure(); // private

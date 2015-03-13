@@ -19,17 +19,15 @@ PointSampler::~PointSampler()
 std::list<Point> PointSampler::sample_points()
 {
 
-
   int num_radii = 1;
   int num_pts_circle = 50;
   int num_pts_line = 20;
 
-
 /*
-  int num_radii = 1;
-  int num_pts_circle = 5;
-  int num_pts_line = 2;
-*/
+   int num_radii = 1;
+   int num_pts_circle = 5;
+   int num_pts_line = 2;
+ */
   NodeMap node_map = this->structure_->get_node_map();
 
   std::list<Point> points;
@@ -53,9 +51,8 @@ std::list<Point> PointSampler::sample_points()
   //std::ofstream out;
   //out.open( "C:\\Users\\amorris\\points.out" );
 
-
 /*
-  foreach( Link link, this->structure_->get_links() ) {
+   foreach( Link link, this->structure_->get_links() ) {
 
     if ( node_map.find( link.a ) == node_map.end() || node_map.find( link.b ) == node_map.end() )
     {
@@ -164,11 +161,10 @@ std::list<Point> PointSampler::sample_points()
         }
       }
     }
-  }
-*/
+   }
+ */
 
-
-int sphere_count = 0;
+  int sphere_count = 0;
 
   foreach( Link link, this->structure_->get_links() ) {
 
@@ -276,17 +272,15 @@ void PointSampler::sample_sphere( double radius, double ox, double oy, double oz
 std::list<Weighted_point> PointSampler::collect_spheres()
 {
 
-
   int num_radii = 1;
   int num_pts_circle = 50;
   int num_pts_line = 20;
 
-
 /*
-  int num_radii = 1;
-  int num_pts_circle = 5;
-  int num_pts_line = 2;
-*/
+   int num_radii = 1;
+   int num_pts_circle = 5;
+   int num_pts_line = 2;
+ */
   NodeMap node_map = this->structure_->get_node_map();
 
   std::list<Weighted_point> points;
@@ -310,9 +304,7 @@ std::list<Weighted_point> PointSampler::collect_spheres()
   //std::ofstream out;
   //out.open( "C:\\Users\\amorris\\points.out" );
 
-
-
-int sphere_count = 0;
+  int sphere_count = 0;
 
   foreach( Link link, this->structure_->get_links() ) {
 
@@ -341,7 +333,10 @@ int sphere_count = 0;
     double squared_distance = vtkMath::Distance2BetweenPoints( p1, p2 );
     double distance = sqrt( squared_distance );
 
-    double num_steps = (int)( distance * num_pts_line );
+    double smaller_radius = std::min<double>( n1.radius, n2.radius );
+
+    //double num_steps = (int)( distance * num_pts_line );
+    double num_steps = (int)( distance / ( smaller_radius / 4 ) );
 
     if ( num_steps < 3 )
     {
@@ -359,8 +354,7 @@ int sphere_count = 0;
       double this_y = n1.y * ratio + n2.y * inv_ratio;
       double this_z = n1.z * ratio + n2.z * inv_ratio;
 
-      points.push_front(Weighted_point(Bare_point(this_x,this_y,this_z), radius));
-
+      points.push_front( Weighted_point( Bare_point( this_x, this_y, this_z ), radius ) );
 
       //PointSampler::sample_sphere( radius, this_x, this_y, this_z, points );
       sphere_count++;
@@ -371,19 +365,18 @@ int sphere_count = 0;
   }
 
 /*
-  std::ofstream out;
-  out.open( "Z:\\shared\\points.asc" );
-  for ( std::list<Point>::iterator it = points.begin(); it != points.end(); ++it )
-  {
+   std::ofstream out;
+   out.open( "Z:\\shared\\points.asc" );
+   for ( std::list<Point>::iterator it = points.begin(); it != points.end(); ++it )
+   {
     out << ( *it ).x() << " " << ( *it ).y() << " " << ( *it ).z() << "\n";
-  }
+   }
 
-  out.close();
-*/
+   out.close();
+ */
   std::cerr << "Sampled " << points.size() << " points\n";
 
   std::cerr << "Created " << sphere_count << " spheres\n";
 
   return points;
-
 }

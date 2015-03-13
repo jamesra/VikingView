@@ -449,12 +449,12 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old2()
     writer->Write();
 
 /*
-    // fill holes
-    vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
-    fill_holes->SetInputData( poly_data );
-    fill_holes->SetHoleSize( 300 );
-    fill_holes->Update();
-    poly_data = fill_holes->GetOutput();
+   // fill holes
+   vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
+   fill_holes->SetInputData( poly_data );
+   fill_holes->SetHoleSize( 300 );
+   fill_holes->Update();
+   poly_data = fill_holes->GetOutput();
 
 
 
@@ -670,6 +670,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   poly_data->SetPoints( vtk_pts );
   poly_data->SetPolys( vtk_triangles );
 
+  poly_data->BuildLinks();
+
   vtkSmartPointer<vtkSmoothPolyDataFilter> smooth;
 
   vtkSmartPointer<vtkFeatureEdges> features = vtkSmartPointer<vtkFeatureEdges>::New();
@@ -684,13 +686,36 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
   std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
 
-    std::cerr << "QuadricDecimation\n";
-    vtkSmartPointer<customQuadricDecimation> decimate = vtkSmartPointer<customQuadricDecimation>::New();
-    decimate->SetInputData( poly_data );
-    //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
-    decimate->SetTargetReduction( .98 ); //10% reduction (if there was 100 triangles, now there will be 90)
-    decimate->Update();
-    poly_data = decimate->GetOutput();
+  std::cerr << "QuadricDecimation\n";
+
+  vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
+  writer->SetFileName( "Z:\\shared\\before_decimate.stl" );
+  writer->SetInputData( poly_data );
+  writer->Write();
+
+  vtkSmartPointer<customQuadricDecimation> decimate = vtkSmartPointer<customQuadricDecimation>::New();
+  decimate->SetInputData( poly_data );
+  //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
+  decimate->SetTargetReduction( .98 );   //10% reduction (if there was 100 triangles, now there will be 90)
+  decimate->Update();
+  poly_data = decimate->GetOutput();
+
+  writer = vtkSmartPointer<vtkSTLWriter>::New();
+  writer->SetFileName( "Z:\\shared\\after_decimate.stl" );
+  writer->SetInputData( poly_data );
+  writer->Write();
+
+  poly_data->BuildLinks();
+
+  std::cerr << "after decimation, " << poly_data->GetNumberOfPoints() << " points, " << poly_data->GetNumberOfCells() << " triangles\n";
+
+  vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+  clean->SetInputData( poly_data );
+  clean->SetTolerance( 0.00001 );
+  clean->Update();
+  poly_data = clean->GetOutput();
+
+  std::cerr << "after clean, " << poly_data->GetNumberOfPoints() << " points, " << poly_data->GetNumberOfCells() << " triangles\n";
 
   features = vtkSmartPointer<vtkFeatureEdges>::New();
   features->SetInputData( poly_data );
@@ -704,34 +729,12 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
   std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
 
-/*
-   std::cerr << "=====================Mesh Fixing====================\n";
+  std::cerr << "=====================Mesh Fixing====================\n";
 
-   // clean
-   std::cerr << "Number of points before cleaning: " << poly_data->GetNumberOfPoints() << "\n";
-   vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
-   clean->SetInputData( poly_data );
-   clean->SetTolerance( 0.00001 );
-   clean->Update();
-   poly_data = clean->GetOutput();
-   std::cerr << "Number of points after cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+  std::vector<int> remove;
 
-   vtkSmartPointer<vtkFeatureEdges> features = vtkSmartPointer<vtkFeatureEdges>::New();
-   features->SetInputData( poly_data );
-   features->NonManifoldEdgesOn();
-   features->BoundaryEdgesOff();
-   features->FeatureEdgesOff();
-   features->Update();
-
-   vtkSmartPointer<vtkPolyData> nonmanifold = features->GetOutput();
-
-   std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
-   std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
-
-   std::vector<int> remove;
-
-   for ( int j = 0; j < poly_data->GetNumberOfPoints(); j++ )
-   {
+  for ( int j = 0; j < poly_data->GetNumberOfPoints(); j++ )
+  {
     double p2[3];
     poly_data->GetPoint( j, p2 );
 
@@ -745,12 +748,118 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
         remove.push_back( j );
       }
     }
+  }
+
+  std::cerr << "Removing " << remove.size() << " non-manifold vertices\n";
+
+  int remove_cell_count = 0;
+
+  for ( int i = 0; i < poly_data->GetNumberOfCells(); i++ )
+  {
+    vtkSmartPointer<vtkIdList> list = vtkIdList::New();
+    poly_data->GetCellPoints( i, list );
+
+    for ( int j = 0; j < list->GetNumberOfIds(); j++ )
+    {
+      int id = list->GetId( j );
+      if ( id < 0 )
+      {
+        std::cerr << "detected crap-up: " << id << "\n";
+      }
+    }
+  }
+
+/*
+
+
+   for ( int i = 0; i < poly_data->GetNumberOfCells(); i++ )
+   {
+     vtkSmartPointer<vtkIdList> list = vtkIdList::New();
+     poly_data->GetCellPoints( i, list );
+
+     bool match = false;
+     for ( int j = 0; j < list->GetNumberOfIds(); j++ )
+     {
+       int id = list->GetId( j );
+       for ( unsigned int k = 0; k < remove.size(); k++ )
+       {
+         if ( id == remove[k] )
+         {
+           match = true;
+         }
+       }
+     }
+
+     if ( match )
+     {
+       remove_cell_count++;
+       poly_data->DeleteCell( i );
+     }
    }
-
-   std::cerr << "Removing " << remove.size() << " non-manifold vertices\n";
-
-   std::cerr << "=====================Mesh Fixing====================\n";
  */
+
+  poly_data->BuildLinks();
+  for ( unsigned int k = 0; k < remove.size(); k++ )
+  {
+    unsigned short ncell;
+    vtkIdType* cells;
+    poly_data->GetPointCells( remove[k], ncell, cells );
+
+    for ( unsigned short c = 0; c < ncell; c++ )
+    {
+      poly_data->DeleteCell( cells[c] );
+      remove_cell_count++;
+    }
+  }
+
+  poly_data->RemoveDeletedCells();
+
+  std::cerr << "removed " << remove_cell_count << " cells\n";
+  poly_data->BuildLinks();
+
+  features = vtkSmartPointer<vtkFeatureEdges>::New();
+  features->SetInputData( poly_data );
+  features->NonManifoldEdgesOn();
+  features->BoundaryEdgesOff();
+  features->FeatureEdgesOff();
+  features->Update();
+  nonmanifold = features->GetOutput();
+  std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
+  std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
+
+  std::cerr << "after fixing, " << poly_data->GetNumberOfPoints() << " points, " << poly_data->GetNumberOfCells() << " triangles\n";
+
+  // fill holes
+  vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
+  fill_holes->SetInputData( poly_data );
+  fill_holes->SetHoleSize( 300 );
+  fill_holes->Update();
+  poly_data = fill_holes->GetOutput();
+
+  std::cerr << "=====================Mesh Fixing====================\n";
+
+  std::cerr << "after hole filling, " << poly_data->GetNumberOfPoints() << " points, " << poly_data->GetNumberOfCells() << " triangles\n";
+
+  //clean = vtkSmartPointer<vtkCleanPolyData>::New();
+  //clean->SetInputData( poly_data );
+  //clean->SetTolerance( 0.00001 );
+  //clean->Update();
+  //poly_data = clean->GetOutput();
+
+  //poly_data->BuildLinks();
+
+  //std::cerr << "after cleaning, " << poly_data->GetNumberOfPoints() << " points, " << poly_data->GetNumberOfCells() << " triangles\n";
+
+  features = vtkSmartPointer<vtkFeatureEdges>::New();
+  features->SetInputData( poly_data );
+  features->NonManifoldEdgesOn();
+  features->BoundaryEdgesOff();
+  features->FeatureEdgesOff();
+  features->Update();
+  nonmanifold = features->GetOutput();
+  //std::cerr << "cleaning...\n";
+  std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
+  std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
 
 /*
    std::cerr << "DecimatePro\n";
@@ -763,22 +872,48 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
    poly_data = decimate->GetOutput();
  */
 
-/*
-   vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
-   triangle_filter->SetInputData( poly_data );
-   triangle_filter->Update();
-   poly_data = triangle_filter->GetOutput();
- */
+  vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
+  triangle_filter->SetInputData( poly_data );
+  triangle_filter->PassLinesOff();
+  triangle_filter->Update();
+  poly_data = triangle_filter->GetOutput();
 
+//  poly_data->BuildLinks();
 
+  //poly_data = this->recopy_mesh(poly_data);
 
-   vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
-   subdivision->SetInputData( poly_data );
-   subdivision->SetNumberOfSubdivisions( 2 );
-   subdivision->Update();
-   poly_data = subdivision->GetOutput();
+  for ( int i = 0; i < poly_data->GetNumberOfCells(); i++ )
+  {
+    vtkSmartPointer<vtkIdList> list = vtkIdList::New();
+    poly_data->GetCellPoints( i, list );
 
-   
+    if ( list->GetNumberOfIds() != 3 )
+    {
+      std::cerr << "detected non-triangle, wtf?\n";
+    }
+    for ( int j = 0; j < list->GetNumberOfIds(); j++ )
+    {
+      int id = list->GetId( j );
+      if ( id < 0 )
+      {
+        std::cerr << "detected crap-up: " << id << "\n";
+      }
+    }
+  }
+
+  //vtkSmartPointer<vtkPolyData> new_poly = this->recopy_mesh(poly_data);
+  //  poly_data = this->recopy_mesh(poly_data);
+
+  //poly_data->BuildLinks();
+
+  std::cerr << "loop subdivision\n";
+  vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
+  subdivision->SetInputData( poly_data );
+  subdivision->SetNumberOfSubdivisions( 2 );
+  subdivision->Update();
+  poly_data = subdivision->GetOutput();
+
+  std::cerr << "done with subdivision\n";
 
 /*
    std::cerr << "Sinc\n";
@@ -881,11 +1016,38 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
    poly_data = normals->GetOutput();
  */
 
-  vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
+  writer = vtkSmartPointer<vtkSTLWriter>::New();
   writer->SetFileName( "Z:\\shared\\file.stl" );
   writer->SetInputData( poly_data );
   writer->Write();
 
   this->mesh_ = poly_data;
   return this->mesh_;
+}
+
+//-----------------------------------------------------------------------------
+vtkSmartPointer<vtkPolyData> Structure::recopy_mesh( vtkSmartPointer<vtkPolyData> mesh )
+{
+
+  vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+  vtkSmartPointer<vtkPoints> vtk_pts = vtkSmartPointer<vtkPoints>::New();
+  vtkSmartPointer<vtkCellArray> vtk_triangles = vtkSmartPointer<vtkCellArray>::New();
+
+  for ( int i = 0; i < mesh->GetNumberOfPoints(); i++ )
+  {
+    vtk_pts->InsertNextPoint( mesh->GetPoint( i ) );
+  }
+
+  for ( int i = 0; i < mesh->GetNumberOfCells(); i++ )
+  {
+    if ( mesh->GetCell( i )->GetNumberOfPoints() == 3 )
+    {
+      vtk_triangles->InsertNextCell( mesh->GetCell( i ) );
+    }
+  }
+
+  poly_data->SetPoints( vtk_pts );
+  poly_data->SetPolys( vtk_triangles );
+
+  return poly_data;
 }

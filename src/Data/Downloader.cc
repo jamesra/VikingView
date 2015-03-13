@@ -17,7 +17,7 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
 {
   QSharedPointer<Structure> structure;
 
-  const int load_from_file = 0;
+  const int load_from_file = 1;
   const int save_to_file = 0;
 
   QString location_text;
