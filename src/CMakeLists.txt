@@ -201,9 +201,11 @@ SET(VIKING_VIEW_DATA_SRCS
 ### Visualization
 SET(VIKING_VIEW_VISUALIZATION_HDRS
   Visualization/Viewer.h
+  Visualization/customQuadricDecimation.h
 )
 SET(VIKING_VIEW_VISUALIZATION_SRCS
   Visualization/Viewer.cc
+  Visualization/customQuadricDecimation.cc
 )
 
 # ### Util

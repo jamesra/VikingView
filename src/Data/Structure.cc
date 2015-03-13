@@ -28,8 +28,7 @@
 #include <vtkTriangle.h>
 #include <vtkMath.h>
 #include <vtkDecimatePro.h>
-#include <vtkQuadricDecimation.h>
-
+#include <Visualization/customQuadricDecimation.h>
 
 #include <vtkButterflySubdivisionFilter.h>
 
@@ -481,11 +480,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old2()
  */
 
 /*
-vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
-subdivision->SetInputData( poly_data );
-subdivision->SetNumberOfSubdivisions( 1 );
-subdivision->Update();
-poly_data = subdivision->GetOutput();
+   vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
+   subdivision->SetInputData( poly_data );
+   subdivision->SetNumberOfSubdivisions( 1 );
+   subdivision->Update();
+   poly_data = subdivision->GetOutput();
  */
 
     // Make the triangle winding order consistent
@@ -604,16 +603,15 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
   CGAL::mesh_union_of_balls_3( union_of_balls, P );
   //CGAL::subdivide_union_of_balls_mesh_3(union_of_balls, P);
 
-
   double shrinkfactor = 0.5;
   //CGAL::make_skin_surface_mesh_3(P, points.begin(), points.end(), shrinkfactor);
 
 /*
-  typedef CGAL::Skin_surface_3<Traits> Skin_surface_3;
-  Skin_surface_3 skin_surface(points.begin(), points.end(), shrinkfactor);
-  CGAL::mesh_skin_surface_3(skin_surface, P);
-  CGAL::subdivide_skin_surface_mesh_3(skin_surface, P);
-*/
+   typedef CGAL::Skin_surface_3<Traits> Skin_surface_3;
+   Skin_surface_3 skin_surface(points.begin(), points.end(), shrinkfactor);
+   CGAL::mesh_skin_surface_3(skin_surface, P);
+   CGAL::subdivide_skin_surface_mesh_3(skin_surface, P);
+ */
 
   std::ofstream out( "Z:\\shared\\balls.off" );
 
@@ -642,7 +640,6 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 
   Index index( P.vertices_begin(), P.vertices_end() );
 
-
   int fcount = 0;
   for ( FCI fi = P.facets_begin(); fi != P.facets_end(); ++fi )
   {
@@ -651,7 +648,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
     HFCC hc_end = hc;
     std::size_t n = circulator_size( hc );
     CGAL_assertion( n >= 3 );
-    if (n != 3)
+    if ( n != 3 )
     {
       std::cerr << "Not triangular!\n";
     }
@@ -669,160 +666,224 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh()
 
   std::cerr << "inserted " << fcount << " facets\n";
 
-
   poly_data->SetPoints( vtk_pts );
   poly_data->SetPolys( vtk_triangles );
 
-
   vtkSmartPointer<vtkSmoothPolyDataFilter> smooth;
 
+  vtkSmartPointer<vtkFeatureEdges> features = vtkSmartPointer<vtkFeatureEdges>::New();
+  features->SetInputData( poly_data );
+  features->NonManifoldEdgesOn();
+  features->BoundaryEdgesOff();
+  features->FeatureEdgesOff();
+  features->Update();
 
-  
+  vtkSmartPointer<vtkPolyData> nonmanifold = features->GetOutput();
 
-  std::cerr << "QuadricDecimation\n";
-  vtkSmartPointer<vtkQuadricDecimation> decimate = vtkSmartPointer<vtkQuadricDecimation>::New();
-  decimate->SetInputData(poly_data);
-  //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
-  decimate->SetTargetReduction(.98); //10% reduction (if there was 100 triangles, now there will be 90)
-  decimate->Update();
-  poly_data = decimate->GetOutput();
+  std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
+  std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
+
+    std::cerr << "QuadricDecimation\n";
+    vtkSmartPointer<customQuadricDecimation> decimate = vtkSmartPointer<customQuadricDecimation>::New();
+    decimate->SetInputData( poly_data );
+    //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
+    decimate->SetTargetReduction( .98 ); //10% reduction (if there was 100 triangles, now there will be 90)
+    decimate->Update();
+    poly_data = decimate->GetOutput();
+
+  features = vtkSmartPointer<vtkFeatureEdges>::New();
+  features->SetInputData( poly_data );
+  features->NonManifoldEdgesOn();
+  features->BoundaryEdgesOff();
+  features->FeatureEdgesOff();
+  features->Update();
+
+  nonmanifold = features->GetOutput();
+
+  std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
+  std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
 
 /*
-  std::cerr << "DecimatePro\n";
-  vtkSmartPointer<vtkDecimatePro> decimate =
+   std::cerr << "=====================Mesh Fixing====================\n";
+
+   // clean
+   std::cerr << "Number of points before cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+   vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+   clean->SetInputData( poly_data );
+   clean->SetTolerance( 0.00001 );
+   clean->Update();
+   poly_data = clean->GetOutput();
+   std::cerr << "Number of points after cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+
+   vtkSmartPointer<vtkFeatureEdges> features = vtkSmartPointer<vtkFeatureEdges>::New();
+   features->SetInputData( poly_data );
+   features->NonManifoldEdgesOn();
+   features->BoundaryEdgesOff();
+   features->FeatureEdgesOff();
+   features->Update();
+
+   vtkSmartPointer<vtkPolyData> nonmanifold = features->GetOutput();
+
+   std::cerr << "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
+   std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
+
+   std::vector<int> remove;
+
+   for ( int j = 0; j < poly_data->GetNumberOfPoints(); j++ )
+   {
+    double p2[3];
+    poly_data->GetPoint( j, p2 );
+
+    for ( int i = 0; i < nonmanifold->GetNumberOfPoints(); i++ )
+    {
+      double p[3];
+      nonmanifold->GetPoint( i, p );
+
+      if ( p[0] == p2[0] && p[1] == p2[1] && p[2] == p2[2] )
+      {
+        remove.push_back( j );
+      }
+    }
+   }
+
+   std::cerr << "Removing " << remove.size() << " non-manifold vertices\n";
+
+   std::cerr << "=====================Mesh Fixing====================\n";
+ */
+
+/*
+   std::cerr << "DecimatePro\n";
+   vtkSmartPointer<vtkDecimatePro> decimate =
     vtkSmartPointer<vtkDecimatePro>::New();
-  decimate->SetInputData(poly_data);
-  //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
-  decimate->SetTargetReduction(.95); //10% reduction (if there was 100 triangles, now there will be 90)
-  decimate->Update();
-  poly_data = decimate->GetOutput();
-*/
+   decimate->SetInputData(poly_data);
+   //decimate->SetTargetReduction(.99); //99% reduction (if there was 100 triangles, now there will be 1)
+   decimate->SetTargetReduction(.95); //10% reduction (if there was 100 triangles, now there will be 90)
+   decimate->Update();
+   poly_data = decimate->GetOutput();
+ */
 
 /*
-  vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
-  triangle_filter->SetInputData( poly_data );
-  triangle_filter->Update();
-  poly_data = triangle_filter->GetOutput();
-*/
+   vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
+   triangle_filter->SetInputData( poly_data );
+   triangle_filter->Update();
+   poly_data = triangle_filter->GetOutput();
+ */
 
 
 
-  vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
-  subdivision->SetInputData( poly_data );
-  subdivision->SetNumberOfSubdivisions( 2 );
-  subdivision->Update();
-  poly_data = subdivision->GetOutput();
-  
+   vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
+   subdivision->SetInputData( poly_data );
+   subdivision->SetNumberOfSubdivisions( 2 );
+   subdivision->Update();
+   poly_data = subdivision->GetOutput();
 
-/*
-  std::cerr << "Sinc\n";
-  vtkSmartPointer<vtkWindowedSincPolyDataFilter> sinc = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
-  sinc->SetInputData( poly_data );
-  sinc->SetNumberOfIterations(15);
-  sinc->BoundarySmoothingOn();
-  sinc->FeatureEdgeSmoothingOff();
-  sinc->SetFeatureAngle(120.0);
-  sinc->SetPassBand(.1);
-  sinc->NormalizeCoordinatesOn();
-  sinc->Update();
-  poly_data = sinc->GetOutput();
-*/
-
+   
 
 /*
-  smooth->SetInputData( poly_data );
-  smooth->SetNumberOfIterations( 100 );
-  smooth->FeatureEdgeSmoothingOff();
-  smooth->BoundarySmoothingOn();
-  smooth->Update();
-  poly_data = smooth->GetOutput();
-*/
-
-
-/*
-  vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
-  clean->SetInputData( poly_data );
-  clean->SetTolerance( 0.00001 );
-  clean->Update();
-  poly_data = clean->GetOutput();
-
-
-  vtkSmartPointer< vtkTriangleFilter > triangle_filter =
-  vtkSmartPointer< vtkTriangleFilter >::New();
-  triangle_filter->SetInputData( poly_data );
-  triangle_filter->Update();
-  poly_data = triangle_filter->GetOutput();
-*/
-
-  
-  
-  
+   std::cerr << "Sinc\n";
+   vtkSmartPointer<vtkWindowedSincPolyDataFilter> sinc = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
+   sinc->SetInputData( poly_data );
+   sinc->SetNumberOfIterations(15);
+   sinc->BoundarySmoothingOn();
+   sinc->FeatureEdgeSmoothingOff();
+   sinc->SetFeatureAngle(120.0);
+   sinc->SetPassBand(.1);
+   sinc->NormalizeCoordinatesOn();
+   sinc->Update();
+   poly_data = sinc->GetOutput();
+ */
 
 /*
-  std::cerr << "Linear subdivision\n";
-  vtkSmartPointer<vtkLinearSubdivisionFilter> subdivision = vtkSmartPointer<vtkLinearSubdivisionFilter>::New();
-  subdivision->SetInputData( poly_data );
-  subdivision->SetNumberOfSubdivisions( 2 );
-  subdivision->Update();
-  poly_data = subdivision->GetOutput();
-*/
+   smooth->SetInputData( poly_data );
+   smooth->SetNumberOfIterations( 100 );
+   smooth->FeatureEdgeSmoothingOff();
+   smooth->BoundarySmoothingOn();
+   smooth->Update();
+   poly_data = smooth->GetOutput();
+ */
 
 /*
-  std::cerr << "butterfly subdivision\n";
-  vtkSmartPointer<vtkButterflySubdivisionFilter> subdivision = vtkSmartPointer<vtkButterflySubdivisionFilter>::New();
-  subdivision->SetInputData( poly_data );
-  subdivision->SetNumberOfSubdivisions( 2 );
-  subdivision->Update();
-  poly_data = subdivision->GetOutput();
-  */
+   vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+   clean->SetInputData( poly_data );
+   clean->SetTolerance( 0.00001 );
+   clean->Update();
+   poly_data = clean->GetOutput();
+
+
+   vtkSmartPointer< vtkTriangleFilter > triangle_filter =
+   vtkSmartPointer< vtkTriangleFilter >::New();
+   triangle_filter->SetInputData( poly_data );
+   triangle_filter->Update();
+   poly_data = triangle_filter->GetOutput();
+ */
 
 /*
-  std::cerr << "Butterfly\n";
-  vtkSmartPointer<vtkButterflySubdivisionFilter> butterfly = vtkSmartPointer<vtkButterflySubdivisionFilter>::New();
-  butterfly->SetInputData(poly_data);
-  butterfly->SetNumberOfSubdivisions(1);
-  butterfly->Update();
-  poly_data = butterfly->GetOutput();
-*/
+   std::cerr << "Linear subdivision\n";
+   vtkSmartPointer<vtkLinearSubdivisionFilter> subdivision = vtkSmartPointer<vtkLinearSubdivisionFilter>::New();
+   subdivision->SetInputData( poly_data );
+   subdivision->SetNumberOfSubdivisions( 2 );
+   subdivision->Update();
+   poly_data = subdivision->GetOutput();
+ */
 
+/*
+   std::cerr << "butterfly subdivision\n";
+   vtkSmartPointer<vtkButterflySubdivisionFilter> subdivision = vtkSmartPointer<vtkButterflySubdivisionFilter>::New();
+   subdivision->SetInputData( poly_data );
+   subdivision->SetNumberOfSubdivisions( 2 );
+   subdivision->Update();
+   poly_data = subdivision->GetOutput();
+ */
+
+/*
+   std::cerr << "Butterfly\n";
+   vtkSmartPointer<vtkButterflySubdivisionFilter> butterfly = vtkSmartPointer<vtkButterflySubdivisionFilter>::New();
+   butterfly->SetInputData(poly_data);
+   butterfly->SetNumberOfSubdivisions(1);
+   butterfly->Update();
+   poly_data = butterfly->GetOutput();
+ */
 
   /*
-  smooth = vtkSmartPointer<vtkSmoothPolyDataFilter>::New();
-  smooth->SetInputData( poly_data );
-  smooth->SetNumberOfIterations( 100 );
-  smooth->FeatureEdgeSmoothingOff();
-  smooth->BoundarySmoothingOn();
-  smooth->Update();
-  poly_data = smooth->GetOutput();
-  */
+     smooth = vtkSmartPointer<vtkSmoothPolyDataFilter>::New();
+     smooth->SetInputData( poly_data );
+     smooth->SetNumberOfIterations( 100 );
+     smooth->FeatureEdgeSmoothingOff();
+     smooth->BoundarySmoothingOn();
+     smooth->Update();
+     poly_data = smooth->GetOutput();
+   */
 
 /*
-  std::cerr << "Sinc\n";
-  sinc = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
-  sinc->SetInputData( poly_data );
-  sinc->SetNumberOfIterations(15);
-  sinc->BoundarySmoothingOn();
-  sinc->FeatureEdgeSmoothingOff();
-  sinc->SetFeatureAngle(120.0);
-  sinc->SetPassBand(.5);
-  sinc->NormalizeCoordinatesOn();
-  sinc->Update();
-  poly_data = sinc->GetOutput();
-*/
-
+   std::cerr << "Sinc\n";
+   sinc = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
+   sinc->SetInputData( poly_data );
+   sinc->SetNumberOfIterations(15);
+   sinc->BoundarySmoothingOn();
+   sinc->FeatureEdgeSmoothingOff();
+   sinc->SetFeatureAngle(120.0);
+   sinc->SetPassBand(.5);
+   sinc->NormalizeCoordinatesOn();
+   sinc->Update();
+   poly_data = sinc->GetOutput();
+ */
 
 /*
-  std::cerr << "Normals\n";
-  // Make the triangle winding order consistent
-  vtkSmartPointer<vtkPolyDataNormals> normals =
+   std::cerr << "Normals\n";
+   // Make the triangle winding order consistent
+   vtkSmartPointer<vtkPolyDataNormals> normals =
     vtkSmartPointer<vtkPolyDataNormals>::New();
-  normals->SetInputData( poly_data );
-  normals->ConsistencyOn();
-  normals->SplittingOff();
-  normals->Update();
-  poly_data = normals->GetOutput();
-*/
+   normals->SetInputData( poly_data );
+   normals->ConsistencyOn();
+   normals->SplittingOff();
+   normals->Update();
+   poly_data = normals->GetOutput();
+ */
 
+  vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
+  writer->SetFileName( "Z:\\shared\\file.stl" );
+  writer->SetInputData( poly_data );
+  writer->Write();
 
   this->mesh_ = poly_data;
   return this->mesh_;
