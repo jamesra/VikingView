@@ -54,6 +54,7 @@
 #include "vtkPointData.h"
 #include "vtkPriorityQueue.h"
 #include "vtkTriangle.h"
+#include <vtkSmartPointer.h>
 
 vtkStandardNewMacro( customQuadricDecimation );
 

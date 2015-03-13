@@ -25,6 +25,7 @@
 #include <vtkAppendPolyData.h>
 #include <vtkTubeFilter.h>
 
+#include <vtkSphereSource.h>
 #include <vtkTriangle.h>
 #include <vtkMath.h>
 #include <vtkDecimatePro.h>
