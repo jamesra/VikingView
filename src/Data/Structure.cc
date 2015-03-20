@@ -50,7 +50,8 @@ Structure::~Structure()
 {}
 
 //-----------------------------------------------------------------------------
-QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> location_list, QList<QVariant> link_list )
+QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> structure_list,
+                                                       QList<QVariant> location_list, QList<QVariant> link_list )
 {
 
   QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
@@ -59,7 +60,10 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> l
   float units_per_pixel = 2.18 / 1000.0;
   float units_per_section = -( 90.0 / 1000.0 );
 
+  std::cerr << "structure list length: " << structure_list.size() << "\n";
   std::cerr << "location list length: " << location_list.size() << "\n";
+  std::cerr << "link list length: " << link_list.size() << "\n";
+
   // construct nodes
   foreach( QVariant var, location_list ) {
     Node n;
@@ -71,12 +75,10 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> l
     n.id = item["ID"].toLongLong();
     n.graph_id = -1;
 
-
     if ( n.z == 56 || n.z == 8 || n.z == 22 || n.z == 81 || n.z == 72 || n.z == 60 )
     {
       continue;
     }
-
 
     // scale
     n.x = n.x * units_per_pixel;
@@ -1062,9 +1064,6 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
   vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
 
   bool first = true;
-
-
-
 
   // spheres
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )

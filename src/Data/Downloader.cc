@@ -18,136 +18,38 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
 {
   QSharedPointer<Structure> structure;
 
-  const int save_to_file = 0;
-  const int load_from_file = 0;
-
   QList<QVariant> location_list;
   QList<QVariant> link_list;
+  QList<QVariant> structure_list;
 
-  // download locations
-  if ( !load_from_file )
-  {
-    QString request = QString( "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc/Locations/?$filter=ParentID eq " ) + QString::number( id );
-    location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
+  QString end_point = "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc";
+  //QString end_point = "http://websvc1.connectomes.utah.edu/RC1/OData/ConnectomeData.svc";
 
-    request = QString( "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc/SelectStructureLocationLinks?StructureID=" ) + QString::number( id ) + "L";
+  QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
+                    + QString::number( id ) + " or ID eq " + QString::number( id );
+  structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
 
-    link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
-    std::cerr << "downloaded\n";
+  request = QString( end_point + "/Locations/?$filter=ParentID eq " )
+            + QString::number( id );
+  location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
 
-    if ( save_to_file )
-    {
-/*
-      QFile* file = new QFile( "C:\\Users\\amorris\\json-locations-" + QString::number( id ) + ".txt" );
+  request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" )
+            + QString::number( id ) + "L";
 
-      if ( !file->open( QIODevice::WriteOnly ) )
-      {
-        std::cerr << "Error opening file for writing\n";
-        return structure;
-      }
+  link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
+  std::cerr << "downloaded\n";
 
-      QTextStream ts( file );
-      ts << location_list.size() << "\n";
-      for ( int i = 0; i < location_list.size(); i++ )
-       {
-        ts << location_list[i].asString() << "\n";
-      }
-
-      file->close();
- */
-
-/*
-      file = new QFile( "C:\\Users\\amorris\\json-links-" + QString::number( id ) + ".txt" );
-
-      if ( !file->open( QIODevice::WriteOnly ) )
-      {
-        std::cerr << "Error opening file for writing\n";
-        return structure;
-      }
-
-      QTextStream ts2( file );
-      ts2 << link_list.size() << "\n";
-      for ( int i = 0; i < link_list.size(); i++ )
-      {
-        ts2 << link_list[i].asString() << "\n";
-      }
-      file->close();
- */
-    }
-  }
-  else
-  {
-
-    QFile* file = new QFile( "C:\\Users\\amorris\\json-locations-" + QString::number( id ) + ".txt" );
-
-    if ( !file->open( QIODevice::ReadOnly ) )
-    {
-      return structure;
-    }
-
-    int num_items;
-    QTextStream ts( file );
-    ts >> num_items;
-    for ( int i = 0; i < num_items; i++ )
-    {
-      QString qs;
-      ts >> qs;
-      location_list.append( qs );
-    }
-
-    file = new QFile( "C:\\Users\\amorris\\json-links-" + QString::number( id ) + ".txt" );
-
-    if ( !file->open( QIODevice::ReadOnly ) )
-    {
-      return structure;
-    }
-
-    QTextStream ts2( file );
-    ts2 >> num_items;
-    for ( int i = 0; i < num_items; i++ )
-    {
-      QString qs;
-      ts2 >> qs;
-      link_list.append( qs );
-    }
-  }
-
-  structure = Structure::create_structure( id, location_list, link_list );
-
-/*
-   //this->file = new QFile( "C:\\Users\\amorris\\json.txt" );
-
-   this->http_request_aborted = false;
-
-   connect( this->reply_, SIGNAL( finished() ),
-    this, SLOT( http_finished() ) );
-   connect( this->reply_, SIGNAL( readyRead() ),
-    this, SLOT( http_ready_read() ) );
-   connect( this->reply_, SIGNAL( downloadProgress( qint64, qint64 ) ),
-    this, SLOT( update_data_read_progress( qint64, qint64 ) ) );
- */
+  structure = Structure::create_structure( id, structure_list, location_list, link_list );
 
   return structure;
 }
-
-//-----------------------------------------------------------------------------
-void Downloader::http_finished()
-{}
-
-//-----------------------------------------------------------------------------
-void Downloader::http_ready_read()
-{}
-
-//-----------------------------------------------------------------------------
-void Downloader::update_data_read_progress( qint64 bytes_read, qint64 total_bytes )
-{}
 
 //-----------------------------------------------------------------------------
 QList<QVariant> Downloader::download_json( QString url_string, QString file_prefix )
 {
 
   const int save_to_file = 1;
-  const int load_from_file = 1;
+  const int load_from_file = 0;
 
   QList<QVariant> list;
 
@@ -196,7 +98,15 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
     if ( more )
     {
       QString link = map["odata.nextLink"].asString();
-      QString next_page = url_string.split( ".svc" )[0] + ".svc" + link.split( ".svc" )[1];
+      QString next_page;
+      if ( link.contains( ".svc" ) )
+      {
+        next_page = url_string.split( ".svc" )[0] + ".svc" + link.split( ".svc" )[1];
+      }
+      else
+      {
+        next_page = url_string.split( ".svc" )[0] + ".svc/" + link;
+      }
       url_string = next_page;
       std::cerr << "next page? " << next_page.toStdString() << "\n";
     }

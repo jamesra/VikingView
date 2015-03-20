@@ -28,15 +28,11 @@ public:
 
 public Q_SLOTS:
 
-  void http_finished();
-  void http_ready_read();
-  void update_data_read_progress( qint64 bytes_read, qint64 total_bytes );
-
 private:
 
-  QList<QVariant> download_json(QString url_string, QString file_prefix);
+  QList<QVariant> download_json( QString url_string, QString file_prefix );
 
-  QString download_url(QString url_string);
+  QString download_url( QString url_string );
 
   QNetworkAccessManager qnam_;
   QNetworkReply* reply_;

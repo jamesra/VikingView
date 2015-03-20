@@ -33,7 +33,8 @@ class Structure
 
 public: ~Structure();
 
-  static QSharedPointer<Structure> create_structure( int id, QList<QVariant> location_list, QList<QVariant> link_list );
+  static QSharedPointer<Structure> create_structure( int id, QList<QVariant> structure_list,
+                                                     QList<QVariant> location_list, QList<QVariant> link_list );
 
   NodeMap get_node_map();
 
@@ -52,11 +53,11 @@ public: ~Structure();
 
   int get_id();
 
-  void set_color(QColor color);
+  void set_color( QColor color );
 
   QColor get_color();
 
-  vtkSmartPointer<vtkPolyData> recopy_mesh(vtkSmartPointer<vtkPolyData> mesh);
+  vtkSmartPointer<vtkPolyData> recopy_mesh( vtkSmartPointer<vtkPolyData> mesh );
 
 private:
 
@@ -71,7 +72,6 @@ private:
   QColor color_;
 
 //  float color_[3];
-
 };
 
 #endif /* VIKING_DATA_STRUCTURE_H */
