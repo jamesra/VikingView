@@ -33,16 +33,18 @@ class Structure
 
 public: ~Structure();
 
-  static QSharedPointer<Structure> create_structure( int id, QString location_text, QString link_text );
+  static QSharedPointer<Structure> create_structure( int id, QList<QVariant> location_list, QList<QVariant> link_list );
 
   NodeMap get_node_map();
 
   QList<Link> get_links();
 
   vtkSmartPointer<vtkPolyData> get_mesh_old();
-  vtkSmartPointer<vtkPolyData> get_mesh_old2();
+  vtkSmartPointer<vtkPolyData> get_mesh_alpha();
 
-  vtkSmartPointer<vtkPolyData> get_mesh();
+  vtkSmartPointer<vtkPolyData> get_mesh_union();
+
+  vtkSmartPointer<vtkPolyData> get_mesh_parts();
 
   double get_volume();
 

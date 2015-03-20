@@ -34,6 +34,10 @@ public Q_SLOTS:
 
 private:
 
+  QList<QVariant> download_json(QString url_string, QString file_prefix);
+
+  QString download_url(QString url_string);
+
   QNetworkAccessManager qnam_;
   QNetworkReply* reply_;
 

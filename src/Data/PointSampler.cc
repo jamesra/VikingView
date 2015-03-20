@@ -335,8 +335,8 @@ std::list<Weighted_point> PointSampler::collect_spheres()
 
     double smaller_radius = std::min<double>( n1.radius, n2.radius );
 
-    //double num_steps = (int)( distance * num_pts_line );
-    double num_steps = (int)( distance / ( smaller_radius / 4 ) );
+    double num_steps = (int)( distance * num_pts_line );
+//    double num_steps = (int)( distance / ( smaller_radius / 4 ) );
 
     if ( num_steps < 3 )
     {

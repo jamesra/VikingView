@@ -50,21 +50,16 @@ Structure::~Structure()
 {}
 
 //-----------------------------------------------------------------------------
-QSharedPointer<Structure> Structure::create_structure( int id, QString location_text, QString link_text )
+QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> location_list, QList<QVariant> link_list )
 {
 
   QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
   structure->id_ = id;
 
-  QMap<QString, QVariant> map = Json::decode( location_text );
-  QList<QVariant> location_list = map["value"].toList();
-
-  map = Json::decode( link_text );
-  QList<QVariant> link_list = map["value"].toList();
-
   float units_per_pixel = 2.18 / 1000.0;
   float units_per_section = -( 90.0 / 1000.0 );
 
+  std::cerr << "location list length: " << location_list.size() << "\n";
   // construct nodes
   foreach( QVariant var, location_list ) {
     Node n;
@@ -76,10 +71,12 @@ QSharedPointer<Structure> Structure::create_structure( int id, QString location_
     n.id = item["ID"].toLongLong();
     n.graph_id = -1;
 
+
     if ( n.z == 56 || n.z == 8 || n.z == 22 || n.z == 81 || n.z == 72 || n.z == 60 )
     {
       continue;
     }
+
 
     // scale
     n.x = n.x * units_per_pixel;
@@ -338,7 +335,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
 }
 
 //-----------------------------------------------------------------------------
-vtkSmartPointer<vtkPolyData> Structure::get_mesh_old2()
+vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
 {
   if ( !this->mesh_ )
   {
@@ -480,13 +477,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old2()
     poly_data = smooth->GetOutput();
  */
 
-/*
-   vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
-   subdivision->SetInputData( poly_data );
-   subdivision->SetNumberOfSubdivisions( 1 );
-   subdivision->Update();
-   poly_data = subdivision->GetOutput();
- */
+    vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
+    subdivision->SetInputData( poly_data );
+    subdivision->SetNumberOfSubdivisions( 2 );
+    subdivision->Update();
+    poly_data = subdivision->GetOutput();
 
     // Make the triangle winding order consistent
     vtkSmartPointer<vtkPolyDataNormals> normals =
@@ -538,7 +533,7 @@ int Structure::get_id()
 double Structure::get_volume()
 {
   return 0;
-  vtkSmartPointer<vtkPolyData> mesh = this->get_mesh();
+  vtkSmartPointer<vtkPolyData> mesh = this->get_mesh_union();
 
   vtkSmartPointer<vtkMassProperties> mass_properties = vtkSmartPointer<vtkMassProperties>::New();
 
@@ -552,7 +547,7 @@ double Structure::get_volume()
 QString Structure::get_center_of_mass_string()
 {
   return "foo";
-  vtkSmartPointer<vtkPolyData> mesh = this->get_mesh();
+  vtkSmartPointer<vtkPolyData> mesh = this->get_mesh_union();
 
   // Compute the center of mass
   vtkSmartPointer<vtkCenterOfMass> center_of_mass =
@@ -588,7 +583,7 @@ QColor Structure::get_color()
 }
 
 //-----------------------------------------------------------------------------
-vtkSmartPointer<vtkPolyData> Structure::get_mesh()
+vtkSmartPointer<vtkPolyData> Structure::get_mesh_union()
 {
   if ( this->mesh_ )
   {
@@ -1050,4 +1045,113 @@ vtkSmartPointer<vtkPolyData> Structure::recopy_mesh( vtkSmartPointer<vtkPolyData
   poly_data->SetPolys( vtk_triangles );
 
   return poly_data;
+}
+
+//-----------------------------------------------------------------------------
+vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
+{
+  if ( this->mesh_ )
+  {
+    return this->mesh_;
+  }
+
+  NodeMap node_map = this->get_node_map();
+
+  std::list<Point> points;
+
+  vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+
+  bool first = true;
+
+
+
+
+  // spheres
+  for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
+  {
+
+    Node n = it->second;
+
+    if ( n.linked_nodes.size() != 1 )
+    {
+      continue;
+    }
+
+//    std::cerr << "adding sphere: " << n.id << "(" << n.x << "," << n.y << "," << n.z << "," << n.radius << ")\n";
+
+    vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
+    sphere->SetCenter( n.x, n.y, n.z );
+    sphere->SetRadius( n.radius );
+    sphere->Update();
+
+    if ( first )
+    {
+      poly_data = sphere->GetOutput();
+      first = false;
+    }
+    else
+    {
+/*
+      vtkSmartPointer<vtkBooleanOperationPolyDataFilter> booleanOperation =
+        vtkSmartPointer<vtkBooleanOperationPolyDataFilter>::New();
+      booleanOperation->SetOperationToUnion();
+
+      booleanOperation->SetInputData( 0, poly_data );
+      booleanOperation->SetInputData( 1, sphere->GetOutput() );
+      booleanOperation->Update();
+      poly_data = booleanOperation->GetOutput();
+ */
+
+      vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
+      append->AddInputData( poly_data );
+      append->AddInputData( sphere->GetOutput() );
+      append->Update();
+      poly_data = append->GetOutput();
+    }
+  }
+
+  foreach( Link link, this->get_links() ) {
+
+    if ( node_map.find( link.a ) == node_map.end() || node_map.find( link.b ) == node_map.end() )
+    {
+      continue;
+    }
+
+    Node n1 = node_map[link.a];
+    Node n2 = node_map[link.b];
+
+    vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
+
+    vtk_points->InsertNextPoint( n1.x, n1.y, n1.z );
+    vtk_points->InsertNextPoint( n2.x, n2.y, n2.z );
+
+    vtkSmartPointer<vtkCellArray> lines =
+      vtkSmartPointer<vtkCellArray>::New();
+    lines->InsertNextCell( 2 );
+    lines->InsertCellPoint( 0 );
+    lines->InsertCellPoint( 1 );
+
+    vtkSmartPointer<vtkPolyData> polyData =
+      vtkSmartPointer<vtkPolyData>::New();
+    polyData->SetPoints( vtk_points );
+    polyData->SetLines( lines );
+
+    vtkSmartPointer<vtkTubeFilter> tube
+      = vtkSmartPointer<vtkTubeFilter>::New();
+    tube->SetInputData( polyData );
+    tube->CappingOn();
+    tube->SetRadius( n1.radius );
+    tube->SetNumberOfSides( 10 );
+    tube->Update();
+
+    vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
+    append->AddInputData( poly_data );
+    append->AddInputData( tube->GetOutput() );
+    append->Update();
+    poly_data = append->GetOutput();
+  }
+
+  this->mesh_ = poly_data;
+
+  return this->mesh_;
 }

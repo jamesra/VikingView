@@ -214,7 +214,7 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
-    vtkSmartPointer<vtkPolyData> mesh = s->get_mesh();
+    vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_parts();
 
     vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
     normals->SetInputData( mesh );
