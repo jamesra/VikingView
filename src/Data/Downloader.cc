@@ -48,8 +48,8 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
 QList<QVariant> Downloader::download_json( QString url_string, QString file_prefix )
 {
 
-  const int save_to_file = 1;
-  const int load_from_file = 0;
+  const int save_to_file = 0;
+  const int load_from_file = 1;
 
   QList<QVariant> list;
 

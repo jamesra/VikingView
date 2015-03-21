@@ -24,6 +24,8 @@
 #include <vtkBooleanOperationPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkTubeFilter.h>
+#include <vtkDoubleArray.h>
+#include <vtkPointData.h>
 
 #include <vtkSphereSource.h>
 #include <vtkTriangle.h>
@@ -111,103 +113,22 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
 
   std::cerr << "Found " << structure->links_.size() << " links\n";
 
-  // identify all subgraphs
+  std::cerr << "===Initial===\n";
+  structure->link_report();
 
-  long max_count = 0;
+  structure->connect_subgraphs();
 
-  for ( NodeMap::iterator it = structure->node_map_.begin(); it != structure->node_map_.end(); ++it )
-  {
-    Node n = it->second;
+  std::cerr << "===After graph connection===\n";
+  structure->link_report();
 
-    if ( n.graph_id == -1 )
-    {
-      max_count++;
-      n.graph_id = max_count;
-      structure->node_map_[it->first] = n;
+  std::cerr << "number of nodes : " << structure->node_map_.size() << "\n";
 
-      QList<int> connections = n.linked_nodes;
+  structure->cull_locations();
 
-      while ( connections.size() > 0 )
-      {
-        int node = connections.first();
-        connections.pop_front();
+  structure->connect_subgraphs();
 
-        Node child = structure->node_map_[node];
-
-        if ( child.graph_id == -1 )
-        {
-          child.graph_id = max_count;
-          connections.append( child.linked_nodes );
-          structure->node_map_[node] = child;  // write back
-        }
-      }
-    }
-  }
-
-  std::cerr << "Found " << max_count << " graphs\n";
-
-  // create links between graphs
-
-  QList<int> primary_group;
-
-  for ( NodeMap::iterator it = structure->node_map_.begin(); it != structure->node_map_.end(); ++it )
-  {
-    Node n = it->second;
-    if ( n.graph_id == 1 )
-    {
-      primary_group.append( n.id );
-    }
-  }
-
-  for ( int i = 2; i <= id; i++ )
-  {
-
-    // find closest pair
-    double min_dist = DBL_MAX;
-    int primary_id = -1;
-    int child_id = -1;
-
-    for ( NodeMap::iterator it = structure->node_map_.begin(); it != structure->node_map_.end(); ++it )
-    {
-      Node n = it->second;
-
-      if ( n.graph_id == i )
-      {
-
-        for ( NodeMap::iterator it2 = structure->node_map_.begin(); it2 != structure->node_map_.end(); ++it2 )
-        {
-          Node pn = it2->second;
-          if ( pn.graph_id >= i )
-          {
-            continue;
-          }
-
-          double point1[3], point2[3];
-          point1[0] = n.x;
-          point1[1] = n.y;
-          point1[2] = n.z;
-          point2[0] = pn.x;
-          point2[1] = pn.y;
-          point2[2] = pn.z;
-          double distance = sqrt( vtkMath::Distance2BetweenPoints( point1, point2 ) );
-
-          if ( distance < min_dist )
-          {
-            min_dist = distance;
-            primary_id = pn.id;
-            child_id = n.id;
-          }
-        }
-      }
-    }
-
-    Link new_link;
-    new_link.a = primary_id;
-    new_link.b = child_id;
-    structure->links_.append( new_link );
-    //std::cerr << "added new link\n";
-  }
-
+  std::cerr << "===After location culling===\n";
+  structure->link_report();
   return structure;
 }
 
@@ -1057,6 +978,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
     return this->mesh_;
   }
 
+  std::cerr << "creating mesh...\n";
+
   NodeMap node_map = this->get_node_map();
 
   std::list<Point> points;
@@ -1099,13 +1022,15 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
       booleanOperation->SetInputData( 1, sphere->GetOutput() );
       booleanOperation->Update();
       poly_data = booleanOperation->GetOutput();
- */
+*/
+ 
 
       vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
       append->AddInputData( poly_data );
       append->AddInputData( sphere->GetOutput() );
       append->Update();
       poly_data = append->GetOutput();
+
     }
   }
 
@@ -1124,23 +1049,29 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
     vtk_points->InsertNextPoint( n1.x, n1.y, n1.z );
     vtk_points->InsertNextPoint( n2.x, n2.y, n2.z );
 
-    vtkSmartPointer<vtkCellArray> lines =
-      vtkSmartPointer<vtkCellArray>::New();
+    vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
     lines->InsertNextCell( 2 );
     lines->InsertCellPoint( 0 );
     lines->InsertCellPoint( 1 );
 
-    vtkSmartPointer<vtkPolyData> polyData =
-      vtkSmartPointer<vtkPolyData>::New();
+    vtkSmartPointer<vtkDoubleArray> tube_radius = vtkSmartPointer<vtkDoubleArray>::New();
+    tube_radius->SetName("tube_radius");
+    tube_radius->SetNumberOfTuples(2);
+    tube_radius->SetTuple1(0, n1.radius);
+    tube_radius->SetTuple1(1, n2.radius);
+
+    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
     polyData->SetPoints( vtk_points );
     polyData->SetLines( lines );
+    polyData->GetPointData()->AddArray(tube_radius);
+    polyData->GetPointData()->SetActiveScalars("tube_radius");
 
-    vtkSmartPointer<vtkTubeFilter> tube
-      = vtkSmartPointer<vtkTubeFilter>::New();
+    vtkSmartPointer<vtkTubeFilter> tube = vtkSmartPointer<vtkTubeFilter>::New();
     tube->SetInputData( polyData );
     tube->CappingOn();
+    tube->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
     tube->SetRadius( n1.radius );
-    tube->SetNumberOfSides( 10 );
+    tube->SetNumberOfSides( 20 );
     tube->Update();
 
     vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
@@ -1153,4 +1084,198 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
   this->mesh_ = poly_data;
 
   return this->mesh_;
+}
+
+//-----------------------------------------------------------------------------
+double Structure::distance( const Node &n1, const Node &n2 )
+{
+  double squared_dist = ( n1.x - n2.x ) * ( n1.x - n2.x )
+                        + ( n1.y - n2.y ) * ( n1.y - n2.y )
+                        + ( n1.z - n2.z ) * ( n1.z - n2.z );
+  return sqrt( squared_dist );
+}
+
+//-----------------------------------------------------------------------------
+void Structure::connect_subgraphs()
+{
+  long max_count = 0;
+
+  // initialize
+  for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+  {
+    ( it->second ).graph_id = -1;
+  }
+
+  for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+  {
+    Node n = it->second;
+
+    if ( n.graph_id == -1 )
+    {
+      max_count++;
+      n.graph_id = max_count;
+      this->node_map_[it->first] = n;
+
+      QList<int> connections = n.linked_nodes;
+
+      while ( connections.size() > 0 )
+      {
+        int node = connections.first();
+        connections.pop_front();
+
+        Node child = this->node_map_[node];
+
+        if ( child.graph_id == -1 )
+        {
+          child.graph_id = max_count;
+          connections.append( child.linked_nodes );
+          this->node_map_[node] = child;  // write back
+        }
+      }
+    }
+  }
+
+  std::cerr << "Found " << max_count << " graphs\n";
+
+  // create links between graphs
+
+  QList<int> primary_group;
+
+  for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+  {
+    Node n = it->second;
+    if ( n.graph_id == 1 )
+    {
+      primary_group.append( n.id );
+    }
+  }
+
+  for ( int i = 2; i <= max_count; i++ )
+  {
+
+    // find closest pair
+    double min_dist = DBL_MAX;
+    int primary_id = -1;
+    int child_id = -1;
+
+    for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+    {
+      Node n = it->second;
+
+      if ( n.graph_id == i )
+      {
+
+        for ( NodeMap::iterator it2 = this->node_map_.begin(); it2 != this->node_map_.end(); ++it2 )
+        {
+          Node pn = it2->second;
+          if ( pn.graph_id >= i )
+          {
+            continue;
+          }
+
+          double point1[3], point2[3];
+          point1[0] = n.x;
+          point1[1] = n.y;
+          point1[2] = n.z;
+          point2[0] = pn.x;
+          point2[1] = pn.y;
+          point2[2] = pn.z;
+          double distance = sqrt( vtkMath::Distance2BetweenPoints( point1, point2 ) );
+
+          if ( distance < min_dist )
+          {
+            min_dist = distance;
+            primary_id = pn.id;
+            child_id = n.id;
+          }
+        }
+      }
+    }
+
+    Link new_link;
+    new_link.a = primary_id;
+    new_link.b = child_id;
+    this->links_.append( new_link );
+
+    this->node_map_[primary_id].linked_nodes.append(child_id);
+    this->node_map_[child_id].linked_nodes.append(primary_id);
+
+  }
+}
+
+//-----------------------------------------------------------------------------
+void Structure::cull_locations()
+{
+
+  std::vector<int> remove_list;
+  do
+  {
+    remove_list.clear();
+    // cull overlapping locations
+    for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+    {
+      Node n = it->second;
+
+      if ( n.linked_nodes.size() != 2 )
+      {
+        continue;
+      }
+
+      bool removed = false;
+
+      foreach( int id, n.linked_nodes ) {
+
+        if ( !removed )
+        {
+          Node other = this->node_map_[id];
+
+          if ( distance( n, other ) < max( n.radius, other.radius ) )
+          {
+            remove_list.push_back( n.id );
+
+            removed = true;
+          }
+        }
+      }
+
+      // delete other nodes links to this node
+      if ( removed )
+      {
+        foreach( int id, n.linked_nodes ) {
+          this->node_map_[id].linked_nodes.remove( n.id );
+        }
+      }
+    }
+
+    std::cerr << "remove list size : " << remove_list.size() << "\n";
+
+    for ( unsigned int i = 0; i < remove_list.size(); i++ )
+    {
+      this->node_map_.erase( remove_list[i] );
+    }
+
+    this->connect_subgraphs();
+  }
+  while ( remove_list.size() > 0 );
+}
+
+//-----------------------------------------------------------------------------
+void Structure::link_report()
+{
+  std::vector<int> link_counts( 100 );
+
+  for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+  {
+    Node n = it->second;
+    link_counts[n.linked_nodes.size()]++;
+  }
+
+  for ( int i = 0; i < 100; i++ )
+  {
+    if ( link_counts[i] > 0 )
+    {
+      std::cerr << "Nodes with " << i << " links: " << link_counts[i] << "\n";
+    }
+  }
+
 }

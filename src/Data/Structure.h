@@ -63,6 +63,16 @@ private:
 
   Structure(); // private
 
+
+  static double distance(const Node &n1, const Node &n2);
+
+
+  void connect_subgraphs();
+
+  void cull_locations();
+
+  void link_report();
+
   int id_;
   NodeMap node_map_;
 
