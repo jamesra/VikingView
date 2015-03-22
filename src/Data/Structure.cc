@@ -31,6 +31,10 @@
 #include <vtkTriangle.h>
 #include <vtkMath.h>
 #include <vtkDecimatePro.h>
+
+#include <vtkParametricSpline.h>
+#include <vtkParametricFunctionSource.h>
+
 #include <Visualization/customQuadricDecimation.h>
 
 #include <vtkButterflySubdivisionFilter.h>
@@ -45,6 +49,7 @@
 Structure::Structure()
 {
   this->color_ = QColor( 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ) );
+  this->num_tubes_ = 0;
 }
 
 //-----------------------------------------------------------------------------
@@ -1022,15 +1027,13 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
       booleanOperation->SetInputData( 1, sphere->GetOutput() );
       booleanOperation->Update();
       poly_data = booleanOperation->GetOutput();
-*/
- 
+ */
 
       vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
       append->AddInputData( poly_data );
       append->AddInputData( sphere->GetOutput() );
       append->Update();
       poly_data = append->GetOutput();
-
     }
   }
 
@@ -1055,19 +1058,19 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
     lines->InsertCellPoint( 1 );
 
     vtkSmartPointer<vtkDoubleArray> tube_radius = vtkSmartPointer<vtkDoubleArray>::New();
-    tube_radius->SetName("tube_radius");
-    tube_radius->SetNumberOfTuples(2);
-    tube_radius->SetTuple1(0, n1.radius);
-    tube_radius->SetTuple1(1, n2.radius);
+    tube_radius->SetName( "tube_radius" );
+    tube_radius->SetNumberOfTuples( 2 );
+    tube_radius->SetTuple1( 0, n1.radius );
+    tube_radius->SetTuple1( 1, n2.radius );
 
-    vtkSmartPointer<vtkPolyData> polyData = vtkSmartPointer<vtkPolyData>::New();
-    polyData->SetPoints( vtk_points );
-    polyData->SetLines( lines );
-    polyData->GetPointData()->AddArray(tube_radius);
-    polyData->GetPointData()->SetActiveScalars("tube_radius");
+    vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+    poly_data->SetPoints( vtk_points );
+    poly_data->SetLines( lines );
+    poly_data->GetPointData()->AddArray( tube_radius );
+    poly_data->GetPointData()->SetActiveScalars( "tube_radius" );
 
     vtkSmartPointer<vtkTubeFilter> tube = vtkSmartPointer<vtkTubeFilter>::New();
-    tube->SetInputData( polyData );
+    tube->SetInputData( poly_data );
     tube->CappingOn();
     tube->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
     tube->SetRadius( n1.radius );
@@ -1197,9 +1200,8 @@ void Structure::connect_subgraphs()
     new_link.b = child_id;
     this->links_.append( new_link );
 
-    this->node_map_[primary_id].linked_nodes.append(child_id);
-    this->node_map_[child_id].linked_nodes.append(primary_id);
-
+    this->node_map_[primary_id].linked_nodes.append( child_id );
+    this->node_map_[child_id].linked_nodes.append( primary_id );
   }
 }
 
@@ -1238,13 +1240,17 @@ void Structure::cull_locations()
         }
       }
 
-      // delete other nodes links to this node
       if ( removed )
       {
-        foreach( int id, n.linked_nodes ) {
-          this->node_map_[id].linked_nodes.remove( n.id );
-        }
+        int n1 = n.linked_nodes[0];
+        int n2 = n.linked_nodes[1];
+
+        this->node_map_[n1].linked_nodes.remove( n.id );
+        this->node_map_[n1].linked_nodes.append( n2 );
+        this->node_map_[n2].linked_nodes.remove( n.id );
+        this->node_map_[n2].linked_nodes.append( n1 );
       }
+
     }
 
     std::cerr << "remove list size : " << remove_list.size() << "\n";
@@ -1277,5 +1283,176 @@ void Structure::link_report()
       std::cerr << "Nodes with " << i << " links: " << link_counts[i] << "\n";
     }
   }
+}
 
+//-----------------------------------------------------------------------------
+vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
+{
+  if ( this->mesh_ )
+  {
+    return this->mesh_;
+  }
+
+  std::cerr << "creating mesh...\n";
+
+  //NodeMap node_map = this->get_node_map();
+
+  std::list<Point> points;
+
+  vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+
+  // reset visited
+  for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+  {
+    ( it->second ).visited = false;
+  }
+
+  int root = -1;
+  // find a dead-end
+  for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
+  {
+    Node n = it->second;
+    if ( n.linked_nodes.size() == 1 )
+    {
+      root = n.id;
+      break;
+    }
+  }
+
+  if ( root == -1 )
+  {
+    std::cerr << "Error: could not locate root node\n";
+    return this->mesh_;
+  }
+
+  Node n = this->node_map_[root];
+
+  vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
+
+  this->add_polydata( n, -1, append, QList<int>() );
+
+  std::cerr << "Num of items: " << append->GetNumberOfInputConnections( 0 ) << "\n";
+
+  std::cerr << "number of tubes: " << this->num_tubes_ << "\n";
+
+  append->Update();
+  poly_data = append->GetOutput();
+
+  this->mesh_ = poly_data;
+
+  return this->mesh_;
+}
+
+//-----------------------------------------------------------------------------
+void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line )
+{
+  this->node_map_[n.id].visited = true;
+
+  if ( n.linked_nodes.size() == 2 )
+  {
+    current_line.append( n.id );
+
+    for ( int i = 0; i < n.linked_nodes.size(); i++ )
+    {
+      Node other = this->node_map_[n.linked_nodes[i]];
+      if ( !other.visited )
+      {
+        this->add_polydata( other, n.id, append, current_line );
+      }
+    }
+  }
+
+  if ( n.linked_nodes.size() != 2 )
+  {
+    vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
+    sphere->SetCenter( n.x, n.y, n.z );
+    sphere->SetRadius( n.radius );
+    sphere->Update();
+    //append->AddInputData( sphere->GetOutput() );
+
+    if ( current_line.size() > 0 )
+    {
+      current_line.append( n.id );
+
+      vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
+      vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
+      lines->InsertNextCell( current_line.size() );
+      vtkSmartPointer<vtkDoubleArray> tube_radius = vtkSmartPointer<vtkDoubleArray>::New();
+      tube_radius->SetName( "tube_radius" );
+
+      int count = 0;
+      foreach( int node_id, current_line ) {
+        Node node = this->node_map_[node_id];
+
+        vtk_points->InsertNextPoint( node.x, node.y, node.z );
+        lines->InsertCellPoint( count++ );
+        tube_radius->InsertNextTuple1( node.radius );
+      }
+
+      vtkSmartPointer<vtkParametricSpline> spline =
+        vtkSmartPointer<vtkParametricSpline>::New();
+      spline->SetPoints( vtk_points );
+
+      // Interpolate the points
+      vtkSmartPointer<vtkParametricFunctionSource> functionSource =
+        vtkSmartPointer<vtkParametricFunctionSource>::New();
+      functionSource->SetParametricFunction( spline );
+      functionSource->SetUResolution(30 * vtk_points->GetNumberOfPoints());
+      //functionSource->SetUResolution( 5 );
+      functionSource->Update();
+
+      vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+      poly_data->SetPoints( vtk_points );
+      poly_data->SetLines( lines );
+      poly_data->GetPointData()->AddArray( tube_radius );
+      poly_data->GetPointData()->SetActiveScalars( "tube_radius" );
+
+      vtkSmartPointer<vtkTubeFilter> tube = vtkSmartPointer<vtkTubeFilter>::New();
+      //tube->SetInputData( poly_data );
+
+      tube->SetInputData( functionSource->GetOutput() );
+
+      tube->CappingOff();
+      //tube->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
+      tube->SetRadius(n.radius);
+      //tube->SetRadius( 0.1 );
+      tube->SetNumberOfSides( 20 );
+      tube->Update();
+
+      poly_data = tube->GetOutput();
+
+      vtkSmartPointer<vtkUnsignedCharArray> colors =
+        vtkSmartPointer<vtkUnsignedCharArray>::New();
+      colors->SetNumberOfComponents( 3 );
+      colors->SetName( "Colors" );
+
+      int r = 128 + ( qrand() % 128 );
+      int g = 128 + ( qrand() % 128 );
+      int b = 128 + ( qrand() % 128 );
+
+      for ( int i = 0; i < poly_data->GetNumberOfPoints(); ++i )
+      {
+        unsigned char tempColor[3] =
+        {r, g, b};
+
+        colors->InsertNextTupleValue( tempColor );
+      }
+
+      poly_data->GetPointData()->SetScalars( colors );
+
+      this->num_tubes_++;
+      append->AddInputData( tube->GetOutput() );
+    }
+
+    for ( int i = 0; i < n.linked_nodes.size(); i++ )
+    {
+      Node other = this->node_map_[n.linked_nodes[i]];
+      if ( !other.visited )
+      {
+        QList<int> new_line;
+        new_line.append( n.id );
+        this->add_polydata( other, n.id, append, new_line );
+      }
+    }
+  }
 }

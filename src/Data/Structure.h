@@ -9,6 +9,7 @@
 #include <vtkSmartPointer.h>
 
 class vtkPolyData;
+class vtkAppendPolyData;
 
 class Node
 {
@@ -17,6 +18,7 @@ public:
   long id;
   QList<int> linked_nodes;
   long graph_id;
+  bool visited;
 };
 
 typedef std::map<long, Node> NodeMap;
@@ -47,6 +49,8 @@ public: ~Structure();
 
   vtkSmartPointer<vtkPolyData> get_mesh_parts();
 
+  vtkSmartPointer<vtkPolyData> get_mesh_tubes();
+
   double get_volume();
 
   QString get_center_of_mass_string();
@@ -62,6 +66,9 @@ public: ~Structure();
 private:
 
   Structure(); // private
+
+
+  void add_polydata(Node n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line);
 
 
   static double distance(const Node &n1, const Node &n2);
@@ -80,6 +87,8 @@ private:
   vtkSmartPointer<vtkPolyData> mesh_;
 
   QColor color_;
+
+  int num_tubes_;
 
 //  float color_[3];
 };

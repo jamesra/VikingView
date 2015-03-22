@@ -37,3 +37,42 @@
 #include <CGAL/IO/Polyhedron_iostream.h>
 #include <CGAL/Inverse_index.h>
 #include <CGAL/make_skin_surface_mesh_3.h>
+
+
+
+
+
+#include <vtkCenterOfMass.h>
+#include <vtkMassProperties.h>
+#include <vtkWindowedSincPolyDataFilter.h>
+#include <vtkCleanPolyData.h>
+#include <vtkSTLWriter.h>
+#include <vtkFeatureEdges.h>
+#include <vtkCellArray.h>
+#include <vtkFillHolesFilter.h>
+#include <vtkPolyDataNormals.h>
+#include <vtkSmoothPolyDataFilter.h>
+#include <vtkTriangleFilter.h>
+//#include <vtkFeatureVertices.h>
+#include <vtkLoopSubdivisionFilter.h>
+#include <vtkLinearSubdivisionFilter.h>
+#include <vtkLineSource.h>
+#include <vtkWindowedSincPolyDataFilter.h>
+
+#include <vtkBooleanOperationPolyDataFilter.h>
+#include <vtkAppendPolyData.h>
+#include <vtkTubeFilter.h>
+#include <vtkDoubleArray.h>
+#include <vtkPointData.h>
+
+#include <vtkSphereSource.h>
+#include <vtkTriangle.h>
+#include <vtkMath.h>
+#include <vtkDecimatePro.h>
+#include <Visualization/customQuadricDecimation.h>
+
+#include <vtkButterflySubdivisionFilter.h>
+
+#include <CGAL/IO/Polyhedron_iostream.h>
+#include <CGAL/Inverse_index.h>
+#include <CGAL/make_skin_surface_mesh_3.h>

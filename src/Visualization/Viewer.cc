@@ -214,7 +214,7 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
     vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
-    vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_parts();
+    vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
 
     vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
     normals->SetInputData( mesh );
@@ -231,7 +231,8 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
     actor->GetProperty()->SetSpecularPower( 15 );
     actor->GetProperty()->BackfaceCullingOn();
 
-    mapper->ScalarVisibilityOff();
+    //mapper->ScalarVisibilityOff();
+    mapper->ScalarVisibilityOn();
 
     this->renderer_->AddActor( actor );
 
