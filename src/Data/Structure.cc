@@ -1234,11 +1234,14 @@ void Structure::cull_locations()
         {
           Node other = this->node_map_[id];
 
-          if ( distance( n, other ) < max( n.radius, other.radius ) )
+          if (other.linked_nodes.size() <= n.linked_nodes.size())  // remove the one with less links
           {
-            remove_list.push_back( n.id );
-            other_id = other.id;
+            if ( distance( n, other ) < max( n.radius, other.radius ) )
+            {
+              remove_list.push_back( n.id );
+              other_id = other.id;
             removed = true;
+            }
           }
         }
       }

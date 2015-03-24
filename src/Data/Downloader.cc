@@ -49,7 +49,7 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
 {
 
   const int save_to_file = 0;
-  const int load_from_file = 1;
+  const int load_from_file = 0;
 
   QList<QVariant> list;
 
