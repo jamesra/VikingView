@@ -20,7 +20,9 @@
 #include <vtkLinearSubdivisionFilter.h>
 #include <vtkLineSource.h>
 #include <vtkWindowedSincPolyDataFilter.h>
+#include <vtkPLYWriter.h>
 
+#include <vtkPolyDataWriter.h>
 #include <vtkBooleanOperationPolyDataFilter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkTubeFilter.h>
@@ -1360,6 +1362,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
   append->Update();
   poly_data = append->GetOutput();
 
+
+  std::cerr << "number of verts: " << poly_data->GetNumberOfPoints() << "\n";
+  std::cerr << "number of polys: " << poly_data->GetNumberOfCells() << "\n";
+
+
   this->mesh_ = poly_data;
 
   return this->mesh_;
@@ -1388,7 +1395,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
   {
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
     sphere->SetCenter( n.x, n.y, n.z );
-    sphere->SetRadius( n.radius );
+    sphere->SetRadius( n.radius * 1.1 );
 
     int resolution = 10;
     if (n.radius > 1.0)
@@ -1396,7 +1403,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
       resolution = resolution * n.radius;
     }
 
-    resolution = 25;
+    resolution = 12;
 
     sphere->SetPhiResolution(resolution);
     sphere->SetThetaResolution(resolution);
@@ -1423,7 +1430,35 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
     }
 
 
-    poly_data->GetPointData()->SetScalars( colors );
+    //poly_data->GetPointData()->SetScalars( colors );
+
+
+/*
+    vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
+    triangle_filter->SetInputData( poly_data );
+    //    triangle_filter->PassLinesOff();
+    triangle_filter->Update();
+    poly_data = triangle_filter->GetOutput();
+
+    std::cerr << "Number of points before cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+    vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+    clean->SetInputData( poly_data );
+    //clean->SetTolerance( 0.00001 );
+    clean->Update();
+    poly_data = clean->GetOutput();
+    std::cerr << "Number of points after cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+
+    this->num_tubes_++;
+    //QString filename = QString("C:\\Users\\amorris\\part") + QString::number(this->num_tubes_) + ".ply";
+    QString filename = QString("C:\\Users\\amorris\\part") + QString::number(this->num_tubes_) + ".vtk";
+    vtkSmartPointer<vtkPolyDataWriter> writer4 = vtkSmartPointer<vtkPolyDataWriter>::New();
+    //vtkSmartPointer<vtkPLYWriter> writer4 = vtkSmartPointer<vtkPLYWriter>::New();
+    writer4->SetFileName( filename );
+    writer4->SetInputData( poly_data );
+    //writer4->SetFileTypeToBinary();
+    writer4->Write();
+*/
+
 
 
     append->AddInputData( poly_data );
@@ -1461,7 +1496,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
       vtkSmartPointer<vtkParametricFunctionSource> functionSource =
         vtkSmartPointer<vtkParametricFunctionSource>::New();
       functionSource->SetParametricFunction( spline );
-      functionSource->SetUResolution( 30 * vtk_points->GetNumberOfPoints() );
+      functionSource->SetUResolution( 2 * vtk_points->GetNumberOfPoints() );
       //functionSource->SetUResolution( 5 );
       functionSource->Update();
 
@@ -1504,7 +1539,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
       //tube->SetRadius(n.radius);
       //tube->SetRadius( 0.1 );
-      tube->SetNumberOfSides( 20 );
+      tube->SetNumberOfSides( 15 );
       tube->Update();
 
       poly_data = tube->GetOutput();
@@ -1526,10 +1561,46 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
         colors->InsertNextTupleValue( tempColor );
       }
 
-      poly_data->GetPointData()->SetScalars( colors );
+      //poly_data->GetPointData()->SetScalars( colors );
+
+      append->AddInputData( poly_data );
+/*
+
+
+      vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
+      triangle_filter->SetInputData( poly_data );
+      //    triangle_filter->PassLinesOff();
+      triangle_filter->Update();
+      poly_data = triangle_filter->GetOutput();
+
+      std::cerr << "Number of points before cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+      vtkSmartPointer<vtkCleanPolyData> clean = vtkSmartPointer<vtkCleanPolyData>::New();
+      clean->SetInputData( poly_data );
+      //clean->SetTolerance( 0.00001 );
+      clean->Update();
+      poly_data = clean->GetOutput();
+      std::cerr << "Number of points after cleaning: " << poly_data->GetNumberOfPoints() << "\n";
+
+
 
       this->num_tubes_++;
-      append->AddInputData( tube->GetOutput() );
+      //QString filename = QString("C:\\Users\\amorris\\part") + QString::number(this->num_tubes_) + ".ply";
+      QString filename = QString("C:\\Users\\amorris\\part") + QString::number(this->num_tubes_) + ".vtk";
+      //vtkSmartPointer<vtkPLYWriter> writer4 = vtkSmartPointer<vtkPLYWriter>::New();
+      vtkSmartPointer<vtkPolyDataWriter> writer4 = vtkSmartPointer<vtkPolyDataWriter>::New();
+      writer4->SetFileName( filename );
+      writer4->SetInputData( poly_data );
+      //writer4->SetFileTypeToBinary();
+      writer4->Write();
+
+
+      filename = QString("C:\\Users\\amorris\\part") + QString::number(this->num_tubes_) + ".stl";
+      vtkSmartPointer<vtkSTLWriter> writer = vtkSmartPointer<vtkSTLWriter>::New();
+      writer->SetFileName( filename );
+      writer->SetInputData( poly_data );
+      writer->Write();
+
+*/
     }
 
     for ( int i = 0; i < n.linked_nodes.size(); i++ )
