@@ -1234,7 +1234,7 @@ void Structure::cull_locations()
         {
           Node other = this->node_map_[id];
 
-          if ( distance( n, other ) < max( n.radius, other.radius ) )
+          if ( distance( n, other ) < std::max<double>( n.radius, other.radius ) )
           {
             remove_list.push_back( n.id );
             other_id = other.id;
