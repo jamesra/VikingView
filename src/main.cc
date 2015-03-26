@@ -96,7 +96,7 @@ int main( int argc, char** argv )
 
     studio_app->initialize_vtk();
 
-    studio_app->load_structure(180);
+    //studio_app->load_structure(180);
     
 
     /*
