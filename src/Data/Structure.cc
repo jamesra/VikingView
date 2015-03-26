@@ -362,8 +362,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
 
     nonmanifold = features->GetOutput();
 
-    std::cerr < "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
-    std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
+    //std::cerr < "Number of non-manifold points: " << nonmanifold->GetNumberOfPoints() << "\n";
+    //std::cerr << "Number of non-manifold cells: " << nonmanifold->GetNumberOfCells() << "\n";
 
     vtkSmartPointer< vtkTriangleFilter > triangle_filter =
       vtkSmartPointer< vtkTriangleFilter >::New();
@@ -477,7 +477,7 @@ double Structure::get_volume()
 //-----------------------------------------------------------------------------
 QString Structure::get_center_of_mass_string()
 {
-  return "foo";
+  return "";
   vtkSmartPointer<vtkPolyData> mesh = this->get_mesh_union();
 
   // Compute the center of mass
