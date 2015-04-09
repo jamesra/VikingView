@@ -31,11 +31,12 @@ public:
 
   void load_structure( int id );
 
-  //virtual void closeEvent( QCloseEvent* event );
+  virtual void closeEvent( QCloseEvent* event );
 
 public Q_SLOTS:
 
   void on_action_quit_triggered();
+  void on_action_preferences_triggered();
 
   void on_add_button_clicked();
   void on_delete_button_clicked();

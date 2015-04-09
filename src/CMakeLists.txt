@@ -168,17 +168,17 @@ endfunction(enable_precompiled_headers)
 ### Application
 SET(VIKING_VIEW_APPLICATION_HDRS
   Application/VikingViewApp.h
-#  Application/Preferences.h
-#  Application/PreferencesWindow.h
+  Application/Preferences.h
+  Application/PreferencesWindow.h
 )
 SET(VIKING_VIEW_APPLICATION_SRCS
   Application/VikingViewApp.cc
-#  Application/Preferences.cc
-#  Application/PreferencesWindow.cc
+  Application/Preferences.cc
+  Application/PreferencesWindow.cc
 )
 SET(VIKING_VIEW_APPLICATION_UIS
   Application/VikingViewApp.ui
-#  Application/PreferencesWindow.ui
+  Application/PreferencesWindow.ui
 )
 
 ### Data

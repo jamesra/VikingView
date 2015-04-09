@@ -1,10 +1,12 @@
 <RCC>
-    <qresource prefix="/VikingView">
-        <file>Images/add.png</file>
-        <file>Images/remove.png</file>
-	<file>Images/CuttingPlaneOn.png</file>
-	<file>Images/CuttingPlaneOff.png</file>
-	<file>Images/AutoViewOn.png</file>
-	<file>Images/AutoViewOff.png</file>
-    </qresource>
+  <qresource prefix="/VikingView">
+    <file>Images/viking-helmet-icon.png</file>
+    <file>Images/viking-ship-icon.png</file>
+    <file>Images/add.png</file>
+    <file>Images/remove.png</file>
+    <file>Images/CuttingPlaneOn.png</file>
+    <file>Images/CuttingPlaneOff.png</file>
+    <file>Images/AutoViewOn.png</file>
+    <file>Images/AutoViewOff.png</file>
+  </qresource>
 </RCC>

@@ -14,6 +14,7 @@
 
 // viking
 #include <Application/VikingViewApp.h>
+#include <Application/Preferences.h>
 #include <Data/Json.h>
 #include <Data/PointSampler.h>
 #include <Data/AlphaShape.h>
@@ -34,6 +35,10 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
 
   this->ui_->sampling_slider->hide();
   this->ui_->sampling_label->hide();
+
+  // resize from preferences
+  this->resize( Preferences::Instance().get_main_window_size() );
+
 }
 
 //---------------------------------------------------------------------------
@@ -161,6 +166,13 @@ void VikingViewApp::on_action_quit_triggered()
   this->close();
 }
 
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_action_preferences_triggered()
+{
+  Preferences::Instance().show_window();
+}
+
 //---------------------------------------------------------------------------
 void VikingViewApp::initialize_vtk()
 {
@@ -180,4 +192,14 @@ void VikingViewApp::on_auto_view_button_clicked()
 void VikingViewApp::on_cutting_plane_button_clicked()
 {
   this->viewer_->set_clipping_plane(this->ui_->cutting_plane_button->isChecked());
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::closeEvent(QCloseEvent* event)
+{
+  // close the preferences window in case it is open
+  Preferences::Instance().close_window();
+
+  // save the size of the window to preferences
+  Preferences::Instance().set_main_window_size( this->size() );
 }

@@ -6,16 +6,16 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>822</width>
-    <height>668</height>
+    <width>547</width>
+    <height>609</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>VikingView</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
-    <normaloff>:/Studio/Images/shapes-icon.png</normaloff>:/Studio/Images/shapes-icon.png</iconset>
+   <iconset resource="../Resources/VikingView.qrc">
+    <normaloff>:/VikingView/Images/viking-helmet-icon.png</normaloff>:/VikingView/Images/viking-helmet-icon.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">
@@ -517,7 +517,7 @@ QPushButton {
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>822</width>
+     <width>547</width>
      <height>21</height>
     </rect>
    </property>
@@ -901,7 +901,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
+    <iconset>
      <normaloff>:/Studio/Images/tools.png</normaloff>:/Studio/Images/tools.png</iconset>
    </property>
    <property name="text">
@@ -913,7 +913,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
+    <iconset>
      <normaloff>:/Studio/Images/data.png</normaloff>:/Studio/Images/data.png</iconset>
    </property>
    <property name="text">
@@ -925,7 +925,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
+    <iconset>
      <normaloff>:/Studio/Images/gear2.png</normaloff>:/Studio/Images/gear2.png</iconset>
    </property>
    <property name="text">
@@ -937,7 +937,7 @@ QPushButton {
     <bool>true</bool>
    </property>
    <property name="icon">
-    <iconset resource="../../../studio/src/Resources/ShapeWorksStudio.qrc">
+    <iconset>
      <normaloff>:/Studio/Images/chart.png</normaloff>:/Studio/Images/chart.png</iconset>
    </property>
    <property name="text">
@@ -1019,7 +1019,6 @@ QPushButton {
  </customwidgets>
  <resources>
   <include location="../Resources/VikingView.qrc"/>
-  <include location="../../../studio/src/Resources/ShapeWorksStudio.qrc"/>
  </resources>
  <connections/>
 </ui>
