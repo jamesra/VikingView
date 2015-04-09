@@ -433,7 +433,9 @@ set(DIRS ${QT_LIBRARY_DIRS} ${CGAL_DIR}/../auxiliary/gmp/lib ${CGAL_DIR}/bin ${B
 #
 # fixup_bundle also grabs the appropriate parts of the qt framework
 # (by following dependencies) and installs them in the distribution
-# 
+#
+IF(APPLE)
+
 install(CODE "
     file(GLOB_RECURSE QTPLUGINS
       \"\${CMAKE_INSTALL_PREFIX}/${plugin_dest_dir}/plugins/*${CMAKE_SHARED_LIBRARY_SUFFIX}\")
@@ -441,6 +443,7 @@ install(CODE "
     fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
     " COMPONENT Runtime)
 
+ENDIF(APPLE)
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
 # And then there's ways to customize this as well

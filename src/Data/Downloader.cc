@@ -97,7 +97,7 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
 
     if ( more )
     {
-      QString link = map["odata.nextLink"].asString();
+      QString link = map["odata.nextLink"].toString();
       QString next_page;
       if ( link.contains( ".svc" ) )
       {

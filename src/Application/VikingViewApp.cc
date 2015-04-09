@@ -30,6 +30,8 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
 
+  this->ui_->connectome_combo->view()->setMinimumWidth(400);
+
   this->ui_->sampling_slider->hide();
   this->ui_->sampling_label->hide();
 }

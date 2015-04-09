@@ -20,8 +20,8 @@
 #include <vtkLinearSubdivisionFilter.h>
 #include <vtkLineSource.h>
 #include <vtkWindowedSincPolyDataFilter.h>
-#include <vtkPLYWriter.h>
 #include <vtkRegularPolygonSource.h>
+//#include <vtkPLYWriter.h>
 
 #include <vtkPolyDataWriter.h>
 #include <vtkBooleanOperationPolyDataFilter.h>
