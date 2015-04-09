@@ -21,6 +21,7 @@
 #include <vtkLineSource.h>
 #include <vtkWindowedSincPolyDataFilter.h>
 #include <vtkPLYWriter.h>
+#include <vtkRegularPolygonSource.h>
 
 #include <vtkPolyDataWriter.h>
 #include <vtkBooleanOperationPolyDataFilter.h>
@@ -87,7 +88,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
 
     if ( n.z == 56 || n.z == 8 || n.z == 22 || n.z == 81 || n.z == 72 || n.z == 60 )
     {
-      continue;
+      //continue;
     }
 
     // scale
@@ -1230,19 +1231,43 @@ void Structure::cull_locations()
 
       int other_id = -1;
 
+
+
+
+      if ( n.linked_nodes.size() == 2 )
+      {
+        // if the two other locations are closer together than this one is to either of them
+
+        Node node_a = this->node_map_[n.linked_nodes[0]];
+        Node node_b = this->node_map_[n.linked_nodes[1]];
+
+        double min_dist = std::min(distance(n, node_a), distance(n, node_b));
+
+        if (distance(node_a, node_b) < min_dist)
+        {
+          std::cerr << "removed outlier!\n";
+          removed = true;
+          remove_list.push_back( n.id );
+          other_id = n.linked_nodes[0];
+        }
+      }
+
+
+
+
       foreach( int id, n.linked_nodes ) {
 
         if ( !removed )
         {
           Node other = this->node_map_[id];
 
-          if (other.linked_nodes.size() <= n.linked_nodes.size())  // remove the one with less links
+          if ( other.linked_nodes.size() <= n.linked_nodes.size() )  // remove the one with less links
           {
             if ( distance( n, other ) < std::max( n.radius, other.radius ) )
             {
               remove_list.push_back( n.id );
               other_id = other.id;
-            removed = true;
+              removed = true;
             }
           }
         }
@@ -1254,26 +1279,13 @@ void Structure::cull_locations()
 
         foreach( int id, n.linked_nodes ) {
 
-          if (id != other_id)
+          if ( id != other_id )
           {
             this->node_map_[other_id].linked_nodes.append( id );
-
-
             this->node_map_[id].linked_nodes.remove( n.id );
             this->node_map_[id].linked_nodes.append( other_id );
           }
         }
-
-/*
-
-        int n1 = n.linked_nodes[0];
-        int n2 = n.linked_nodes[1];
-
-        this->node_map_[n1].linked_nodes.remove( n.id );
-        this->node_map_[n1].linked_nodes.append( n2 );
-        this->node_map_[n2].linked_nodes.remove( n.id );
-        this->node_map_[n2].linked_nodes.append( n1 );*/
-
       }
     }
 
@@ -1362,10 +1374,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
   append->Update();
   poly_data = append->GetOutput();
 
-
   std::cerr << "number of verts: " << poly_data->GetNumberOfPoints() << "\n";
   std::cerr << "number of polys: " << poly_data->GetNumberOfCells() << "\n";
-
 
   this->mesh_ = poly_data;
 
@@ -1393,25 +1403,39 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
   if ( n.linked_nodes.size() != 2 )
   {
+
+    /* sphere */
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
     sphere->SetCenter( n.x, n.y, n.z );
     sphere->SetRadius( n.radius * 1.1 );
 
     int resolution = 10;
-    if (n.radius > 1.0)
+    if ( n.radius > 1.0 )
     {
       resolution = resolution * n.radius;
     }
 
     resolution = 12;
 
-    sphere->SetPhiResolution(resolution);
-    sphere->SetThetaResolution(resolution);
+    sphere->SetPhiResolution( resolution );
+    sphere->SetThetaResolution( resolution );
     sphere->Update();
 
     vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
     poly_data = sphere->GetOutput();
 
+    // circle
+    /*
+       vtkSmartPointer<vtkRegularPolygonSource> circle = vtkSmartPointer<vtkRegularPolygonSource>::New();
+       circle->GeneratePolygonOff();
+       circle->SetNumberOfSides( 12 );
+       circle->SetRadius( n.radius );
+       circle->SetCenter( n.x, n.y, n.z );
+       circle->Update();
+       vtkSmartPointer<vtkPolyData> poly_data = circle->GetOutput();
+     */
+
+/*
     vtkSmartPointer<vtkUnsignedCharArray> colors =
       vtkSmartPointer<vtkUnsignedCharArray>::New();
     colors->SetNumberOfComponents( 3 );
@@ -1420,7 +1444,6 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
     int r = 128 + ( qrand() % 128 );
     int g = 128 + ( qrand() % 128 );
     int b = 128 + ( qrand() % 128 );
-
     for ( int i = 0; i < poly_data->GetNumberOfPoints(); ++i )
     {
       unsigned char tempColor[3] =
@@ -1428,10 +1451,8 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
       colors->InsertNextTupleValue( tempColor );
     }
-
-
     //poly_data->GetPointData()->SetScalars( colors );
-
+ */
 
 /*
     vtkSmartPointer< vtkTriangleFilter > triangle_filter = vtkSmartPointer< vtkTriangleFilter >::New();
@@ -1457,9 +1478,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
     writer4->SetInputData( poly_data );
     //writer4->SetFileTypeToBinary();
     writer4->Write();
-*/
-
-
+ */
 
     append->AddInputData( poly_data );
 
@@ -1470,13 +1489,12 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
       vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
       vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
       lines->InsertNextCell( current_line.size() );
-      vtkSmartPointer<vtkDoubleArray> tube_radius = vtkSmartPointer<vtkDoubleArray>::New();
-      tube_radius->SetName( "tube_radius" );
+      vtkSmartPointer<vtkDoubleArray> tube_radius_array = vtkSmartPointer<vtkDoubleArray>::New();
+      tube_radius_array->SetName( "tube_radius" );
 
-      vtkSmartPointer<vtkTupleInterpolator> interpolatedRadius =
-        vtkSmartPointer<vtkTupleInterpolator> ::New();
-      interpolatedRadius->SetInterpolationTypeToLinear();
-      interpolatedRadius->SetNumberOfComponents( 1 );
+      vtkSmartPointer<vtkTupleInterpolator> interpolated_radius = vtkSmartPointer<vtkTupleInterpolator> ::New();
+      interpolated_radius->SetInterpolationTypeToLinear();
+      interpolated_radius->SetNumberOfComponents( 1 );
 
       int count = 0;
       foreach( int node_id, current_line ) {
@@ -1484,55 +1502,55 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
         vtk_points->InsertNextPoint( node.x, node.y, node.z );
         lines->InsertCellPoint( count++ );
-        tube_radius->InsertNextTuple1( node.radius );
-        interpolatedRadius->AddTuple( count, &( node.radius ) );
+        tube_radius_array->InsertNextTuple1( node.radius );
+        interpolated_radius->AddTuple( count, &( node.radius ) );
       }
 
-      vtkSmartPointer<vtkParametricSpline> spline =
-        vtkSmartPointer<vtkParametricSpline>::New();
+      vtkSmartPointer<vtkParametricSpline> spline = vtkSmartPointer<vtkParametricSpline>::New();
       spline->SetPoints( vtk_points );
 
       // Interpolate the points
-      vtkSmartPointer<vtkParametricFunctionSource> functionSource =
+      vtkSmartPointer<vtkParametricFunctionSource> function_source =
         vtkSmartPointer<vtkParametricFunctionSource>::New();
-      functionSource->SetParametricFunction( spline );
-      functionSource->SetUResolution( 2 * vtk_points->GetNumberOfPoints() );
-      //functionSource->SetUResolution( 5 );
-      functionSource->Update();
+      function_source->SetParametricFunction( spline );
+      function_source->SetUResolution( 2 * vtk_points->GetNumberOfPoints() );
+      //function_source->SetUResolution( vtk_points->GetNumberOfPoints() );
+      function_source->Update();
 
       vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
       poly_data->SetPoints( vtk_points );
       poly_data->SetLines( lines );
-      poly_data->GetPointData()->AddArray( tube_radius );
+      poly_data->GetPointData()->AddArray( tube_radius_array );
       poly_data->GetPointData()->SetActiveScalars( "tube_radius" );
 
+      // tmp: add line instead
+      //append->AddInputData( poly_data );
+
       // Generate the radius scalars
-      vtkSmartPointer<vtkDoubleArray> tubeRadius = vtkSmartPointer<vtkDoubleArray>::New();
-      unsigned int n = functionSource->GetOutput()->GetNumberOfPoints();
-      tubeRadius->SetNumberOfTuples( n );
-      tubeRadius->SetName( "TubeRadius" );
-      double tMin = interpolatedRadius->GetMinimumT();
-      double tMax = interpolatedRadius->GetMaximumT();
+      vtkSmartPointer<vtkDoubleArray> tube_radius = vtkSmartPointer<vtkDoubleArray>::New();
+      unsigned int n = function_source->GetOutput()->GetNumberOfPoints();
+      tube_radius->SetNumberOfTuples( n );
+      tube_radius->SetName( "TubeRadius" );
+      double tMin = interpolated_radius->GetMinimumT();
+      double tMax = interpolated_radius->GetMaximumT();
       double radius;
       for ( unsigned int i = 0; i < n; ++i )
       {
         double t = ( tMax - tMin ) / ( n - 1 ) * i + tMin;
-        interpolatedRadius->InterpolateTuple( t, &radius );
-        tubeRadius->SetTuple1( i, radius );
+        interpolated_radius->InterpolateTuple( t, &radius );
+        tube_radius->SetTuple1( i, radius );
       }
 
       // Add the scalars to the polydata
-      vtkSmartPointer<vtkPolyData> tubePolyData =
-        vtkSmartPointer<vtkPolyData>::New();
-      tubePolyData = functionSource->GetOutput();
-      tubePolyData->GetPointData()->AddArray( tubeRadius );
-      tubePolyData->GetPointData()->SetActiveScalars( "TubeRadius" );
+      vtkSmartPointer<vtkPolyData> tube_poly_data = vtkSmartPointer<vtkPolyData>::New();
+      tube_poly_data = function_source->GetOutput();
+      tube_poly_data->GetPointData()->AddArray( tube_radius );
+      tube_poly_data->GetPointData()->SetActiveScalars( "TubeRadius" );
 
       vtkSmartPointer<vtkTubeFilter> tube = vtkSmartPointer<vtkTubeFilter>::New();
       //tube->SetInputData( poly_data );
 
-      //tube->SetInputData( functionSource->GetOutput() );
-      tube->SetInputData( tubePolyData );
+      tube->SetInputData( tube_poly_data );
 
       tube->CappingOn();
       tube->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
@@ -1544,26 +1562,30 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
       poly_data = tube->GetOutput();
 
-      vtkSmartPointer<vtkUnsignedCharArray> colors =
-        vtkSmartPointer<vtkUnsignedCharArray>::New();
-      colors->SetNumberOfComponents( 3 );
-      colors->SetName( "Colors" );
+      /* //color
+         vtkSmartPointer<vtkUnsignedCharArray> colors =
+         vtkSmartPointer<vtkUnsignedCharArray>::New();
+         colors->SetNumberOfComponents( 3 );
+         colors->SetName( "Colors" );
 
-      int r = 128 + ( qrand() % 128 );
-      int g = 128 + ( qrand() % 128 );
-      int b = 128 + ( qrand() % 128 );
+         int r = 128 + ( qrand() % 128 );
+         int g = 128 + ( qrand() % 128 );
+         int b = 128 + ( qrand() % 128 );
 
-      for ( int i = 0; i < poly_data->GetNumberOfPoints(); ++i )
-      {
-        unsigned char tempColor[3] =
-        {r, g, b};
+         for ( int i = 0; i < poly_data->GetNumberOfPoints(); ++i )
+         {
+         unsigned char tempColor[3] =
+         {r, g, b};
 
-        colors->InsertNextTupleValue( tempColor );
-      }
+         colors->InsertNextTupleValue( tempColor );
+         }
 
-      //poly_data->GetPointData()->SetScalars( colors );
+         //poly_data->GetPointData()->SetScalars( colors );
+       */
 
+      // here
       append->AddInputData( poly_data );
+
 /*
 
 
@@ -1600,7 +1622,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
       writer->SetInputData( poly_data );
       writer->Write();
 
-*/
+ */
     }
 
     for ( int i = 0; i < n.linked_nodes.size(); i++ )
