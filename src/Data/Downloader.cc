@@ -14,7 +14,7 @@ Downloader::~Downloader()
 {}
 
 //-----------------------------------------------------------------------------
-QSharedPointer<Structure> Downloader::download_structure( int id )
+QSharedPointer<Structure> Downloader::download_structure( QString end_point, int id )
 {
   QSharedPointer<Structure> structure;
 
@@ -22,15 +22,14 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
   QList<QVariant> link_list;
   QList<QVariant> structure_list;
 
-  QString end_point = "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc";
-  //QString end_point = "http://websvc1.connectomes.utah.edu/RC1/OData/ConnectomeData.svc";
+  //end_point = "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc";
+  //end_point = "http://websvc1.connectomes.utah.edu/RC1/OData/ConnectomeData.svc";
 
   QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
                     + QString::number( id ) + " or ID eq " + QString::number( id );
   structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
 
-  request = QString( end_point + "/Locations/?$filter=ParentID eq " )
-            + QString::number( id );
+  request = QString( end_point + "/Locations/?$filter=ParentID eq " ) + QString::number( id );
   location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
 
   request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" )
@@ -48,7 +47,7 @@ QSharedPointer<Structure> Downloader::download_structure( int id )
 QList<QVariant> Downloader::download_json( QString url_string, QString file_prefix )
 {
 
-  const int save_to_file = 0;
+  const int save_to_file = 1;
   const int load_from_file = 0;
 
   QList<QVariant> list;
@@ -90,6 +89,11 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
     pages.append( text );
 
     QMap<QString, QVariant> map = Json::decode( text );
+
+    if ( !map.contains( "value" ) )
+    {
+      // parse error
+    }
 
     list.append( map["value"].toList() );
 

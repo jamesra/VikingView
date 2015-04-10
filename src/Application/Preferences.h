@@ -32,7 +32,9 @@ public:
   void set_main_window_size( QSize size );
 
   QStringList get_connectome_list();
-  void set_connectome_list(QStringList list);
+  void set_connectome_list(QStringList nicknames, QStringList list);
+
+  QStringList get_connectome_nickname_list();
 
   int get_last_connectome();
   void set_last_connectome(int id);
@@ -43,6 +45,7 @@ public:
 Q_SIGNALS:
   //void color_scheme_changed( int newIndex );
   //void glyph_properties_changed();
+  void preferences_changed();
 
 private:
 
@@ -61,6 +64,9 @@ private:
 
   /// the preferences user interface
   PreferencesWindow preferences_window;
+
+  QStringList default_connectomes_;
+  QStringList default_connectome_nicknames_;
 };
 
 #endif // ifndef VIKINGVIEW_APPLICATION_PREFERENCES_H

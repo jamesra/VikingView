@@ -1407,7 +1407,8 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
     /* sphere */
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
     sphere->SetCenter( n.x, n.y, n.z );
-    sphere->SetRadius( n.radius * 1.1 );
+    sphere->SetRadius( n.radius * 1.05 );
+    //sphere->SetRadius( n.radius );
 
     int resolution = 10;
     if ( n.radius > 1.0 )

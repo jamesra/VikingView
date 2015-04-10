@@ -639,11 +639,6 @@ QPushButton {
                 <property name="sizeAdjustPolicy">
                  <enum>QComboBox::AdjustToContentsOnFirstShow</enum>
                 </property>
-                <item>
-                 <property name="text">
-                  <string>http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc</string>
-                 </property>
-                </item>
                </widget>
               </item>
               <item row="0" column="1">

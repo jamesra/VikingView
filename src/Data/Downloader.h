@@ -21,7 +21,7 @@ public:
   Downloader();
   ~Downloader();
 
-  QSharedPointer<Structure> download_structure( int id );
+  QSharedPointer<Structure> download_structure( QString end_point, int id );
 
   QList<QVariant> get_location_list();
   QList<QVariant> get_link_list();

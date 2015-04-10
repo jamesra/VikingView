@@ -47,6 +47,10 @@ public Q_SLOTS:
   void on_auto_view_button_clicked();
   void on_cutting_plane_button_clicked();
 
+  void on_connectome_configure_clicked();
+
+  void on_preferences_changed();
+
 private:
 
   void update_table();

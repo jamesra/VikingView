@@ -1,9 +1,7 @@
-
 // qt
 #include <QThread>
 
 #include <Application/Preferences.h>
-
 
 //-----------------------------------------------------------------------------
 Preferences& Preferences::Instance()
@@ -15,7 +13,17 @@ Preferences& Preferences::Instance()
 //-----------------------------------------------------------------------------
 Preferences::Preferences()
   : settings( "Scientific Computing and Imaging Institute", "VikingView" )
-{}
+{
+  this->default_connectomes_ << "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc";
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC1/OData/ConnectomeData.svc";
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC2/OData/ConnectomeData.svc";
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RPC1/OData/ConnectomeData.svc";
+
+  this->default_connectome_nicknames_ << "Rabbit";
+  this->default_connectome_nicknames_ << "RC1";
+  this->default_connectome_nicknames_ << "RC2";
+  this->default_connectome_nicknames_ << "RPC1";
+}
 
 //-----------------------------------------------------------------------------
 void Preferences::show_window()
@@ -42,50 +50,55 @@ void Preferences::set_main_window_size( QSize size )
   this->settings.setValue( "MainWindow/Size", size );
 }
 
-
-
 //-----------------------------------------------------------------------------
 QStringList Preferences::get_connectome_list()
 {
-  QStringList default_list;
-  default_list << "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc";
-  QList<QVariant> list = this->settings.value( "Connectomes", default_list).toList();
+  QList<QVariant> list = this->settings.value( "Connectomes", this->default_connectomes_ ).toList();
 
   QStringList string_list;
-  foreach (QVariant var, list)
-  {
+  foreach( QVariant var, list ) {
     string_list << var.toString();
   }
   return string_list;
 }
 
 //-----------------------------------------------------------------------------
-void Preferences::set_connectome_list(QStringList list)
+void Preferences::set_connectome_list( QStringList nicknames, QStringList list )
 {
-  this->settings.setValue("Connectomes", list);
+  this->settings.setValue( "Connectomes", list );
+  this->settings.setValue( "Connectome Nicknames", nicknames );
+  emit preferences_changed();
 }
-
 
 //-----------------------------------------------------------------------------
 int Preferences::get_last_connectome()
 {
-  return this->settings.value("LastConnectome", 0).toInt();
+  return this->settings.value( "LastConnectome", 0 ).toInt();
 }
 
 //-----------------------------------------------------------------------------
-void Preferences::set_last_connectome(int id)
+QStringList Preferences::get_connectome_nickname_list()
 {
-  this->settings.setValue("LastConnectome", id);
+  QList<QVariant> list = this->settings.value( "Connectome Nicknames", this->default_connectome_nicknames_ ).toList();
+
+  QStringList string_list;
+  foreach( QVariant var, list ) {
+    string_list << var.toString();
+  }
+  return string_list;
 }
 
+//-----------------------------------------------------------------------------
+void Preferences::set_last_connectome( int id )
+{
+  this->settings.setValue( "LastConnectome", id );
+  emit preferences_changed();
+}
 
 //-----------------------------------------------------------------------------
 void Preferences::restore_defaults()
 {
-  QStringList default_list;
-  default_list << "http://connectomes.utah.edu/Rabbit/OData/ConnectomeData.svc";
 
-  this->set_connectome_list(default_list);
-  this->set_last_connectome(0);
-
+  this->set_connectome_list( this->default_connectome_nicknames_, this->default_connectomes_ );
+  this->set_last_connectome( 0 );
 }

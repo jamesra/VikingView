@@ -31,7 +31,7 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
 
-  this->ui_->connectome_combo->view()->setMinimumWidth(400);
+  //this->ui_->connectome_combo->view()->setMinimumWidth( 400 );
 
   this->ui_->sampling_slider->hide();
   this->ui_->sampling_label->hide();
@@ -39,6 +39,8 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
   // resize from preferences
   this->resize( Preferences::Instance().get_main_window_size() );
 
+  connect( &( Preferences::Instance() ), SIGNAL( preferences_changed() ), this, SLOT( on_preferences_changed() ) );
+  this->on_preferences_changed();
 }
 
 //---------------------------------------------------------------------------
@@ -59,8 +61,6 @@ void VikingViewApp::on_add_button_clicked()
 
     foreach( QString str, pieces ) {
       int id = str.toInt();
-      std::cerr << "id = " << id << "\n";
-      //textLabel->setText( text );
       this->load_structure( id );
     }
   }
@@ -94,16 +94,25 @@ void VikingViewApp::load_structure( int id )
   progress.setWindowModality( Qt::WindowModal );
   progress.setMinimumDuration( 500 );
 
-  progress.setValue(0);
+  progress.setValue( 0 );
   Downloader downloader;
-  QSharedPointer<Structure> structure = downloader.download_structure( id );
 
-  progress.setLabelText("Generating Mesh...");
+  QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
+  QSharedPointer<Structure> structure = downloader.download_structure( end_point, id );
+
+  if ( structure->get_node_map().size() == 0 )
+  {
+    progress.close();
+    QMessageBox::critical( NULL, "VikingView", "Error: Download error or Invalid structure", QMessageBox::Ok );
+    return;
+  }
+
+  progress.setLabelText( "Generating Mesh..." );
   this->structures_.append( structure );
-  progress.setValue(2);
+  progress.setValue( 2 );
 
   this->viewer_->display_structures( this->structures_ );
-  progress.setValue(4);
+  progress.setValue( 4 );
 
   this->update_table();
 
@@ -166,7 +175,6 @@ void VikingViewApp::on_action_quit_triggered()
   this->close();
 }
 
-
 //---------------------------------------------------------------------------
 void VikingViewApp::on_action_preferences_triggered()
 {
@@ -191,15 +199,39 @@ void VikingViewApp::on_auto_view_button_clicked()
 //---------------------------------------------------------------------------
 void VikingViewApp::on_cutting_plane_button_clicked()
 {
-  this->viewer_->set_clipping_plane(this->ui_->cutting_plane_button->isChecked());
+  this->viewer_->set_clipping_plane( this->ui_->cutting_plane_button->isChecked() );
 }
 
 //---------------------------------------------------------------------------
-void VikingViewApp::closeEvent(QCloseEvent* event)
+void VikingViewApp::closeEvent( QCloseEvent* event )
 {
   // close the preferences window in case it is open
   Preferences::Instance().close_window();
 
   // save the size of the window to preferences
   Preferences::Instance().set_main_window_size( this->size() );
+
+  // save the last used connectome
+  Preferences::Instance().set_last_connectome( this->ui_->connectome_combo->currentIndex() );
+  this->ui_->connectome_combo->setCurrentIndex( Preferences::Instance().get_last_connectome() );
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_preferences_changed()
+{
+
+  this->ui_->connectome_combo->clear();
+  this->ui_->connectome_combo->addItems( Preferences::Instance().get_connectome_nickname_list() );
+  int last_connectome = Preferences::Instance().get_last_connectome();
+  if ( last_connectome < 0 || last_connectome >= this->ui_->connectome_combo->count() )
+  {
+    last_connectome = 0;
+  }
+  this->ui_->connectome_combo->setCurrentIndex( last_connectome );
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_connectome_configure_clicked()
+{
+  Preferences::Instance().show_window();
 }

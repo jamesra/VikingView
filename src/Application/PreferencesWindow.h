@@ -29,6 +29,7 @@ public Q_SLOTS:
 
 private:
   Ui_PreferencesWindow* ui_;
+
 };
 
 #endif // VIKINGVIEW_APPLICATION_PREFERENCES_WINDOW_H
