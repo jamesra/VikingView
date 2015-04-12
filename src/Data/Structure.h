@@ -16,18 +16,24 @@ class Node
 public:
   double x, y, z, radius;
   long id;
+  long parent_id;
   QList<int> linked_nodes;
   long graph_id;
   bool visited;
 };
 
-typedef std::map<long, Node> NodeMap;
+typedef QHash<long, QSharedPointer<Node> > NodeMap;
 
 class Link
 {
 public:
   long a, b;
 };
+
+
+class Structure;
+
+typedef QHash<long, QSharedPointer<Structure> > StructureHash;
 
 //! Maintains data a structure (e.g. cell)
 class Structure
@@ -38,17 +44,17 @@ public: ~Structure();
   static QSharedPointer<Structure> create_structure( int id, QList<QVariant> structure_list,
                                                      QList<QVariant> location_list, QList<QVariant> link_list );
 
+  static QSharedPointer<StructureHash> create_structures( QList<QVariant> structure_list,
+                                                                   QList<QVariant> location_list, QList<QVariant> link_list );
+
   NodeMap get_node_map();
 
   QList<Link> get_links();
 
   vtkSmartPointer<vtkPolyData> get_mesh_old();
   vtkSmartPointer<vtkPolyData> get_mesh_alpha();
-
   vtkSmartPointer<vtkPolyData> get_mesh_union();
-
   vtkSmartPointer<vtkPolyData> get_mesh_parts();
-
   vtkSmartPointer<vtkPolyData> get_mesh_tubes();
 
   double get_volume();
@@ -67,12 +73,9 @@ private:
 
   Structure(); // private
 
+  void add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line );
 
-  void add_polydata(Node n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line);
-
-
-  static double distance(const Node &n1, const Node &n2);
-
+  static double distance( const QSharedPointer<Node> &n1, const QSharedPointer<Node> &n2 );
 
   void connect_subgraphs();
 

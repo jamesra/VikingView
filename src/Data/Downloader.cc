@@ -14,7 +14,7 @@ Downloader::~Downloader()
 {}
 
 //-----------------------------------------------------------------------------
-QSharedPointer<Structure> Downloader::download_structure( QString end_point, int id )
+QSharedPointer<Structure> Downloader::download_cell( QString end_point, int id )
 {
   QSharedPointer<Structure> structure;
 
@@ -26,21 +26,40 @@ QSharedPointer<Structure> Downloader::download_structure( QString end_point, int
   //end_point = "http://websvc1.connectomes.utah.edu/RC1/OData/ConnectomeData.svc";
 
   QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
-                    + QString::number( id ) + " or ID eq " + QString::number( id );
+    + QString::number( id ) + " or ID eq " + QString::number( id );
   structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
 
-  request = QString( end_point + "/Locations/?$filter=ParentID eq " ) + QString::number( id );
+  //request = QString( end_point + "/Locations/?$filter=ParentID eq " ) + QString::number( id );
+  request = QString( end_point + "/SelectStructureLocations?ID=" ) + QString::number( id ) + "L" + "&$format=json";
   location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
 
-  request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" )
-            + QString::number( id ) + "L";
-
+  //request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" ) + QString::number( id ) + "L";
+  request = QString( end_point + "/SelectStructureLocationLinks?ID=" ) + QString::number( id ) + "L";
   link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
+
   std::cerr << "downloaded\n";
 
   structure = Structure::create_structure( id, structure_list, location_list, link_list );
 
   return structure;
+}
+
+
+bool Downloader::download_cell2(QString end_point, int id, DownloadObject &download_object)
+{
+  QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
+    + QString::number( id ) + " or ID eq " + QString::number( id );
+  download_object.structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
+
+  //request = QString( end_point + "/Locations/?$filter=ParentID eq " ) + QString::number( id );
+  request = QString( end_point + "/SelectStructureLocations?ID=" ) + QString::number( id ) + "L" + "&$format=json";
+  download_object.location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
+
+  //request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" ) + QString::number( id ) + "L";
+  request = QString( end_point + "/SelectStructureLocationLinks?ID=" ) + QString::number( id ) + "L";
+  download_object.link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
+
+  return true;
 }
 
 //-----------------------------------------------------------------------------

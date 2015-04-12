@@ -46,7 +46,7 @@ public:
   void set_renderer( vtkSmartPointer<vtkRenderer> renderer );
   vtkSmartPointer<vtkRenderer> get_renderer();
 
-  void display_structures( QList<QSharedPointer<Structure> > structures );
+  void display_structures( StructureHash structures );
 
   void clear_viewer();
 

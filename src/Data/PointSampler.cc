@@ -36,9 +36,9 @@ std::list<Point> PointSampler::sample_points()
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
 
-    Node n = it->second;
+    QSharedPointer<Node> n = it.value();
 
-    if ( n.linked_nodes.size() != 1 )
+    if ( n->linked_nodes.size() != 1 )
     {
       continue;
     }
@@ -173,17 +173,17 @@ std::list<Point> PointSampler::sample_points()
       continue;
     }
 
-    Node n1 = node_map[link.a];
-    Node n2 = node_map[link.b];
+    QSharedPointer<Node> n1 = node_map[link.a];
+    QSharedPointer<Node> n2 = node_map[link.b];
 
     double p1[3], p2[3];
 
-    p1[0] = n1.x;
-    p1[1] = n1.y;
-    p1[2] = n1.z;
-    p2[0] = n2.x;
-    p2[1] = n2.y;
-    p2[2] = n2.z;
+    p1[0] = n1->x;
+    p1[1] = n1->y;
+    p1[2] = n1->z;
+    p2[0] = n2->x;
+    p2[1] = n2->y;
+    p2[2] = n2->z;
 
     double vec[3];
     vec[0] = p1[0] - p2[0];
@@ -205,11 +205,11 @@ std::list<Point> PointSampler::sample_points()
       double ratio = (double)step / ( num_steps - 1 );
       double inv_ratio = 1 - ratio;
 
-      double radius = ( n1.radius * ratio ) + ( n2.radius * inv_ratio );
+      double radius = ( n1->radius * ratio ) + ( n2->radius * inv_ratio );
 
-      double this_x = n1.x * ratio + n2.x * inv_ratio;
-      double this_y = n1.y * ratio + n2.y * inv_ratio;
-      double this_z = n1.z * ratio + n2.z * inv_ratio;
+      double this_x = n1->x * ratio + n2->x * inv_ratio;
+      double this_y = n1->y * ratio + n2->y * inv_ratio;
+      double this_z = n1->z * ratio + n2->z * inv_ratio;
 
       PointSampler::sample_sphere( radius, this_x, this_y, this_z, points );
       sphere_count++;
@@ -289,9 +289,9 @@ std::list<Weighted_point> PointSampler::collect_spheres()
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
 
-    Node n = it->second;
+    QSharedPointer<Node> n = it.value();
 
-    if ( n.linked_nodes.size() != 1 )
+    if ( n->linked_nodes.size() != 1 )
     {
       continue;
     }
@@ -313,17 +313,17 @@ std::list<Weighted_point> PointSampler::collect_spheres()
       continue;
     }
 
-    Node n1 = node_map[link.a];
-    Node n2 = node_map[link.b];
+    QSharedPointer<Node> n1 = node_map[link.a];
+    QSharedPointer<Node> n2 = node_map[link.b];
 
     double p1[3], p2[3];
 
-    p1[0] = n1.x;
-    p1[1] = n1.y;
-    p1[2] = n1.z;
-    p2[0] = n2.x;
-    p2[1] = n2.y;
-    p2[2] = n2.z;
+    p1[0] = n1->x;
+    p1[1] = n1->y;
+    p1[2] = n1->z;
+    p2[0] = n2->x;
+    p2[1] = n2->y;
+    p2[2] = n2->z;
 
     double vec[3];
     vec[0] = p1[0] - p2[0];
@@ -333,7 +333,7 @@ std::list<Weighted_point> PointSampler::collect_spheres()
     double squared_distance = vtkMath::Distance2BetweenPoints( p1, p2 );
     double distance = sqrt( squared_distance );
 
-    double smaller_radius = std::min<double>( n1.radius, n2.radius );
+    double smaller_radius = std::min<double>( n1->radius, n2->radius );
 
     double num_steps = (int)( distance * num_pts_line );
 //    double num_steps = (int)( distance / ( smaller_radius / 4 ) );
@@ -348,11 +348,11 @@ std::list<Weighted_point> PointSampler::collect_spheres()
       double ratio = (double)step / ( num_steps - 1 );
       double inv_ratio = 1 - ratio;
 
-      double radius = ( n1.radius * ratio ) + ( n2.radius * inv_ratio );
+      double radius = ( n1->radius * ratio ) + ( n2->radius * inv_ratio );
 
-      double this_x = n1.x * ratio + n2.x * inv_ratio;
-      double this_y = n1.y * ratio + n2.y * inv_ratio;
-      double this_z = n1.z * ratio + n2.z * inv_ratio;
+      double this_x = n1->x * ratio + n2->x * inv_ratio;
+      double this_y = n1->y * ratio + n2->y * inv_ratio;
+      double this_z = n1->z * ratio + n2->z * inv_ratio;
 
       points.push_front( Weighted_point( Bare_point( this_x, this_y, this_z ), radius ) );
 

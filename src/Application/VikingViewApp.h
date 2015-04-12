@@ -8,9 +8,12 @@
 #include <QTimer>
 
 #include <QFile>
+#include <QMap>
 
+
+#include <Data/Structure.h>
 class Viewer;
-class Structure;
+//class Structure;
 
 // Forward Qt class declarations
 class Ui_VikingViewApp;
@@ -61,7 +64,13 @@ private:
   /// designer form
   Ui_VikingViewApp* ui_;
 
-  QList<QSharedPointer<Structure> > structures_;
+  //QList<QSharedPointer<Structure> > structures_;
+
+  //QMap<int, QSharedPointer<Structure> > structures_;
+
+  StructureHash structures_;
+
+  QMap<int, QList<int> > cells_;
 
   Viewer* viewer_;
 };

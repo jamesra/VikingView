@@ -61,6 +61,103 @@ Structure::~Structure()
 {}
 
 //-----------------------------------------------------------------------------
+QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> structure_list,
+                                                            QList<QVariant> location_list,
+                                                            QList<QVariant> link_list )
+{
+
+  QSharedPointer<StructureHash> structures = QSharedPointer<StructureHash> ( new StructureHash() );
+
+  QHash<int, QSharedPointer<NodeMap> > node_maps;
+
+  foreach( QVariant var, structure_list ) {
+    QMap<QString, QVariant> item = var.toMap();
+    int id = item["ID"].toLongLong();
+    QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
+    structure->id_ = id;
+    structures->insert( id, structure );
+  }
+
+  std::cerr << "structure list length: " << structure_list.size() << "\n";
+  std::cerr << "location list length: " << location_list.size() << "\n";
+  std::cerr << "link list length: " << link_list.size() << "\n";
+
+  float units_per_pixel = 2.18 / 1000.0;
+  float units_per_section = -( 90.0 / 1000.0 );
+
+  NodeMap full_node_map;
+
+  // construct nodes
+  foreach( QVariant var, location_list ) {
+    QSharedPointer<Node> n = QSharedPointer<Node>( new Node() );
+    QMap<QString, QVariant> item = var.toMap();
+    n->id = item["ID"].toLongLong();
+    n->x = item["VolumeX"].toDouble();
+    n->y = item["VolumeY"].toDouble();
+    n->z = item["Z"].toDouble();
+    n->radius = item["Radius"].toDouble();
+    n->parent_id = item["ParentID"].toLongLong();
+    n->graph_id = -1;
+
+    // scale
+    n->x = n->x * units_per_pixel;
+    n->y = n->y * units_per_pixel;
+    n->z = n->z * units_per_section;
+    n->radius = n->radius * units_per_pixel;
+
+    structures->value( n->parent_id )->node_map_[n->id] = n;
+    full_node_map[n->id] = n;
+  }
+
+  foreach( QVariant var, link_list ) {
+    Link link;
+    QMap<QString, QVariant> item = var.toMap();
+
+    link.a = item["A"].toLongLong();
+    link.b = item["B"].toLongLong();
+
+    if ( !full_node_map.contains( link.a ) || !full_node_map.contains( link.b ) )
+    {
+      continue;
+    }
+
+    full_node_map[link.a]->linked_nodes.append( link.b );
+    full_node_map[link.b]->linked_nodes.append( link.a );
+
+    if ( full_node_map[link.a]->parent_id != full_node_map[link.b]->parent_id )
+    {
+      std::cerr << "links can go between structs?!\n";
+      std::cerr << "links can go between structs?!\n";
+      std::cerr << "links can go between structs?!\n";
+    }
+
+    long parent_id = full_node_map[link.a]->parent_id;
+    structures->value( parent_id )->links_.append( link );
+  }
+
+  foreach( QSharedPointer<Structure> structure, structures->values() ) {
+    //std::cerr << "===Initial===\n";
+    //structure->link_report();
+
+    structure->connect_subgraphs();
+
+    //std::cerr << "===After graph connection===\n";
+    //structure->link_report();
+
+    //std::cerr << "number of nodes : " << structure->node_map_.size() << "\n";
+
+    structure->cull_locations();
+
+    structure->connect_subgraphs();
+
+    //std::cerr << "===After location culling===\n";
+    //structure->link_report();
+  }
+
+  return structures;
+}
+
+//-----------------------------------------------------------------------------
 QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> structure_list,
                                                        QList<QVariant> location_list, QList<QVariant> link_list )
 {
@@ -77,27 +174,26 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
 
   // construct nodes
   foreach( QVariant var, location_list ) {
-    Node n;
+    QSharedPointer<Node> n = QSharedPointer<Node>( new Node() );
     QMap<QString, QVariant> item = var.toMap();
-    n.x = item["VolumeX"].toDouble();
-    n.y = item["VolumeY"].toDouble();
-    n.z = item["Z"].toDouble();
-    n.radius = item["Radius"].toDouble();
-    n.id = item["ID"].toLongLong();
-    n.graph_id = -1;
-
-    if ( n.z == 56 || n.z == 8 || n.z == 22 || n.z == 81 || n.z == 72 || n.z == 60 )
-    {
-      //continue;
-    }
+    n->id = item["ID"].toLongLong();
+    n->x = item["VolumeX"].toDouble();
+    n->y = item["VolumeY"].toDouble();
+    n->z = item["Z"].toDouble();
+    n->radius = item["Radius"].toDouble();
+    n->parent_id = item["ParentID"].toLongLong();
+    n->graph_id = -1;
 
     // scale
-    n.x = n.x * units_per_pixel;
-    n.y = n.y * units_per_pixel;
-    n.z = n.z * units_per_section;
-    n.radius = n.radius * units_per_pixel;
+    n->x = n->x * units_per_pixel;
+    n->y = n->y * units_per_pixel;
+    n->z = n->z * units_per_section;
+    n->radius = n->radius * units_per_pixel;
 
-    structure->node_map_[n.id] = n;
+    if ( item["ParentID"] == id )
+    {
+      structure->node_map_[n->id] = n;
+    }
   }
 
   std::cerr << "Found " << structure->node_map_.size() << " nodes\n";
@@ -115,8 +211,8 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
       continue;
     }
 
-    structure->node_map_[link.a].linked_nodes.append( link.b );
-    structure->node_map_[link.b].linked_nodes.append( link.a );
+    structure->node_map_[link.a]->linked_nodes.append( link.b );
+    structure->node_map_[link.b]->linked_nodes.append( link.a );
     structure->links_.append( link );
   }
 
@@ -167,9 +263,9 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
 
-    Node n = it->second;
+    QSharedPointer<Node> n = it.value();
 
-    if ( n.linked_nodes.size() != 1 )
+    if ( n->linked_nodes.size() != 1 )
     {
       continue;
     }
@@ -177,8 +273,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
 //    std::cerr << "adding sphere: " << n.id << "(" << n.x << "," << n.y << "," << n.z << "," << n.radius << ")\n";
 
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
-    sphere->SetCenter( n.x, n.y, n.z );
-    sphere->SetRadius( n.radius );
+    sphere->SetCenter( n->x, n->y, n->z );
+    sphere->SetRadius( n->radius );
     sphere->Update();
 
     if ( first )
@@ -227,13 +323,13 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
       continue;
     }
 
-    Node n1 = node_map[link.a];
-    Node n2 = node_map[link.b];
+    QSharedPointer<Node> n1 = node_map[link.a];
+    QSharedPointer<Node> n2 = node_map[link.b];
 
     vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
 
-    vtk_points->InsertNextPoint( n1.x, n1.y, n1.z );
-    vtk_points->InsertNextPoint( n2.x, n2.y, n2.z );
+    vtk_points->InsertNextPoint( n1->x, n1->y, n1->z );
+    vtk_points->InsertNextPoint( n2->x, n2->y, n2->z );
 
     vtkSmartPointer<vtkCellArray> lines =
       vtkSmartPointer<vtkCellArray>::New();
@@ -250,7 +346,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
       = vtkSmartPointer<vtkTubeFilter>::New();
     tube->SetInputData( polyData );
     tube->CappingOn();
-    tube->SetRadius( n1.radius );
+    tube->SetRadius( n1->radius );
     tube->SetNumberOfSides( 10 );
     tube->Update();
 
@@ -987,7 +1083,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
     return this->mesh_;
   }
 
-  std::cerr << "creating mesh...\n";
+  //std::cerr << "creating mesh...\n";
 
   NodeMap node_map = this->get_node_map();
 
@@ -1001,9 +1097,9 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
   {
 
-    Node n = it->second;
+    QSharedPointer<Node> n = it.value();
 
-    if ( n.linked_nodes.size() != 1 )
+    if ( n->linked_nodes.size() != 1 )
     {
       continue;
     }
@@ -1011,8 +1107,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
 //    std::cerr << "adding sphere: " << n.id << "(" << n.x << "," << n.y << "," << n.z << "," << n.radius << ")\n";
 
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
-    sphere->SetCenter( n.x, n.y, n.z );
-    sphere->SetRadius( n.radius );
+    sphere->SetCenter( n->x, n->y, n->z );
+    sphere->SetRadius( n->radius );
     sphere->Update();
 
     if ( first )
@@ -1048,13 +1144,13 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
       continue;
     }
 
-    Node n1 = node_map[link.a];
-    Node n2 = node_map[link.b];
+    QSharedPointer<Node> n1 = node_map[link.a];
+    QSharedPointer<Node> n2 = node_map[link.b];
 
     vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
 
-    vtk_points->InsertNextPoint( n1.x, n1.y, n1.z );
-    vtk_points->InsertNextPoint( n2.x, n2.y, n2.z );
+    vtk_points->InsertNextPoint( n1->x, n1->y, n1->z );
+    vtk_points->InsertNextPoint( n2->x, n2->y, n2->z );
 
     vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
     lines->InsertNextCell( 2 );
@@ -1064,8 +1160,8 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
     vtkSmartPointer<vtkDoubleArray> tube_radius = vtkSmartPointer<vtkDoubleArray>::New();
     tube_radius->SetName( "tube_radius" );
     tube_radius->SetNumberOfTuples( 2 );
-    tube_radius->SetTuple1( 0, n1.radius );
-    tube_radius->SetTuple1( 1, n2.radius );
+    tube_radius->SetTuple1( 0, n1->radius );
+    tube_radius->SetTuple1( 1, n2->radius );
 
     vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
     poly_data->SetPoints( vtk_points );
@@ -1077,7 +1173,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
     tube->SetInputData( poly_data );
     tube->CappingOn();
     tube->SetVaryRadiusToVaryRadiusByAbsoluteScalar();
-    tube->SetRadius( n1.radius );
+    tube->SetRadius( n1->radius );
     tube->SetNumberOfSides( 20 );
     tube->Update();
 
@@ -1094,11 +1190,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
 }
 
 //-----------------------------------------------------------------------------
-double Structure::distance( const Node &n1, const Node &n2 )
+double Structure::distance( const QSharedPointer<Node> &n1, const QSharedPointer<Node> &n2 )
 {
-  double squared_dist = ( n1.x - n2.x ) * ( n1.x - n2.x )
-                        + ( n1.y - n2.y ) * ( n1.y - n2.y )
-                        + ( n1.z - n2.z ) * ( n1.z - n2.z );
+  double squared_dist = ( n1->x - n2->x ) * ( n1->x - n2->x )
+                        + ( n1->y - n2->y ) * ( n1->y - n2->y )
+                        + ( n1->z - n2->z ) * ( n1->z - n2->z );
   return sqrt( squared_dist );
 }
 
@@ -1110,39 +1206,39 @@ void Structure::connect_subgraphs()
   // initialize
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
-    ( it->second ).graph_id = -1;
+    it.value()->graph_id = -1;
   }
 
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
-    Node n = it->second;
+    QSharedPointer<Node> n = it.value();
 
-    if ( n.graph_id == -1 )
+    if ( n->graph_id == -1 )
     {
       max_count++;
-      n.graph_id = max_count;
-      this->node_map_[it->first] = n;
+      n->graph_id = max_count;
+      this->node_map_[it.key()] = n;
 
-      QList<int> connections = n.linked_nodes;
+      QList<int> connections = n->linked_nodes;
 
       while ( connections.size() > 0 )
       {
         int node = connections.first();
         connections.pop_front();
 
-        Node child = this->node_map_[node];
+        QSharedPointer<Node> child = this->node_map_[node];
 
-        if ( child.graph_id == -1 )
+        if ( child->graph_id == -1 )
         {
-          child.graph_id = max_count;
-          connections.append( child.linked_nodes );
-          this->node_map_[node] = child;  // write back
+          child->graph_id = max_count;
+          connections.append( child->linked_nodes );
+          //this->node_map_[node] = child;  // write back
         }
       }
     }
   }
 
-  std::cerr << "Found " << max_count << " graphs\n";
+  //std::cerr << "Found " << max_count << " graphs\n";
 
   // create links between graphs
 
@@ -1150,10 +1246,10 @@ void Structure::connect_subgraphs()
 
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
-    Node n = it->second;
-    if ( n.graph_id == 1 )
+    QSharedPointer<Node> n = it.value();
+    if ( n->graph_id == 1 )
     {
-      primary_group.append( n.id );
+      primary_group.append( n->id );
     }
   }
 
@@ -1167,33 +1263,33 @@ void Structure::connect_subgraphs()
 
     for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
     {
-      Node n = it->second;
+      QSharedPointer<Node> n = it.value();
 
-      if ( n.graph_id == i )
+      if ( n->graph_id == i )
       {
 
         for ( NodeMap::iterator it2 = this->node_map_.begin(); it2 != this->node_map_.end(); ++it2 )
         {
-          Node pn = it2->second;
-          if ( pn.graph_id >= i )
+          QSharedPointer<Node> pn = it2.value();
+          if ( pn->graph_id >= i )
           {
             continue;
           }
 
           double point1[3], point2[3];
-          point1[0] = n.x;
-          point1[1] = n.y;
-          point1[2] = n.z;
-          point2[0] = pn.x;
-          point2[1] = pn.y;
-          point2[2] = pn.z;
+          point1[0] = n->x;
+          point1[1] = n->y;
+          point1[2] = n->z;
+          point2[0] = pn->x;
+          point2[1] = pn->y;
+          point2[2] = pn->z;
           double distance = sqrt( vtkMath::Distance2BetweenPoints( point1, point2 ) );
 
           if ( distance < min_dist )
           {
             min_dist = distance;
-            primary_id = pn.id;
-            child_id = n.id;
+            primary_id = pn->id;
+            child_id = n->id;
           }
         }
       }
@@ -1204,8 +1300,8 @@ void Structure::connect_subgraphs()
     new_link.b = child_id;
     this->links_.append( new_link );
 
-    this->node_map_[primary_id].linked_nodes.append( child_id );
-    this->node_map_[child_id].linked_nodes.append( primary_id );
+    this->node_map_[primary_id]->linked_nodes.append( child_id );
+    this->node_map_[child_id]->linked_nodes.append( primary_id );
   }
 }
 
@@ -1220,9 +1316,9 @@ void Structure::cull_locations()
     // cull overlapping locations
     for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
     {
-      Node n = it->second;
+      QSharedPointer<Node> n = it.value();
 
-      if ( n.linked_nodes.size() != 2 )
+      if ( n->linked_nodes.size() != 2 )
       {
         //continue;
       }
@@ -1231,42 +1327,36 @@ void Structure::cull_locations()
 
       int other_id = -1;
 
-
-
-
-      if ( n.linked_nodes.size() == 2 )
+      if ( n->linked_nodes.size() == 2 )
       {
         // if the two other locations are closer together than this one is to either of them
 
-        Node node_a = this->node_map_[n.linked_nodes[0]];
-        Node node_b = this->node_map_[n.linked_nodes[1]];
+        QSharedPointer<Node> node_a = this->node_map_[n->linked_nodes[0]];
+        QSharedPointer<Node> node_b = this->node_map_[n->linked_nodes[1]];
 
-        double min_dist = std::min(distance(n, node_a), distance(n, node_b));
+        double min_dist = std::min( distance( n, node_a ), distance( n, node_b ) );
 
-        if (distance(node_a, node_b) < min_dist)
+        if ( distance( node_a, node_b ) < min_dist )
         {
           std::cerr << "removed outlier!\n";
           removed = true;
-          remove_list.push_back( n.id );
-          other_id = n.linked_nodes[0];
+          remove_list.push_back( n->id );
+          other_id = n->linked_nodes[0];
         }
       }
 
-
-
-
-      foreach( int id, n.linked_nodes ) {
+      foreach( int id, n->linked_nodes ) {
 
         if ( !removed )
         {
-          Node other = this->node_map_[id];
+          QSharedPointer<Node> other = this->node_map_[id];
 
-          if ( other.linked_nodes.size() <= n.linked_nodes.size() )  // remove the one with less links
+          if ( other->linked_nodes.size() <= n->linked_nodes.size() )  // remove the one with less links
           {
-            if ( distance( n, other ) < std::max( n.radius, other.radius ) )
+            if ( distance( n, other ) < std::max( n->radius, other->radius ) )
             {
-              remove_list.push_back( n.id );
-              other_id = other.id;
+              remove_list.push_back( n->id );
+              other_id = other->id;
               removed = true;
             }
           }
@@ -1275,25 +1365,25 @@ void Structure::cull_locations()
 
       if ( removed )
       {
-        this->node_map_[other_id].linked_nodes.remove( n.id );
+        this->node_map_[other_id]->linked_nodes.remove( n->id );
 
-        foreach( int id, n.linked_nodes ) {
+        foreach( int id, n->linked_nodes ) {
 
           if ( id != other_id )
           {
-            this->node_map_[other_id].linked_nodes.append( id );
-            this->node_map_[id].linked_nodes.remove( n.id );
-            this->node_map_[id].linked_nodes.append( other_id );
+            this->node_map_[other_id]->linked_nodes.append( id );
+            this->node_map_[id]->linked_nodes.remove( n->id );
+            this->node_map_[id]->linked_nodes.append( other_id );
           }
         }
       }
     }
 
-    std::cerr << "remove list size : " << remove_list.size() << "\n";
+    //std::cerr << "remove list size : " << remove_list.size() << "\n";
 
     for ( unsigned int i = 0; i < remove_list.size(); i++ )
     {
-      this->node_map_.erase( remove_list[i] );
+      this->node_map_.remove( remove_list[i] );
     }
 
     this->connect_subgraphs();
@@ -1308,8 +1398,8 @@ void Structure::link_report()
 
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
-    Node n = it->second;
-    link_counts[n.linked_nodes.size()]++;
+    QSharedPointer<Node> n = it.value();
+    link_counts[n->linked_nodes.size()]++;
   }
 
   for ( int i = 0; i < 100; i++ )
@@ -1329,7 +1419,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
     return this->mesh_;
   }
 
-  std::cerr << "creating mesh...\n";
+  //std::cerr << "creating mesh...\n";
 
   //NodeMap node_map = this->get_node_map();
 
@@ -1340,17 +1430,17 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
   // reset visited
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
-    ( it->second ).visited = false;
+    it.value()->visited = false;
   }
 
   int root = -1;
   // find a dead-end
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
-    Node n = it->second;
-    if ( n.linked_nodes.size() == 1 )
+    QSharedPointer<Node> n = it.value();
+    if ( n->linked_nodes.size() == 1 || n->linked_nodes.size() == 0 )
     {
-      root = n.id;
+      root = n->id;
       break;
     }
   }
@@ -1361,21 +1451,21 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
     return this->mesh_;
   }
 
-  Node n = this->node_map_[root];
+  QSharedPointer<Node> n = this->node_map_[root];
 
   vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
 
   this->add_polydata( n, -1, append, QList<int>() );
 
-  std::cerr << "Num of items: " << append->GetNumberOfInputConnections( 0 ) << "\n";
+  //std::cerr << "Num of items: " << append->GetNumberOfInputConnections( 0 ) << "\n";
 
-  std::cerr << "number of tubes: " << this->num_tubes_ << "\n";
+  //std::cerr << "number of tubes: " << this->num_tubes_ << "\n";
 
   append->Update();
   poly_data = append->GetOutput();
 
-  std::cerr << "number of verts: " << poly_data->GetNumberOfPoints() << "\n";
-  std::cerr << "number of polys: " << poly_data->GetNumberOfCells() << "\n";
+  //  std::cerr << "number of verts: " << poly_data->GetNumberOfPoints() << "\n";
+  //std::cerr << "number of polys: " << poly_data->GetNumberOfCells() << "\n";
 
   this->mesh_ = poly_data;
 
@@ -1383,40 +1473,40 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
 }
 
 //-----------------------------------------------------------------------------
-void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line )
+void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line )
 {
-  this->node_map_[n.id].visited = true;
+  this->node_map_[n->id]->visited = true;
 
-  if ( n.linked_nodes.size() == 2 )
+  if ( n->linked_nodes.size() == 2 )
   {
-    current_line.append( n.id );
+    current_line.append( n->id );
 
-    for ( int i = 0; i < n.linked_nodes.size(); i++ )
+    for ( int i = 0; i < n->linked_nodes.size(); i++ )
     {
-      Node other = this->node_map_[n.linked_nodes[i]];
-      if ( !other.visited )
+      QSharedPointer<Node> other = this->node_map_[n->linked_nodes[i]];
+      if ( !other->visited )
       {
-        this->add_polydata( other, n.id, append, current_line );
+        this->add_polydata( other, n->id, append, current_line );
       }
     }
   }
 
-  if ( n.linked_nodes.size() != 2 )
+  if ( n->linked_nodes.size() != 2 )
   {
 
     /* sphere */
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
-    sphere->SetCenter( n.x, n.y, n.z );
-    sphere->SetRadius( n.radius * 1.05 );
+    sphere->SetCenter( n->x, n->y, n->z );
+    sphere->SetRadius( n->radius * 1.05 );
     //sphere->SetRadius( n.radius );
 
     int resolution = 10;
-    if ( n.radius > 1.0 )
+    if ( n->radius > 1.0 )
     {
-      resolution = resolution * n.radius;
+      resolution = resolution * n->radius;
     }
 
-    resolution = 12;
+    resolution = 15;
 
     sphere->SetPhiResolution( resolution );
     sphere->SetThetaResolution( resolution );
@@ -1485,7 +1575,7 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
     if ( current_line.size() > 0 )
     {
-      current_line.append( n.id );
+      current_line.append( n->id );
 
       vtkSmartPointer<vtkPoints> vtk_points = vtkSmartPointer<vtkPoints>::New();
       vtkSmartPointer<vtkCellArray> lines = vtkSmartPointer<vtkCellArray>::New();
@@ -1499,12 +1589,12 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
 
       int count = 0;
       foreach( int node_id, current_line ) {
-        Node node = this->node_map_[node_id];
+        QSharedPointer<Node> node = this->node_map_[node_id];
 
-        vtk_points->InsertNextPoint( node.x, node.y, node.z );
+        vtk_points->InsertNextPoint( node->x, node->y, node->z );
         lines->InsertCellPoint( count++ );
-        tube_radius_array->InsertNextTuple1( node.radius );
-        interpolated_radius->AddTuple( count, &( node.radius ) );
+        tube_radius_array->InsertNextTuple1( node->radius );
+        interpolated_radius->AddTuple( count, &( node->radius ) );
       }
 
       vtkSmartPointer<vtkParametricSpline> spline = vtkSmartPointer<vtkParametricSpline>::New();
@@ -1626,14 +1716,14 @@ void Structure::add_polydata( Node n, int from, vtkSmartPointer<vtkAppendPolyDat
  */
     }
 
-    for ( int i = 0; i < n.linked_nodes.size(); i++ )
+    for ( int i = 0; i < n->linked_nodes.size(); i++ )
     {
-      Node other = this->node_map_[n.linked_nodes[i]];
-      if ( !other.visited )
+      QSharedPointer<Node> other = this->node_map_[n->linked_nodes[i]];
+      if ( !other->visited )
       {
         QList<int> new_line;
-        new_line.append( n.id );
-        this->add_polydata( other, n.id, append, new_line );
+        new_line.append( n->id );
+        this->add_polydata( other, n->id, append, new_line );
       }
     }
   }

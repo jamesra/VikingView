@@ -204,7 +204,7 @@ void Viewer::set_render_window( vtkRenderWindow* render_window )
 }
 
 //-----------------------------------------------------------------------------
-void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
+void Viewer::display_structures( StructureHash structures )
 {
   this->surface_actors_.clear();
   this->surface_mappers_.clear();
@@ -216,33 +216,32 @@ void Viewer::display_structures( QList<QSharedPointer<Structure> > structures )
 
     vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
 
-    if ( !mesh )
+    if ( mesh )
     {
-      return;
+
+      vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
+      normals->SetInputData( mesh );
+
+      mapper->SetInputConnection( normals->GetOutputPort() );
+
+      actor->SetMapper( mapper );
+
+      QColor color = s->get_color();
+
+      //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
+      actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0 );
+      actor->GetProperty()->SetSpecular( 0.2 );
+      actor->GetProperty()->SetSpecularPower( 15 );
+      actor->GetProperty()->BackfaceCullingOn();
+
+      //mapper->ScalarVisibilityOff();
+      mapper->ScalarVisibilityOn();
+
+      this->renderer_->AddActor( actor );
+
+      this->surface_actors_.append( actor );
+      this->surface_mappers_.append( mapper );
     }
-
-    vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
-    normals->SetInputData( mesh );
-
-    mapper->SetInputConnection( normals->GetOutputPort() );
-
-    actor->SetMapper( mapper );
-
-    QColor color = s->get_color();
-
-    //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
-    actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0 );
-    actor->GetProperty()->SetSpecular( 0.2 );
-    actor->GetProperty()->SetSpecularPower( 15 );
-    actor->GetProperty()->BackfaceCullingOn();
-
-    //mapper->ScalarVisibilityOff();
-    mapper->ScalarVisibilityOn();
-
-    this->renderer_->AddActor( actor );
-
-    this->surface_actors_.append( actor );
-    this->surface_mappers_.append( mapper );
   }
 
   this->renderer_->ResetCamera();
