@@ -269,21 +269,18 @@ void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
 
         vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
         normals->SetInputData( mesh );
-
         mapper->SetInputConnection( normals->GetOutputPort() );
-
         actor->SetMapper( mapper );
 
-        QColor color = s->get_color();
+        QColor color = this->get_color( s );
 
-        //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
         actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0 );
         actor->GetProperty()->SetSpecular( 0.2 );
         actor->GetProperty()->SetSpecularPower( 15 );
         actor->GetProperty()->BackfaceCullingOn();
 
-        //mapper->ScalarVisibilityOff();
-        mapper->ScalarVisibilityOn();
+        mapper->ScalarVisibilityOff();
+        //mapper->ScalarVisibilityOn();
 
         this->renderer_->AddActor( actor );
 
@@ -367,4 +364,30 @@ void Viewer::set_clipping_plane( bool clip )
   }
 
   this->redraw();
+}
+
+//-----------------------------------------------------------------------------
+QColor Viewer::get_color( QSharedPointer<Structure> s )
+{
+  QColor color;
+  if ( s->get_type() == 1 ) // cell
+  {
+    if ( !this->cell_colors_.contains( s->get_id() ) )
+    {
+      color = QColor( 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ) );
+      this->cell_colors_.insert( s->get_id(), color );
+    }
+    color = this->cell_colors_.value( s->get_id() );
+  }
+  else // child structure
+  {
+    if ( !this->type_colors_.contains( s->get_type() ) )
+    {
+      color = QColor( 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ) );
+      this->type_colors_.insert( s->get_type(), color );
+    }
+    color = this->type_colors_.value( s->get_type() );
+  }
+
+  return color;
 }

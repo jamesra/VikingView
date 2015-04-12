@@ -73,8 +73,10 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
   foreach( QVariant var, structure_list ) {
     QMap<QString, QVariant> item = var.toMap();
     int id = item["ID"].toLongLong();
+    int type = item["TypeID"].toInt();
     QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
     structure->id_ = id;
+    structure->type_ = type;
     structures->insert( id, structure );
   }
 
@@ -126,8 +128,6 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
 
     if ( full_node_map[link.a]->parent_id != full_node_map[link.b]->parent_id )
     {
-      std::cerr << "links can go between structs?!\n";
-      std::cerr << "links can go between structs?!\n";
       std::cerr << "links can go between structs?!\n";
     }
 
@@ -556,6 +556,13 @@ int Structure::get_id()
 {
   return this->id_;
 }
+
+//-----------------------------------------------------------------------------
+int Structure::get_type()
+{
+  return this->type_;
+}
+
 
 //-----------------------------------------------------------------------------
 double Structure::get_volume()

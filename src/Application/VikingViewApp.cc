@@ -101,7 +101,7 @@ void VikingViewApp::load_structure( int id )
   QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
 
   DownloadObject download_object;
-  downloader.download_cell2( end_point, id, download_object );
+  downloader.download_cell( end_point, id, download_object );
 
   progress.setLabelText( "Generating Mesh..." );
   progress.setValue( 1 );

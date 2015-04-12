@@ -9,15 +9,12 @@
 
 class Structure;
 
-
-
 class DownloadObject
 {
 public:
   QList<QVariant> location_list;
   QList<QVariant> link_list;
   QList<QVariant> structure_list;
-
 };
 
 //! Downloads and parses JSON data from viking database
@@ -32,12 +29,7 @@ public:
   Downloader();
   ~Downloader();
 
-  QSharedPointer<Structure> download_cell( QString end_point, int id );
-
-
-  bool download_cell2( QString end_point, int id, DownloadObject &download_object);
-
-
+  bool download_cell( QString end_point, int id, DownloadObject &download_object );
 
   QList<QVariant> get_location_list();
   QList<QVariant> get_link_list();

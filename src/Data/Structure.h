@@ -47,7 +47,8 @@ public:
 class Structure
 {
 
-public: ~Structure();
+public: 
+  ~Structure();
 
   static QSharedPointer<Structure> create_structure( int id, QList<QVariant> structure_list,
                                                      QList<QVariant> location_list, QList<QVariant> link_list );
@@ -70,6 +71,7 @@ public: ~Structure();
   QString get_center_of_mass_string();
 
   int get_id();
+  int get_type();
 
   void set_color( QColor color );
 
@@ -81,7 +83,8 @@ private:
 
   Structure(); // private
 
-  void add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<vtkAppendPolyData> append, QList<int> current_line );
+  void add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<vtkAppendPolyData> append, 
+    QList<int> current_line );
 
   static double distance( const QSharedPointer<Node> &n1, const QSharedPointer<Node> &n2 );
 
@@ -92,6 +95,7 @@ private:
   void link_report();
 
   int id_;
+  int type_;
   NodeMap node_map_;
 
   QList<Link> links_;

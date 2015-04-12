@@ -68,20 +68,27 @@ private:
 
   void update_actors();
 
-  vtkSmartPointer<vtkRenderer>             renderer_;
 
+  QColor get_color(QSharedPointer<Structure> s);
+
+
+  vtkSmartPointer<vtkRenderer>               renderer_;
   QList<vtkSmartPointer<vtkPolyDataMapper> > surface_mappers_;
-  QList<vtkSmartPointer<vtkActor> > surface_actors_;
+  QList<vtkSmartPointer<vtkActor> >          surface_actors_;
+  vtkSmartPointer<vtkLookupTable>            lut_;
 
-  vtkSmartPointer<vtkLookupTable>          lut_;
-
-  vtkSmartPointer<vtkImplicitPlaneWidget2> plane_widget_;
+  vtkSmartPointer<vtkImplicitPlaneWidget2>        plane_widget_;
   vtkSmartPointer<vtkImplicitPlaneRepresentation> imp_plane_rep_;
-  vtkSmartPointer<vtkIPWCallback> callback_;
-  vtkSmartPointer<vtkPlane> plane;
+  vtkSmartPointer<vtkIPWCallback>                 callback_;
+  vtkSmartPointer<vtkPlane>                       plane;
 
-  vtkSmartPointer<OrientationController> orientation_controller_;
+  vtkSmartPointer<OrientationController>      orientation_controller_;
   vtkSmartPointer<vtkOrientationMarkerWidget> orientation_widget_;
+
+
+  QHash<int, QColor> type_colors_;
+  QHash<int, QColor> cell_colors_;
+
 };
 
 #endif /* STUDIO_VISUALIZATION_VIEWER_H */

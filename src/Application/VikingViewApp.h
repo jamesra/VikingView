@@ -72,6 +72,8 @@ private:
 
   QList< QSharedPointer<Cell> > cells_;
 
+
+
   Viewer* viewer_;
 };
 
