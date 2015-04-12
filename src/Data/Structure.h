@@ -35,6 +35,14 @@ class Structure;
 
 typedef QHash<long, QSharedPointer<Structure> > StructureHash;
 
+
+class Cell
+{
+public:
+  int id;
+  QSharedPointer<StructureHash> structures;
+};
+
 //! Maintains data a structure (e.g. cell)
 class Structure
 {

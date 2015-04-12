@@ -70,7 +70,7 @@ private:
 
   StructureHash structures_;
 
-  QMap<int, QList<int> > cells_;
+  QList< QSharedPointer<Cell> > cells_;
 
   Viewer* viewer_;
 };

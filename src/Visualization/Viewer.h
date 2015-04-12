@@ -48,6 +48,8 @@ public:
 
   void display_structures( StructureHash structures );
 
+  void display_cells( QList< QSharedPointer<Cell> > cells );
+
   void clear_viewer();
 
   void reset_camera();

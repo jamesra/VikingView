@@ -79,10 +79,11 @@ void VikingViewApp::on_delete_button_clicked()
   }
 
   foreach( int i, index_list ) {
-    this->structures_.erase( this->structures_.begin() + i );
+    this->cells_.erase( this->cells_.begin() + i );
   }
 
-  this->viewer_->display_structures( this->structures_ );
+//  this->viewer_->display_structures( this->structures_ );
+  this->viewer_->display_cells( this->cells_ );
   this->update_table();
 }
 
@@ -104,48 +105,25 @@ void VikingViewApp::load_structure( int id )
 
   progress.setLabelText( "Generating Mesh..." );
   progress.setValue( 1 );
-/*
-
-   foreach( QVariant var, download_object.structure_list )
-   {
-    QMap<QString, QVariant> item = var.toMap();
-    int sid = item["ID"].toLongLong();
-    std::cerr << "sid = " << sid << "\n";
-
-    QSharedPointer<Structure> structure = Structure::create_structure( sid, download_object.structure_list,
-      download_object.location_list, download_object.link_list );
-    this->structures_[sid] = structure;
-
-    }
-
- */
 
   QSharedPointer<StructureHash> structures = Structure::create_structures( download_object.structure_list,
-    download_object.location_list, 
-    download_object.link_list );
+                                                                           download_object.location_list,
+                                                                           download_object.link_list );
 
-  //QSharedPointer<Structure> structure = Structure::create_structure( id, download_object.structure_list,
-  //  download_object.location_list, 
-  //  download_object.link_list );
+  QSharedPointer<Cell> cell = QSharedPointer<Cell>( new Cell() );
 
+  cell->id = id;
+  cell->structures = structures;
+  this->cells_ << cell;
 
-  foreach (QSharedPointer<Structure> structure, structures->values())
-  {
-
+  foreach( QSharedPointer<Structure> structure, structures->values() ) {
     this->structures_[structure->get_id()] = structure;
-
-  //  if ( structure->get_node_map().size() == 0 )
-  //  {
-  //    progress.close();
-  //    QMessageBox::critical( NULL, "VikingView", "Error: Download error or Invalid structure", QMessageBox::Ok );
-  //    return;
-  //  }
-
   }
 
   progress.setValue( 2 );
 
-  this->viewer_->display_structures( this->structures_ );
+  //this->viewer_->display_structures( this->structures_ );
+  this->viewer_->display_cells( this->cells_ );
   progress.setValue( 3 );
 
   this->update_table();
@@ -169,18 +147,17 @@ void VikingViewApp::update_table()
 
   this->ui_->table_widget->verticalHeader()->setVisible( false );
 
-  foreach( int i, this->structures_.keys() ) {
-    QSharedPointer<Structure> structure = this->structures_[i];
-    //std::cerr << "s = " << i << "\n";
+  for ( int i = 0; i < this->cells_.size(); i++ )
+  {
 
-    QTableWidgetItem* new_item = new QTableWidgetItem( QString::number( this->structures_[i]->get_id() ) );
+    QTableWidgetItem* new_item = new QTableWidgetItem( QString::number( this->cells_[i]->id ) );
     this->ui_->table_widget->setItem( i, 0, new_item );
 
-    new_item = new QTableWidgetItem( QString::number( this->structures_[i]->get_volume() ) );
-    this->ui_->table_widget->setItem( i, 1, new_item );
+    //new_item = new QTableWidgetItem( QString::number( this->structures_[i]->get_volume() ) );
+    //this->ui_->table_widget->setItem( i, 1, new_item );
 
-    new_item = new QTableWidgetItem( this->structures_[i]->get_center_of_mass_string() );
-    this->ui_->table_widget->setItem( i, 2, new_item );
+    //new_item = new QTableWidgetItem( this->structures_[i]->get_center_of_mass_string() );
+    //this->ui_->table_widget->setItem( i, 2, new_item );
   }
 
   this->ui_->table_widget->resizeColumnsToContents();

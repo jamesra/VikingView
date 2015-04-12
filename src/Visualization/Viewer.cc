@@ -250,6 +250,55 @@ void Viewer::display_structures( StructureHash structures )
 }
 
 //-----------------------------------------------------------------------------
+void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
+{
+  this->surface_actors_.clear();
+  this->surface_mappers_.clear();
+  this->renderer_->RemoveAllViewProps();
+
+  foreach( QSharedPointer<Cell> cell, cells ) {
+
+    foreach( QSharedPointer<Structure> s, cell->structures->values() ) {
+      vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
+      vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+
+      vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
+
+      if ( mesh )
+      {
+
+        vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
+        normals->SetInputData( mesh );
+
+        mapper->SetInputConnection( normals->GetOutputPort() );
+
+        actor->SetMapper( mapper );
+
+        QColor color = s->get_color();
+
+        //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
+        actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0 );
+        actor->GetProperty()->SetSpecular( 0.2 );
+        actor->GetProperty()->SetSpecularPower( 15 );
+        actor->GetProperty()->BackfaceCullingOn();
+
+        //mapper->ScalarVisibilityOff();
+        mapper->ScalarVisibilityOn();
+
+        this->renderer_->AddActor( actor );
+
+        this->surface_actors_.append( actor );
+        this->surface_mappers_.append( mapper );
+      }
+    }
+  }
+
+  this->renderer_->ResetCamera();
+  this->renderer_->Render();
+  this->renderer_->GetRenderWindow()->Render();
+}
+
+//-----------------------------------------------------------------------------
 void Viewer::set_opacity( float opacity )
 {
   foreach( vtkSmartPointer<vtkActor> actor, this->surface_actors_ ) {
