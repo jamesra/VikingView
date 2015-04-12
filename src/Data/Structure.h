@@ -1,9 +1,9 @@
 #ifndef VIKING_DATA_STRUCTURE_H
 #define VIKING_DATA_STRUCTURE_H
 
-#include <map>
 
 #include <QSharedPointer.h>
+#include <QHash.h>
 #include <QColor.h>
 
 #include <vtkSmartPointer.h>
