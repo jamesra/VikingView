@@ -46,7 +46,6 @@ public:
   void set_renderer( vtkSmartPointer<vtkRenderer> renderer );
   vtkSmartPointer<vtkRenderer> get_renderer();
 
-  void display_structures( StructureHash structures );
 
   void display_cells( QList< QSharedPointer<Cell> > cells );
 
@@ -71,6 +70,7 @@ private:
 
   QColor get_color(QSharedPointer<Structure> s);
 
+  vtkSmartPointer<vtkPolyData> scale_mesh(QSharedPointer<Structure> s);
 
   vtkSmartPointer<vtkRenderer>               renderer_;
   QList<vtkSmartPointer<vtkPolyDataMapper> > surface_mappers_;

@@ -239,10 +239,24 @@ void VikingViewApp::on_preferences_changed()
     last_connectome = 0;
   }
   this->ui_->connectome_combo->setCurrentIndex( last_connectome );
+
+  this->ui_->child_scale->setValue( Preferences::Instance().get_child_scale() );
 }
 
 //---------------------------------------------------------------------------
 void VikingViewApp::on_connectome_configure_clicked()
 {
   Preferences::Instance().show_window();
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::on_child_scale_valueChanged( double scale )
+{
+  //double scale = this->ui_->child_scale->value();
+  Preferences::Instance().set_child_scale( scale );
+
+  if ( this->viewer_ )
+  {
+    this->viewer_->display_cells( this->cells_ );
+  }
 }

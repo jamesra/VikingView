@@ -39,6 +39,9 @@ public:
   int get_last_connectome();
   void set_last_connectome(int id);
 
+  double get_child_scale();
+  void set_child_scale(double scale);
+
   /// restore all default values
   void restore_defaults();
 

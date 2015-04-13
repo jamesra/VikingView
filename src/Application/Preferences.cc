@@ -95,10 +95,24 @@ void Preferences::set_last_connectome( int id )
   emit preferences_changed();
 }
 
+
+//-----------------------------------------------------------------------------
+double Preferences::get_child_scale()
+{
+  return this->settings.value("ChildScale", 1.0).toDouble();
+}
+
+//-----------------------------------------------------------------------------
+void Preferences::set_child_scale(double scale)
+{
+  this->settings.setValue("ChildScale", scale);
+}
+
 //-----------------------------------------------------------------------------
 void Preferences::restore_defaults()
 {
 
   this->set_connectome_list( this->default_connectome_nicknames_, this->default_connectomes_ );
   this->set_last_connectome( 0 );
+  this->set_child_scale(1.0);
 }

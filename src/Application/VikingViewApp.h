@@ -54,6 +54,8 @@ public Q_SLOTS:
 
   void on_preferences_changed();
 
+  void on_child_scale_valueChanged(double value);
+
 private:
 
   void update_table();

@@ -1474,6 +1474,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
   //  std::cerr << "number of verts: " << poly_data->GetNumberOfPoints() << "\n";
   //std::cerr << "number of polys: " << poly_data->GetNumberOfCells() << "\n";
 
+  vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
+  normals->SetInputData( poly_data );
+  normals->Update();
+  poly_data = normals->GetOutput();
+
   this->mesh_ = poly_data;
 
   return this->mesh_;

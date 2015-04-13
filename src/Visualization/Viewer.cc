@@ -33,6 +33,7 @@
 #include <QKeyEvent>
 
 #include <Data/Structure.h>
+#include <Application/Preferences.h>
 
 #include <Visualization/Viewer.h>
 
@@ -204,54 +205,13 @@ void Viewer::set_render_window( vtkRenderWindow* render_window )
 }
 
 //-----------------------------------------------------------------------------
-void Viewer::display_structures( StructureHash structures )
-{
-  this->surface_actors_.clear();
-  this->surface_mappers_.clear();
-  this->renderer_->RemoveAllViewProps();
-
-  foreach( QSharedPointer<Structure> s, structures ) {
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
-    vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
-
-    vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
-
-    if ( mesh )
-    {
-
-      vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
-      normals->SetInputData( mesh );
-
-      mapper->SetInputConnection( normals->GetOutputPort() );
-
-      actor->SetMapper( mapper );
-
-      QColor color = s->get_color();
-
-      //actor->GetProperty()->SetDiffuseColor( 1, 191.0 / 255.0, 0 );
-      actor->GetProperty()->SetDiffuseColor( color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0 );
-      actor->GetProperty()->SetSpecular( 0.2 );
-      actor->GetProperty()->SetSpecularPower( 15 );
-      actor->GetProperty()->BackfaceCullingOn();
-
-      //mapper->ScalarVisibilityOff();
-      mapper->ScalarVisibilityOn();
-
-      this->renderer_->AddActor( actor );
-
-      this->surface_actors_.append( actor );
-      this->surface_mappers_.append( mapper );
-    }
-  }
-
-  this->renderer_->ResetCamera();
-  this->renderer_->Render();
-  this->renderer_->GetRenderWindow()->Render();
-}
-
-//-----------------------------------------------------------------------------
 void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
 {
+  if ( !this->renderer_ )
+  {
+    return;
+  }
+
   this->surface_actors_.clear();
   this->surface_mappers_.clear();
   this->renderer_->RemoveAllViewProps();
@@ -267,9 +227,9 @@ void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
       if ( mesh )
       {
 
-        vtkSmartPointer<vtkPolyDataNormals> normals = vtkSmartPointer<vtkPolyDataNormals>::New();
-        normals->SetInputData( mesh );
-        mapper->SetInputConnection( normals->GetOutputPort() );
+        mesh = this->scale_mesh( s );
+
+        mapper->SetInputData( mesh );
         actor->SetMapper( mapper );
 
         QColor color = this->get_color( s );
@@ -390,4 +350,38 @@ QColor Viewer::get_color( QSharedPointer<Structure> s )
   }
 
   return color;
+}
+
+//-----------------------------------------------------------------------------
+vtkSmartPointer<vtkPolyData> Viewer::scale_mesh( QSharedPointer<Structure> s )
+{
+  vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
+
+  if ( s->get_type() == 1 )
+  {
+    return mesh;
+  }
+
+// else it's a child structure, scale it
+  double scale = Preferences::Instance().get_child_scale();
+  if ( scale == 1.0 )
+  {
+    return mesh;
+  }
+
+  double center[3];
+  mesh->GetCenter( center );
+
+  vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
+  transform->Translate( center[0], center[1], center[2] );
+  transform->Scale( scale, scale, scale );
+  transform->Translate( -center[0], -center[1], -center[2] );
+
+  vtkSmartPointer<vtkTransformPolyDataFilter> transform_filter =
+    vtkSmartPointer<vtkTransformPolyDataFilter>::New();
+  transform_filter->SetInputData( mesh );
+  transform_filter->SetTransform( transform );
+  transform_filter->Update();
+  mesh = transform_filter->GetOutput();
+  return mesh;
 }
