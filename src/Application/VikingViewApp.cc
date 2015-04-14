@@ -8,6 +8,8 @@
 #include <QMessageBox>
 #include <QUrl>
 #include <QProgressDialog>
+#include <QXmlStreamWriter>
+#include <QDateTime>
 
 // vtk
 #include <vtkRenderWindow.h>
@@ -131,6 +133,58 @@ void VikingViewApp::load_structure( int id )
   this->viewer_->redraw();
 
   return;
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::export_dae( QString filename )
+{
+  std::cerr << "exporting dae to \"" << filename.toStdString() << "\"\n";
+
+  // open file
+  QFile file( filename );
+
+  if ( !file.open( QIODevice::WriteOnly ) )
+  {
+    QMessageBox::warning( 0, "Read only", "The file is in read only mode" );
+    return;
+  }
+
+  // setup XML
+  QSharedPointer<QXmlStreamWriter> xml = QSharedPointer<QXmlStreamWriter>( new QXmlStreamWriter() );
+  xml->setAutoFormatting( true );
+  xml->setDevice( &file );
+  xml->writeStartDocument();
+
+  // write the root element
+  xml->writeStartElement( "COLLADA" );
+  xml->writeAttribute( "xmlns", "http://www.collada.org/2005/11/COLLADASchema" );
+  xml->writeAttribute( "version", "1.4.1" );
+
+  xml->writeStartElement( "asset" );
+
+  xml->writeStartElement( "contributor" );
+  xml->writeTextElement( "authoring_tool", "VikingView" );
+  xml->writeEndElement(); // contributor
+
+  xml->writeTextElement( "created", QDateTime::currentDateTime().toUTC().toString( Qt::ISODate ) + "Z" );
+  xml->writeTextElement( "modified", QDateTime::currentDateTime().toUTC().toString( Qt::ISODate ) + "Z" );
+
+  xml->writeStartElement( "unit" );
+  xml->writeAttribute( "meter", "1" );
+  xml->writeAttribute( "name", "meter" );
+  xml->writeEndElement(); // unit
+
+  xml->writeTextElement( "up_axis", "Z_UP");
+
+  xml->writeEndElement(); // asset
+
+  xml->writeStartElement( "library_geometries" );
+  xml->writeEndElement(); //library_geometries
+
+
+
+  xml->writeEndElement(); // COLLADA
+  xml->writeEndDocument();
 }
 
 //---------------------------------------------------------------------------

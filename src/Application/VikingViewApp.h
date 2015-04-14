@@ -10,7 +10,6 @@
 #include <QFile>
 #include <QMap>
 
-
 #include <Data/Structure.h>
 class Viewer;
 //class Structure;
@@ -34,6 +33,8 @@ public:
 
   void load_structure( int id );
 
+  void export_dae( QString filename );
+
   virtual void closeEvent( QCloseEvent* event );
 
 public Q_SLOTS:
@@ -54,12 +55,11 @@ public Q_SLOTS:
 
   void on_preferences_changed();
 
-  void on_child_scale_valueChanged(double value);
+  void on_child_scale_valueChanged( double value );
 
 private:
 
   void update_table();
-
 
   void import_json( QString json_text );
 
@@ -73,8 +73,6 @@ private:
   StructureHash structures_;
 
   QList< QSharedPointer<Cell> > cells_;
-
-
 
   Viewer* viewer_;
 };

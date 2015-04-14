@@ -79,7 +79,7 @@ int main( int argc, char** argv )
 
 #ifdef WIN32
   ::SetErrorMode( 0 );
-    RedirectIOToConsole2();
+  RedirectIOToConsole2();
 #endif
   try {
 
@@ -97,7 +97,29 @@ int main( int argc, char** argv )
     studio_app->initialize_vtk();
 
     //studio_app->load_structure(180);
-    
+
+    int argidx = 1;
+
+    while ( argidx < argc )
+    {
+
+      QString arg = argv[argidx++];
+      if ( arg == "-id" )
+      {
+        int id = QString( argv[argidx++] ).toInt();
+        studio_app->load_structure( id );
+      }
+      else if ( arg == "-export" )
+      {
+        QString filename = argv[argidx++];
+        studio_app->export_dae( filename );
+        return 0;
+      }
+      else
+      {
+        std::cerr << "unrecognized option: " << arg.toStdString() << "\n";
+      }
+    }
 
     /*
 
