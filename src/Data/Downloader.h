@@ -9,6 +9,17 @@
 
 class Structure;
 
+class DownloadException
+{
+public:
+  DownloadException( QString message )
+  {
+    this->message_ = message;
+  }
+
+  QString message_;
+};
+
 class DownloadObject
 {
 public:

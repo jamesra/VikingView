@@ -205,7 +205,7 @@ void Viewer::set_render_window( vtkRenderWindow* render_window )
 }
 
 //-----------------------------------------------------------------------------
-void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
+void Viewer::display_cells( QList< QSharedPointer<Cell> > cells, bool reset_camera )
 {
   if ( !this->renderer_ )
   {
@@ -239,6 +239,8 @@ void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
         actor->GetProperty()->SetSpecularPower( 15 );
         actor->GetProperty()->BackfaceCullingOn();
 
+        //actor->GetProperty()->SetRepresentationToWireframe();
+
         mapper->ScalarVisibilityOff();
         //mapper->ScalarVisibilityOn();
 
@@ -250,7 +252,11 @@ void Viewer::display_cells( QList< QSharedPointer<Cell> > cells )
     }
   }
 
-  this->renderer_->ResetCamera();
+  if ( reset_camera )
+  {
+    this->renderer_->ResetCamera();
+  }
+
   this->renderer_->Render();
   this->renderer_->GetRenderWindow()->Render();
 }

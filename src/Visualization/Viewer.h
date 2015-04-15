@@ -47,7 +47,7 @@ public:
   vtkSmartPointer<vtkRenderer> get_renderer();
 
 
-  void display_cells( QList< QSharedPointer<Cell> > cells );
+  void display_cells( QList< QSharedPointer<Cell> > cells, bool reset_camera );
 
   void clear_viewer();
 

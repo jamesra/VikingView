@@ -14,28 +14,37 @@ Downloader::~Downloader()
 {}
 
 //-----------------------------------------------------------------------------
-bool Downloader::download_cell(QString end_point, int id, DownloadObject &download_object)
+bool Downloader::download_cell( QString end_point, int id, DownloadObject &download_object )
 {
-  QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
-    + QString::number( id ) + " or ID eq " + QString::number( id );
-  download_object.structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
+  try{
 
-  //request = QString( end_point + "/Locations/?$filter=ParentID eq " ) + QString::number( id );
-  request = QString( end_point + "/SelectStructureLocations?ID=" ) + QString::number( id ) + "L" + "&$format=json";
-  download_object.location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
+    QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
+                      + QString::number( id ) + " or ID eq " + QString::number( id );
+    download_object.structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
 
-  //request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" ) + QString::number( id ) + "L";
-  request = QString( end_point + "/SelectStructureLocationLinks?ID=" ) + QString::number( id ) + "L";
-  download_object.link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
+    //request = QString( end_point + "/Locations/?$filter=ParentID eq " ) + QString::number( id );
+    request = QString( end_point + "/SelectStructureLocations?ID=" ) + QString::number( id ) + "L" + "&$format=json";
+    download_object.location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
 
-  return true;
+    //request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" ) + QString::number( id ) + "L";
+    request = QString( end_point + "/SelectStructureLocationLinks?ID=" ) + QString::number( id ) + "L";
+    download_object.link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
+
+    return true;
+  }
+  catch ( DownloadException e )
+  {
+    std::cerr << e.message_.toStdString() << "\n";
+    QMessageBox::critical( 0, "Error", e.message_ );
+  }
+  return false;
 }
 
 //-----------------------------------------------------------------------------
 QList<QVariant> Downloader::download_json( QString url_string, QString file_prefix )
 {
 
-  const int save_to_file = 1;
+  const int save_to_file = 0;
   const int load_from_file = 0;
 
   QList<QVariant> list;
@@ -80,7 +89,8 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
 
     if ( !map.contains( "value" ) )
     {
-      // parse error
+      QString message = "Error downloading url: " + url_string + "\n\n" + text.left( 256 );
+      throw DownloadException( message );
     }
 
     list.append( map["value"].toList() );

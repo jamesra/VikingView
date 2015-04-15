@@ -85,7 +85,7 @@ void VikingViewApp::on_delete_button_clicked()
   }
 
 //  this->viewer_->display_structures( this->structures_ );
-  this->viewer_->display_cells( this->cells_ );
+  this->viewer_->display_cells( this->cells_, false );
   this->update_table();
 }
 
@@ -103,7 +103,10 @@ void VikingViewApp::load_structure( int id )
   QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
 
   DownloadObject download_object;
-  downloader.download_cell( end_point, id, download_object );
+  if ( !downloader.download_cell( end_point, id, download_object ) )
+  {
+    return;
+  }
 
   progress.setLabelText( "Generating Mesh..." );
   progress.setValue( 1 );
@@ -125,7 +128,7 @@ void VikingViewApp::load_structure( int id )
   progress.setValue( 2 );
 
   //this->viewer_->display_structures( this->structures_ );
-  this->viewer_->display_cells( this->cells_ );
+  this->viewer_->display_cells( this->cells_, true );
   progress.setValue( 3 );
 
   this->update_table();
@@ -148,6 +151,8 @@ void VikingViewApp::export_dae( QString filename )
     QMessageBox::warning( 0, "Read only", "The file is in read only mode" );
     return;
   }
+
+  // -id 180 -export "z:/shared/file.dae"
 
   // setup XML
   QSharedPointer<QXmlStreamWriter> xml = QSharedPointer<QXmlStreamWriter>( new QXmlStreamWriter() );
@@ -174,14 +179,12 @@ void VikingViewApp::export_dae( QString filename )
   xml->writeAttribute( "name", "meter" );
   xml->writeEndElement(); // unit
 
-  xml->writeTextElement( "up_axis", "Z_UP");
+  xml->writeTextElement( "up_axis", "Z_UP" );
 
   xml->writeEndElement(); // asset
 
   xml->writeStartElement( "library_geometries" );
   xml->writeEndElement(); //library_geometries
-
-
 
   xml->writeEndElement(); // COLLADA
   xml->writeEndDocument();
@@ -311,6 +314,6 @@ void VikingViewApp::on_child_scale_valueChanged( double scale )
 
   if ( this->viewer_ )
   {
-    this->viewer_->display_cells( this->cells_ );
+    this->viewer_->display_cells( this->cells_, false );
   }
 }
