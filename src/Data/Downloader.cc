@@ -6,6 +6,7 @@
 #include <QEventLoop>
 #include <QFile>
 #include <QTextStream>
+#include <QMessageBox>
 
 Downloader::Downloader()
 {}
