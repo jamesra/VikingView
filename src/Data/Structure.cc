@@ -1,8 +1,8 @@
 #include <Data/Structure.h>
 #include <Data/Json.h>
-#include <Data/PointSampler.h>
-#include <Data/AlphaShape.h>
-#include <Data/FixedAlphaShape.h>
+//#include <Data/PointSampler.h>
+//#include <Data/AlphaShape.h>
+//#include <Data/FixedAlphaShape.h>
 
 #include <vtkCenterOfMass.h>
 #include <vtkMassProperties.h>
@@ -44,9 +44,11 @@
 
 #include <vtkButterflySubdivisionFilter.h>
 
-#include <CGAL/IO/Polyhedron_iostream.h>
-#include <CGAL/Inverse_index.h>
-#include <CGAL/make_skin_surface_mesh_3.h>
+#include <QVariant>
+
+//#include <CGAL/IO/Polyhedron_iostream.h>
+//#include <CGAL/Inverse_index.h>
+//#include <CGAL/make_skin_surface_mesh_3.h>
 
 //#include <CGAL/Polyhe>
 
@@ -244,6 +246,7 @@ NodeMap Structure::get_node_map()
   return this->node_map_;
 }
 
+/*
 //-----------------------------------------------------------------------------
 vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
 {
@@ -295,27 +298,9 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
       booleanOperation->Update();
       poly_data = booleanOperation->GetOutput();
 
-/*
-   vtkSmartPointer<vtkAppendPolyData> append = vtkSmartPointer<vtkAppendPolyData>::New();
-   append->AddInputData( poly_data );
-   append->AddInputData( sphere->GetOutput() );
-   append->Update();
-   poly_data = append->GetOutput();
- */
     }
   }
 
-/*
-
-      vtkSmartPointer<vtkBooleanOperationPolyDataFilter> booleanOperation =
-        vtkSmartPointer<vtkBooleanOperationPolyDataFilter>::New();
-      booleanOperation->SetOperationToUnion();
-
-      booleanOperation->SetInputData( 0, poly_data );
-      booleanOperation->SetInputData( 1, poly_data );
-      booleanOperation->Update();
-      poly_data = booleanOperation->GetOutput();
- */
 
   foreach( Link link, this->get_links() ) {
 
@@ -362,7 +347,9 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
 
   return this->mesh_;
 }
+*/
 
+/*
 //-----------------------------------------------------------------------------
 vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
 {
@@ -474,18 +461,6 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
     writer->SetInputData( poly_data );
     writer->Write();
 
-/*
-   // fill holes
-   vtkSmartPointer<vtkFillHolesFilter> fill_holes = vtkSmartPointer<vtkFillHolesFilter>::New();
-   fill_holes->SetInputData( poly_data );
-   fill_holes->SetHoleSize( 300 );
-   fill_holes->Update();
-   poly_data = fill_holes->GetOutput();
-
-
-
- */
-
     // clean
     clean = vtkSmartPointer<vtkCleanPolyData>::New();
     clean->SetInputData( poly_data );
@@ -494,17 +469,6 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
 
     // smooth
 
-/*
-
-    vtkSmartPointer<vtkWindowedSincPolyDataFilter> smooth = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
-    smooth->SetInputData( poly_data );
-    smooth->SetPassBand( 0.1 );
-    smooth->SetNumberOfIterations( 200 );
-    smooth->FeatureEdgeSmoothingOn();
-    smooth->NonManifoldSmoothingOn();
-    smooth->Update();
-    poly_data = smooth->GetOutput();
- */
 
     vtkSmartPointer<vtkLoopSubdivisionFilter> subdivision = vtkSmartPointer<vtkLoopSubdivisionFilter>::New();
     subdivision->SetInputData( poly_data );
@@ -521,22 +485,6 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
     normals->Update();
     poly_data = normals->GetOutput();
 
-/*
-    vtkSmartPointer<vtkSmoothPolyDataFilter> smooth = vtkSmartPointer<vtkSmoothPolyDataFilter>::New();
-    smooth->SetInputData( poly_data );
-    smooth->SetNumberOfIterations( 200 );
-    smooth->Update();
-    poly_data = smooth->GetOutput();
- */
-
-/*
-    vtkSmartPointer<vtkWindowedSincPolyDataFilter> smooth = vtkSmartPointer<vtkWindowedSincPolyDataFilter>::New();
-    smooth->SetInputData( poly_data );
-    smooth->SetNumberOfIterations( 200 );
-    smooth->SetPassBand(0.20);
-    smooth->Update();
-    poly_data = smooth->GetOutput();
- */
 
     // Make the triangle winding order consistent
     normals = vtkSmartPointer<vtkPolyDataNormals>::New();
@@ -551,7 +499,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
 
   return this->mesh_;
 }
-
+*/
 //-----------------------------------------------------------------------------
 int Structure::get_id()
 {
@@ -658,7 +606,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_parts()
 
   NodeMap node_map = this->get_node_map();
 
-  std::list<Point> points;
+  //std::list<Point> points;
 
   vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
 
@@ -994,7 +942,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
 
   //NodeMap node_map = this->get_node_map();
 
-  std::list<Point> points;
+  //std::list<Point> points;
 
   vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
 

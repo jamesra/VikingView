@@ -1,3 +1,8 @@
 cicero 32-bit:
 
 cmake ../src -G "Visual Studio 9 2008" -DVTK_DIR="C:/Users/amorris/carma/packages/vtk-6.1.0-x86" -DCGAL_DIR="C:/Users/amorris/carma/packages/cgal-4.5.1-x86/build-static"
+
+Mac:
+
+
+cmake ../src -DBOOST_ROOT=$HOME/carma/packages/boost_1_55_0 -DVTK_DIR=$HOME/carma/packages/vtk-6.2.0-new

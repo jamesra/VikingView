@@ -18,8 +18,8 @@
 #include <Application/VikingViewApp.h>
 #include <Application/Preferences.h>
 #include <Data/Json.h>
-#include <Data/PointSampler.h>
-#include <Data/AlphaShape.h>
+//#include <Data/PointSampler.h>
+//#include <Data/AlphaShape.h>
 #include <Data/Downloader.h>
 #include <Data/Structure.h>
 #include <Visualization/Viewer.h>

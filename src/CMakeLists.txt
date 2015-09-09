@@ -58,17 +58,17 @@ MESSAGE(STATUS "** VTK_DIR: ${VTK_DIR}")
 #MESSAGE(STATUS "** ITK_LIBRARIES: ${ITK_LIBRARIES}")
 
 
-FIND_PACKAGE(CGAL REQUIRED)
+#FIND_PACKAGE(CGAL REQUIRED)
 
-MESSAGE(STATUS "** USE_CGAL_FILE: ${USE_CGAL_FILE}")
+#MESSAGE(STATUS "** USE_CGAL_FILE: ${USE_CGAL_FILE}")
 
 
-if ( CGAL_FOUND )
-  include( ${CGAL_USE_FILE} )
-ENDIF( CGAL_FOUND )
+#if ( CGAL_FOUND )
+#  include( ${CGAL_USE_FILE} )
+#ENDIF( CGAL_FOUND )
 
-MESSAGE(STATUS "** CGAL_DIR: ${CGAL_DIR}")
-MESSAGE(STATUS "** CGAL_LIBRARIES: ${CGAL_LIBRARIES}")
+#MESSAGE(STATUS "** CGAL_DIR: ${CGAL_DIR}")
+#MESSAGE(STATUS "** CGAL_LIBRARIES: ${CGAL_LIBRARIES}")
 
 
 
@@ -77,7 +77,7 @@ MESSAGE(STATUS "** CGAL_LIBRARIES: ${CGAL_LIBRARIES}")
 #SET(CMAKE_INCLUDE_PATH ${CMAKE_INCLUDE_PATH} "/usr/local/include/boost")
 #SET(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} "/usr/local/lib")
 #set( Boost_USE_STATIC_LIBS ON )
-FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem thread)
+#FIND_PACKAGE(Boost REQUIRED COMPONENTS system filesystem thread)
 #link_directories ( ${Boost_LIBRARY_DIRS} )
 #include_directories ( ${Boost_INCLUDE_DIRS} )
 
@@ -184,17 +184,17 @@ SET(VIKING_VIEW_APPLICATION_UIS
 ### Data
 SET(VIKING_VIEW_DATA_HDRS
   Data/Json.h
-  Data/AlphaShape.h
-  Data/FixedAlphaShape.h
-  Data/PointSampler.h
+#  Data/AlphaShape.h
+#  Data/FixedAlphaShape.h
+#  Data/PointSampler.h
   Data/Downloader.h
   Data/Structure.h
   )
 SET(VIKING_VIEW_DATA_SRCS
   Data/Json.cc
-  Data/AlphaShape.cc
-  Data/FixedAlphaShape.cc
-  Data/PointSampler.cc
+#  Data/AlphaShape.cc
+#  Data/FixedAlphaShape.cc
+#  Data/PointSampler.cc
   Data/Downloader.cc
   Data/Structure.cc
   )
