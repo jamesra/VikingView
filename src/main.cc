@@ -11,7 +11,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <Data/AlphaShape.h>
+//#include <Data/AlphaShape.h>
 
 #ifndef _USE_OLD_IOSTREAMS
 using namespace std;
