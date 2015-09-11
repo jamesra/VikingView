@@ -50,7 +50,7 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
       std::cerr << idx << "/" << download_object.structure_list.size() << "\n";
       idx++;
 
-      progress.setValue(idx);
+      progress.setValue( idx );
     }
 
     //request = QString( end_point + "/SelectStructureLocations?ID=" ) + QString::number( id ) + "L" + "&$format=json";

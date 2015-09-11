@@ -32,15 +32,15 @@ public:
   void set_main_window_size( QSize size );
 
   QStringList get_connectome_list();
-  void set_connectome_list(QStringList nicknames, QStringList list);
+  void set_connectome_list( QStringList nicknames, QStringList list );
 
   QStringList get_connectome_nickname_list();
 
   int get_last_connectome();
-  void set_last_connectome(int id);
+  void set_last_connectome( int id );
 
   double get_child_scale();
-  void set_child_scale(double scale);
+  void set_child_scale( double scale );
 
   /// restore all default values
   void restore_defaults();

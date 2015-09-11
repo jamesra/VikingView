@@ -8,7 +8,6 @@
 #include <QSharedPointer>
 #include <QProgressDialog>
 
-
 class Structure;
 
 class DownloadException
