@@ -19,10 +19,20 @@ Preferences::Preferences()
   this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC2/OData/ConnectomeData.svc";
   this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RPC1/OData/ConnectomeData.svc";
 
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC1/OData";
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC2/OData";
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RPC1/OData";
+
+
   this->default_connectome_nicknames_ << "Rabbit";
   this->default_connectome_nicknames_ << "RC1";
   this->default_connectome_nicknames_ << "RC2";
   this->default_connectome_nicknames_ << "RPC1";
+
+  this->default_connectome_nicknames_ << "New RC1";
+  this->default_connectome_nicknames_ << "New RC2";
+  this->default_connectome_nicknames_ << "New RPC1";
+
 }
 
 //-----------------------------------------------------------------------------

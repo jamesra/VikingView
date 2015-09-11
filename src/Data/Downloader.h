@@ -6,6 +6,8 @@
 #include <QNetworkReply>
 #include <QUrl>
 #include <QSharedPointer>
+#include <QProgressDialog>
+
 
 class Structure;
 
@@ -40,7 +42,7 @@ public:
   Downloader();
   ~Downloader();
 
-  bool download_cell( QString end_point, int id, DownloadObject &download_object );
+  bool download_cell( QString end_point, int id, DownloadObject &download_object, QProgressDialog &progress );
 
   QList<QVariant> get_location_list();
   QList<QVariant> get_link_list();

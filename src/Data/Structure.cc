@@ -110,6 +110,12 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
     n->z = n->z * units_per_section;
     n->radius = n->radius * units_per_pixel;
 
+    if ( !structures->contains( n->parent_id ) )
+    {
+      std::cerr << "Error: could not find structure: " << n->parent_id << "\n";
+      return structures;
+    }
+
     structures->value( n->parent_id )->node_map_[n->id] = n;
     full_node_map[n->id] = n;
   }
@@ -247,25 +253,25 @@ NodeMap Structure::get_node_map()
 }
 
 /*
-//-----------------------------------------------------------------------------
-vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
-{
-  if ( this->mesh_ )
-  {
+   //-----------------------------------------------------------------------------
+   vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
+   {
+   if ( this->mesh_ )
+   {
     return this->mesh_;
-  }
+   }
 
-  NodeMap node_map = this->get_node_map();
+   NodeMap node_map = this->get_node_map();
 
-  std::list<Point> points;
+   std::list<Point> points;
 
-  vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
+   vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
 
-  bool first = true;
+   bool first = true;
 
-  // spheres
-  for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
-  {
+   // spheres
+   for ( NodeMap::iterator it = node_map.begin(); it != node_map.end(); ++it )
+   {
 
     QSharedPointer<Node> n = it.value();
 
@@ -274,7 +280,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
       continue;
     }
 
-//    std::cerr << "adding sphere: " << n.id << "(" << n.x << "," << n.y << "," << n.z << "," << n.radius << ")\n";
+   //    std::cerr << "adding sphere: " << n.id << "(" << n.x << "," << n.y << "," << n.z << "," << n.radius << ")\n";
 
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
     sphere->SetCenter( n->x, n->y, n->z );
@@ -299,10 +305,10 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
       poly_data = booleanOperation->GetOutput();
 
     }
-  }
+   }
 
 
-  foreach( Link link, this->get_links() ) {
+   foreach( Link link, this->get_links() ) {
 
     if ( node_map.find( link.a ) == node_map.end() || node_map.find( link.b ) == node_map.end() )
     {
@@ -341,20 +347,20 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_old()
     append->AddInputData( tube->GetOutput() );
     append->Update();
     poly_data = append->GetOutput();
-  }
+   }
 
-  this->mesh_ = poly_data;
+   this->mesh_ = poly_data;
 
-  return this->mesh_;
-}
-*/
+   return this->mesh_;
+   }
+ */
 
 /*
-//-----------------------------------------------------------------------------
-vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
-{
-  if ( !this->mesh_ )
-  {
+   //-----------------------------------------------------------------------------
+   vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
+   {
+   if ( !this->mesh_ )
+   {
     PointSampler ps( this );
     std::list<Point> points = ps.sample_points();
 
@@ -495,11 +501,11 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_alpha()
     poly_data = normals->GetOutput();
 
     this->mesh_ = poly_data;
-  }
+   }
 
-  return this->mesh_;
-}
-*/
+   return this->mesh_;
+   }
+ */
 //-----------------------------------------------------------------------------
 int Structure::get_id()
 {
@@ -511,7 +517,6 @@ int Structure::get_type()
 {
   return this->type_;
 }
-
 
 //-----------------------------------------------------------------------------
 double Structure::get_volume()
@@ -565,7 +570,6 @@ QColor Structure::get_color()
 {
   return this->color_;
 }
-
 
 //-----------------------------------------------------------------------------
 vtkSmartPointer<vtkPolyData> Structure::recopy_mesh( vtkSmartPointer<vtkPolyData> mesh )
@@ -1016,15 +1020,15 @@ void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<
   }
 
   /*
-  // add a circle at every location
-  vtkSmartPointer<vtkRegularPolygonSource> circle = vtkSmartPointer<vtkRegularPolygonSource>::New();
-  circle->GeneratePolygonOff();
-  circle->SetNumberOfSides( 12 );
-  circle->SetRadius( n->radius );
-  circle->SetCenter( n->x, n->y, n->z );
-  circle->Update();
-  append->AddInputData( circle->GetOutput() );
-  /**/
+     // add a circle at every location
+     vtkSmartPointer<vtkRegularPolygonSource> circle = vtkSmartPointer<vtkRegularPolygonSource>::New();
+     circle->GeneratePolygonOff();
+     circle->SetNumberOfSides( 12 );
+     circle->SetRadius( n->radius );
+     circle->SetCenter( n->x, n->y, n->z );
+     circle->Update();
+     append->AddInputData( circle->GetOutput() );
+     /**/
 
   if ( n->linked_nodes.size() != 2 )
   {
@@ -1049,8 +1053,6 @@ void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<
 
     vtkSmartPointer<vtkPolyData> poly_data = vtkSmartPointer<vtkPolyData>::New();
     poly_data = sphere->GetOutput();
-
-    
 
 /*
     vtkSmartPointer<vtkUnsignedCharArray> colors =
@@ -1129,7 +1131,6 @@ void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<
       //vtkSmartPointer<vtkCardinalSpline> spline = vtkSmartPointer<vtkCardinalSpline>::New();
       spline->SetPoints( vtk_points );
 
-
       // Interpolate the points
       vtkSmartPointer<vtkParametricFunctionSource> function_source =
         vtkSmartPointer<vtkParametricFunctionSource>::New();
@@ -1145,8 +1146,6 @@ void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<
       poly_data->SetLines( lines );
       //poly_data->GetPointData()->AddArray( tube_radius_array );
       //poly_data->GetPointData()->SetActiveScalars( "tube_radius" );
-
-
 
       //append->AddInputData(function_source->GetOutput());
       // tmp: add line instead
