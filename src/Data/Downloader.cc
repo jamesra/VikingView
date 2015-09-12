@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QTextStream>
 #include <QMessageBox>
+#include <QtConcurrentMap>
+#include <QElapsedTimer>
 
 Downloader::Downloader()
 {}
@@ -19,49 +21,52 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 {
   try{
 
-    // http://websvc1.connectomes.utah.edu/RC1/OData/Structures(180)/Children
+    QElapsedTimer timer;
+    timer.start();
 
-    //QString request = QString( end_point + "/Structures/?$filter=ParentID eq " )
-    // + QString::number( id ) + " or ID eq " + QString::number( id );
-
-    //http://websvc1.connectomes.utah.edu/RC1/OData/Structures?$filter=(ID eq 180 or ParentID eq 180)
+    // set number of threads to download
+    QThreadPool::globalInstance()->setMaxThreadCount( 16 );
 
     QString request = QString( end_point + "/Structures?$filter=(ID eq " ) + QString::number( id )
                       + " or ParentID eq " + QString::number( id ) + ")&$select=ID,TypeID";
     download_object.structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
 
     std::cerr << "structure list length = " << download_object.structure_list.size() << "\n";
-    int idx = 0;
 
-    progress.setMaximum( download_object.structure_list.size() );
+    QList< QList<QVariant> > downloaded;
+    QList< QString > requests;
 
     foreach( QVariant var, download_object.structure_list ) {
       QMap<QString, QVariant> item = var.toMap();
       int id = item["ID"].toLongLong();
-
       request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/Locations?$select=ID,VolumeX,VolumeY,Z,Radius,ParentID";
-      QList<QVariant> list = this->download_json( request, QString( "locations-" ) + QString::number( id ) + "-" + QString::number( idx ) );
-      download_object.location_list.append( list );
-
-      request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/LocationLinks?$select=A,B";
-      list = this->download_json( request, QString( "links-" ) + QString::number( id ) + "-" + QString::number( idx ) );
-      download_object.link_list.append( list );
-
-      std::cerr << idx << "/" << download_object.structure_list.size() << "\n";
-      idx++;
-
-      progress.setValue( idx );
+      requests.append( request );
     }
 
-    //request = QString( end_point + "/SelectStructureLocations?ID=" ) + QString::number( id ) + "L" + "&$format=json";
-    //request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/Locations";
-    //download_object.location_list = this->download_json( request, QString( "locations-" ) + QString::number( id ) );
+    downloaded = QtConcurrent::blockingMapped( requests, download_item );
+    progress.setValue( 1 );
 
-    //request = QString( end_point + "/SelectStructureLocationLinks?StructureID=" ) + QString::number( id ) + "L";
-    //request = QString( end_point + "/SelectStructureLocationLinks?ID=" ) + QString::number( id ) + "L";
-    //request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/LocationLinks";
-    //download_object.link_list = this->download_json( request, QString( "links-" ) + QString::number( id ) );
+    foreach( QList<QVariant> list, downloaded ) {
+      download_object.location_list.append( list );
+    }
 
+    // download locations
+    requests.clear();
+    foreach( QVariant var, download_object.structure_list ) {
+      QMap<QString, QVariant> item = var.toMap();
+      int id = item["ID"].toLongLong();
+      request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/LocationLinks?$select=A,B";
+      requests.append( request );
+    }
+
+    // download location links
+    downloaded = QtConcurrent::blockingMapped( requests, download_item );
+    progress.setValue( 2 );
+    foreach( QList<QVariant> list, downloaded ) {
+      download_object.link_list.append( list );
+    }
+
+    std::cerr << "Download took: " << timer.elapsed() / 1000.0 << " seconds\n";
     return true;
   }
   catch ( DownloadException e )
@@ -75,7 +80,7 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 //-----------------------------------------------------------------------------
 QList<QVariant> Downloader::download_json( QString url_string, QString file_prefix )
 {
-
+  //std::cerr << "download_json(" << url_string.toStdString() << "\n";
   const int save_to_file = 0;
   const int load_from_file = 0;
 
@@ -122,7 +127,7 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
   do
   {
 
-    QString text = this->download_url( url_string );
+    QString text = Downloader::download_url( url_string );
     pages.append( text );
 
     QMap<QString, QVariant> map = Json::decode( text );
@@ -180,19 +185,28 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
 }
 
 //-----------------------------------------------------------------------------
+QList<QVariant> Downloader::download_item( QString request )
+{
+  QList<QVariant> list = Downloader::download_json( request, QString( "json-" ) + request );
+  return list;
+}
+
+//-----------------------------------------------------------------------------
 QString Downloader::download_url( QString url_string )
 {
+  QNetworkAccessManager qnam;
+
   QUrl url = url_string;
   QNetworkRequest request = QNetworkRequest( url );
   request.setRawHeader( "Accept", "application/json" );
-  this->reply_ = qnam_.get( request );
+  QNetworkReply* reply = qnam.get( request );
 
   // wait for download
   QEventLoop loop;
-  connect( this->reply_, SIGNAL( finished() ), &loop, SLOT( quit() ) );
+  connect( reply, SIGNAL( finished() ), &loop, SLOT( quit() ) );
   loop.exec();
 
-  QString text = this->reply_->readAll();
+  QString text = reply->readAll();
 
   return text;
 }

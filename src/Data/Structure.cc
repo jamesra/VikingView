@@ -861,7 +861,7 @@ void Structure::cull_locations()
 
         if ( distance( node_a, node_b ) < min_dist )
         {
-          std::cerr << "removed outlier!\n";
+          //std::cerr << "removed outlier!\n";
           removed = true;
           remove_list.push_back( n->id );
           other_id = n->linked_nodes[0];

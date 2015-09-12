@@ -50,12 +50,13 @@ public Q_SLOTS:
 
 private:
 
-  QList<QVariant> download_json( QString url_string, QString file_prefix );
+  static QList<QVariant> download_json( QString url_string, QString file_prefix );
 
-  QString download_url( QString url_string );
+  static QList<QVariant> download_item( QString request );
 
-  QNetworkAccessManager qnam_;
-  QNetworkReply* reply_;
+  static QString download_url( QString url_string );
+
+
 
   bool http_request_aborted;
 };
