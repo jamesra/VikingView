@@ -1,8 +1,24 @@
-cicero 32-bit:
+Windows 32-bit:
 
-cmake ../src -G "Visual Studio 9 2008" -DVTK_DIR="C:/Users/amorris/carma/packages/vtk-6.1.0-x86" -DCGAL_DIR="C:/Users/amorris/carma/packages/cgal-4.5.1-x86/build-static"
+Tested development environment:
 
-Mac:
+1) Visual Studio 9 (2008).  Everything should works with newer versions of Visual Studio.
 
+2) Qt 4.8.x.  The latest Qt4 should be used.  It's probably not difficult to upgrade it Qt5, but I haven't seen any reason to.
 
-cmake ../src -DBOOST_ROOT=$HOME/carma/packages/boost_1_55_0 -DVTK_DIR=$HOME/carma/packages/vtk-6.2.0-new
+3) CMake 2.8+.  Any recent version of CMake should be fine.
+
+4) VTK 6.  Any version of VTK 6 should be fine.
+  * Make sure to build with Qt support
+
+5) Sample cmake configuration command:
+
+cmake ../src -G "Visual Studio 9 2008" -DVTK_DIR="C:/path/to/vtk-6.1.0-x86"
+
+To deploy, we use CPack+NSIS.
+
+1) You may need to install NSIS separately in order for CPack to use it.
+
+2) Run:
+
+cpack -G NSIS
