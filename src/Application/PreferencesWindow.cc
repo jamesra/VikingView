@@ -4,6 +4,10 @@
 
 // qt
 #include <QtGui>
+#include <QLineEdit>
+#include <QInputDialog>
+#include <QStringList>
+#include <QPushButton>
 
 #include <Application/PreferencesWindow.h>
 #include <Application/Preferences.h>
@@ -118,8 +122,8 @@ void PreferencesWindow::on_delete_connectome_button_clicked()
   QStringList nicknames = Preferences::Instance().get_connectome_nickname_list();
 
   foreach( int i, index_list ) {
-    connectome_list.remove( connectome_list.begin() + i );
-    nicknames.remove( nicknames.begin() + i );
+    connectome_list.removeAt( i );
+    nicknames.removeAt( i );
   }
   Preferences::Instance().set_connectome_list( nicknames, connectome_list );
   this->set_values_from_preferences();

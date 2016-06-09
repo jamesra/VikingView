@@ -1,19 +1,25 @@
-Windows 32-bit:
+Windows 64-bit:
 
 Tested development environment:
 
-1) Visual Studio 9 (2008).  Everything should works with newer versions of Visual Studio.
+1) Visual Studio 14 (2015).
 
-2) Qt 4.8.x.  The latest Qt4 should be used.  It's probably not difficult to upgrade it Qt5, but I haven't seen any reason to.
+2) Qt 5.6.x.
 
 3) CMake 2.8+.  Any recent version of CMake should be fine.
 
-4) VTK 6.  Any version of VTK 6 should be fine.
+4) VTK 7.  VTK 6 is probably ok too
   * Make sure to build with Qt support
+
+cmake ../src/VTK-7.0.0 -DBUILD_EXAMPLES=0 -DBUILD_TESTING=0 -DBUILD_SHARED_LIBS=0 -DVTK_Group_Qt=1 -G "Visual Studio 14 2015" -DQT_QMAKE_EXECUTABLE="C:/Qt/Qt5.6.0-vs2015-x86/5.6/msvc2015/bin/qmake.exe" -DVTK_QT_VERSION:STRING=5 -DQt5_Dir="C:/Qt/5.6.0/qtbase/lib/cmake/Qt5"
 
 5) Sample cmake configuration command:
 
 cmake ../src -G "Visual Studio 9 2008" -DVTK_DIR="C:/path/to/vtk-6.1.0-x86"
+
+Not sure what the secret CMake sauce to properly use Qt5 is.  For now, the following works:
+
+cmake -G "Visual Studio 14 2015 Win64" ../src -DVTK_DIR=../../packages/vs2015/vtk-7.0.0-install/lib/cmake/vtk-7.0 -DQT_QMAKE_EXECUTABLE="C:/Qt/Qt5.6.0-vs2015-x64/5.6/msvc2015_64/bin/qmake.exe" -DQt5Script_DIR="C:\Qt\Qt5.6.0-vs2015-x64\5.6\msvc2015_64\lib\cmake\Qt5Script" -DQt5Network_DIR="C:\Qt\Qt5.6.0-vs2015-x64\5.6\msvc2015_64\lib\cmake\Qt5Network"  -DQt5Concurrent_DIR="C:\Qt\Qt5.6.0-vs2015-x64\5.6\msvc2015_64\lib\cmake\Qt5Concurrent"
 
 To deploy, we use CPack+NSIS.
 

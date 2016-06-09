@@ -27,24 +27,27 @@ IF (WIN32 AND MSVC)
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ENDIF (WIN32 AND MSVC)
 
-FIND_PACKAGE(VTK COMPONENTS
-  vtkCommonCore
-  vtkInfovisCore
-  vtkInteractionStyle
-  vtkRenderingFreeTypeOpenGL
-  vtkViewsQt
-  vtkFiltersCore
-  vtkGUISupportQt
-  vtkIOLegacy
-  vtkIOGeometry
-  vtkFiltersCore
-  vtkIOPLY
-  )
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+
+#FIND_PACKAGE(VTK COMPONENTS
+ # vtkCommonCore
+#  vtkInfovisCore
+#  vtkInteractionStyle
+#  vtkViewsQt
+#  vtkFiltersCore
+#  vtkGUISupportQt
+#  vtkIOLegacy
+#  vtkIOGeometry
+#  vtkFiltersCore
+#  vtkIOPLY
+ # )
 
 MESSAGE(STATUS "** USE_VTK_FILE: ${USE_VTK_FILE}")
+MESSAGE(STATUS "** VTK_LIBRARIES: ${VTK_LIBRARIES}")
 
 
-INCLUDE(${VTK_USE_FILE})
+#INCLUDE(${VTK_USE_FILE})
 
 #INCLUDE( ${USE_VTK_FILE} )
 MESSAGE(STATUS "** VTK_DIR: ${VTK_DIR}")
@@ -111,11 +114,30 @@ ENDIF (WIN32)
 # this command finds Qt4 libraries and sets all required variables
 # note that it's Qt4, not QT4 or qt4
 SET(QT_MIN_VERSION "4.7.4")
-FIND_PACKAGE( Qt4 REQUIRED )
+#FIND_PACKAGE( Qt4 REQUIRED )
+find_package(Qt5Widgets REQUIRED)
+include_directories(${Qt5Widgets_INCLUDE_DIRS})
+add_definitions(${Qt5Widgets_DEFINITION_DIRS})
+
+find_package(Qt5Script REQUIRED)
+include_directories(${Qt5Script_INCLUDE_DIRS})
+add_definitions(${Qt5Script_DEFINITION_DIRS})
+
+find_package(Qt5Core REQUIRED)
+include_directories(${Qt5Core_INCLUDE_DIRS})
+add_definitions(${Qt5Core_DEFINITION_DIRS})
+
+find_package(Qt5Concurrent REQUIRED)
+include_directories(${Qt5Concurrent_INCLUDE_DIRS})
+add_definitions(${Qt5Concurrent_DEFINITION_DIRS})
+
+find_package(Qt5Network REQUIRED)
+include_directories(${Qt5Network_INCLUDE_DIRS})
+add_definitions(${Qt5Network_DEFINITION_DIRS})
 
 # add some useful macros and variables
 # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that contains a path to CMake script)
-INCLUDE( ${QT_USE_FILE} )
+#INCLUDE( ${QT_USE_FILE} )
 
 MESSAGE(STATUS "** QT_QMAKE_EXECUTABLE: ${QT_QMAKE_EXECUTABLE}")
 
@@ -256,17 +278,17 @@ SOURCE_GROUP("Data" FILES ${VIKING_VIEW_DATA_SRCS} ${VIKING_VIEW_DATA_HDRS})
 
 # this command will generate rules that will run rcc on all files from VIKING_VIEW_RCS
 # in result VIKING_VIEW_RC_SRCS variable will contain paths to files produced by rcc
-QT4_ADD_RESOURCES( VIKING_VIEW_RC_SRCS ${VIKING_VIEW_RCS} )
+QT5_ADD_RESOURCES( VIKING_VIEW_RC_SRCS ${VIKING_VIEW_RCS} )
 
 # this will run uic on .ui files:
-QT4_WRAP_UI( VIKING_VIEW_UI_HDRS ${VIKING_VIEW_APPLICATION_UIS} 
+QT5_WRAP_UI( VIKING_VIEW_UI_HDRS ${VIKING_VIEW_APPLICATION_UIS} 
   ${VIKING_VIEW_GROOM_UIS}
   ${VIKING_VIEW_OPTIMIZE_UIS} 
   ${VIKING_VIEW_ANALYSIS_UIS} 
 )
 
 # and finally this will run moc:
-QT4_WRAP_CPP( VIKING_VIEW_MOC_SRCS ${VIKING_VIEW_APPLICATION_HDRS} ${VIKING_VIEW_MOC_HDRS} )
+QT5_WRAP_CPP( VIKING_VIEW_MOC_SRCS ${VIKING_VIEW_APPLICATION_HDRS} ${VIKING_VIEW_MOC_HDRS} )
 
 
 # Turn on precompiled headers
@@ -317,6 +339,12 @@ TARGET_LINK_LIBRARIES( VikingView
   ${Boost_SYSTEM_LIBRARY}
   ${Boost_FILESYSTEM_LIBRARY}
   ${VTK_LIBRARIES}
+  Qt5::Widgets
+  Qt5::Core
+  Qt5::Network
+  Qt5::Script
+  Qt5::Concurrent
+  Qt5::WinMain
   )
 
 

@@ -888,14 +888,14 @@ void Structure::cull_locations()
 
       if ( removed )
       {
-        this->node_map_[other_id]->linked_nodes.remove( n->id );
+        this->node_map_[other_id]->linked_nodes.removeOne( n->id );
 
         foreach( int id, n->linked_nodes ) {
 
           if ( id != other_id )
           {
             this->node_map_[other_id]->linked_nodes.append( id );
-            this->node_map_[id]->linked_nodes.remove( n->id );
+            this->node_map_[id]->linked_nodes.removeOne( n->id );
             this->node_map_[id]->linked_nodes.append( other_id );
           }
         }
