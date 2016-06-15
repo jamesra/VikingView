@@ -62,7 +62,7 @@ public:
 
   vtkSmartPointer<vtkPolyData> get_mesh_old();
   vtkSmartPointer<vtkPolyData> get_mesh_alpha();
-  vtkSmartPointer<vtkPolyData> get_mesh_union();
+  // vtkSmartPointer<vtkPolyData> get_mesh_union();
   vtkSmartPointer<vtkPolyData> get_mesh_parts();
   vtkSmartPointer<vtkPolyData> get_mesh_tubes();
 

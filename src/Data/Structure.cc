@@ -522,6 +522,7 @@ int Structure::get_type()
 double Structure::get_volume()
 {
   return 0;
+  /*
   vtkSmartPointer<vtkPolyData> mesh = this->get_mesh_union();
 
   vtkSmartPointer<vtkMassProperties> mass_properties = vtkSmartPointer<vtkMassProperties>::New();
@@ -530,12 +531,14 @@ double Structure::get_volume()
   mass_properties->Update();
 
   return mass_properties->GetVolume();
+  */
 }
 
 //-----------------------------------------------------------------------------
 QString Structure::get_center_of_mass_string()
 {
   return "";
+  /*
   vtkSmartPointer<vtkPolyData> mesh = this->get_mesh_union();
 
   // Compute the center of mass
@@ -551,6 +554,7 @@ QString Structure::get_center_of_mass_string()
   QString str = QString::number( center[0] ) + ", " + QString::number( center[1] ) + ", " + QString::number( center[2] );
 
   return str;
+  */
 }
 
 //-----------------------------------------------------------------------------
