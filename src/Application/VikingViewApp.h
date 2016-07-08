@@ -17,9 +17,6 @@ class Viewer;
 // Forward Qt class declarations
 class Ui_VikingViewApp;
 
-// Forward VTK class declarations
-class vtkRenderWindow;
-
 //! Main VikingView window
 /*!
  * This class represents the primary VikingView window interface
@@ -38,11 +35,7 @@ public:
 
   void export_dae( QString filename );
 
-  void export_obj( QString filename );
-
   virtual void closeEvent( QCloseEvent* event );
-
-  vtkRenderWindow* get_render_window();
 
 public Q_SLOTS:
 

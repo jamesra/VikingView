@@ -13,7 +13,6 @@
 
 // vtk
 #include <vtkRenderWindow.h>
-#include <vtkOBJExporter.h>
 
 // viking
 #include <Application/VikingViewApp.h>
@@ -192,27 +191,8 @@ void VikingViewApp::export_dae( QString filename )
 }
 
 //---------------------------------------------------------------------------
-void VikingViewApp::export_obj( QString filename )
-{
-	// Create an OBJ file exporter
-	vtkOBJExporter* vtkExporter = vtkOBJExporter::New();
-	// Give the exporter access to the render window
-	vtkRenderWindow* renderWindow = this->get_render_window();
-	vtkExporter->SetRenderWindow(renderWindow);
-	vtkExporter->SetFilePrefix(filename.toStdString().c_str());
-	vtkExporter->Write();
-}
-
-vtkRenderWindow* VikingViewApp::get_render_window()
-{
-	return this->ui_->qvtkWidget->GetRenderWindow();
-}
-
-//---------------------------------------------------------------------------
 void VikingViewApp::update_table()
 {
-
-	std::cerr << "Updating the table" << std::endl;
   this->ui_->table_widget->clear();
 
   this->ui_->table_widget->setRowCount( this->structures_.size() );

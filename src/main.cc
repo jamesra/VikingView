@@ -109,18 +109,12 @@ int main( int argc, char** argv )
         int id = QString( argv[argidx++] ).toInt();
         studio_app->load_structure( id );
       }
-      else if ( arg == "-export-dae" )
+      else if ( arg == "-export" )
       {
         QString filename = argv[argidx++];
         studio_app->export_dae( filename );
         return 0;
       }
-	  else if (arg == "-export-obj")
-	  {
-		  QString filename = argv[argidx++];
-		  studio_app->export_obj( filename );
-		  return 0;
-	  }
       else
       {
         std::cerr << "unrecognized option: " << arg.toStdString() << "\n";
