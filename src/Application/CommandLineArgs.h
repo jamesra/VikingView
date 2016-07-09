@@ -19,7 +19,7 @@ class CommandLineArgs
 
     static QList< QString > command_prefixes;
 
-    bool arg_is_command( QString arg );
+	QString arg_as_command( QString arg );
 
     QList< QString > commands_;
     QMap< QString, QList<QString> > command_parameters_;

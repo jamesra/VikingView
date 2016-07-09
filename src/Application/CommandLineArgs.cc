@@ -10,6 +10,18 @@ QList< QString > CommandLineArgs::command_prefixes;
 //-----------------------------------------------------------------------------
 CommandLineArgs::CommandLineArgs( int argc, char** argv )
 {
+  // Construct the list of acceptable prefixes for a command, if necessary
+  if (command_prefixes.empty())
+  {
+	// Commands look like any of these examples:
+	//  -export
+	//  --export
+	//  /export
+	command_prefixes.push_back(QString("-"));
+	command_prefixes.push_back(QString("--"));
+	command_prefixes.push_back(QString("/"));
+  }
+	
   // Process every command line argument as a QString, excluding the first
   // argument, "VikingView.exe"
   for ( int i = 1; i < argc; ++i)
@@ -17,11 +29,12 @@ CommandLineArgs::CommandLineArgs( int argc, char** argv )
     QString arg( argv[i] );
 
     // If the argument is a command, store it in the command list
-    if ( arg_is_command( arg ))
+	QString arg_command = arg_as_command( arg );
+    if ( !arg_command.isEmpty() )
     {
-      commands_.push_back( arg );
+	  commands_.push_back( arg_command );
       // Give it an empty parameter list
-      command_parameters_[ arg ] = QList<QString>();
+      command_parameters_[ arg_command ] = QList<QString>();
     }
     // Otherwise the argument must be a parameter to the last command
     // passed
@@ -61,27 +74,19 @@ QList< QString > CommandLineArgs::command_parameters( QString command )
 }
 
 //-----------------------------------------------------------------------------
-bool CommandLineArgs::arg_is_command( QString arg )
+QString CommandLineArgs::arg_as_command( QString arg )
 {
-  // Construct the list of acceptable prefixes for a command, if necessary
-  if ( command_prefixes.empty() )
-  {
-    // Commands look like any of these examples:
-    //  -export
-    //  --export
-    //  /export
-    command_prefixes.push_back( QString( "-" ));
-    command_prefixes.push_back( QString( "--" ));
-    command_prefixes.push_back( QString( "/" ));
-  }
-
   // Commands can start with any of the different acceptable prefixes
   for ( int i = 0; i < command_prefixes.size(); ++i )
   {
-    if ( arg.startsWith( command_prefixes[ i ] ) ) return true;
+	QString prefix = command_prefixes[ i ];
+    if ( arg.startsWith( prefix ) )
+	{
+	  return arg.replace( prefix, "" );
+	}
   }
 
   // If an arg doesn't have one of these prefixes, it is a parameter, not
   // a command
-  return false;
+  return "";
 }

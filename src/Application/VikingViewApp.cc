@@ -29,7 +29,7 @@
 #include <ui_VikingViewApp.h>
 
 //---------------------------------------------------------------------------
-VikingViewApp::VikingViewApp( int argc, char** argv )
+VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > )
 {
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );

@@ -10,6 +10,7 @@
 #include <QFile>
 #include <QMap>
 
+#include <Application/CommandLineArgs.h>
 #include <Data/Structure.h>
 class Viewer;
 //class Structure;
@@ -29,7 +30,7 @@ class VikingViewApp : public QMainWindow
   Q_OBJECT
 public:
 
-  VikingViewApp( int argc, char** argv );
+  VikingViewApp( QSharedPointer< CommandLineArgs > );
   ~VikingViewApp();
 
   void initialize_vtk();

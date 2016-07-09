@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <Application/VikingViewApp.h>
+#include <Application/CommandLineArgs.h>
 #include <iostream>
 
 #ifdef _WIN32
@@ -89,8 +90,12 @@ int main( int argc, char** argv )
 
     QApplication app( argc, argv );
 
+	// Collect and parse the command line arguments into a reusable object
+	QSharedPointer<CommandLineArgs> command_line_args =
+		QSharedPointer<CommandLineArgs>( new CommandLineArgs( argc, argv ));
+
     QSharedPointer<VikingViewApp> studio_app =
-      QSharedPointer<VikingViewApp>( new VikingViewApp( argc, argv ) );
+        QSharedPointer<VikingViewApp>( new VikingViewApp( command_line_args ) );
 
     studio_app->show();
 
@@ -98,18 +103,31 @@ int main( int argc, char** argv )
 
     //studio_app->load_structure(180);
 
-    int argidx = 1;
-
-    while ( argidx < argc )
-    {
-
-      QString arg = argv[argidx++];
-      if ( arg == "-id" )
-      {
-        int id = QString( argv[argidx++] ).toInt();
+	// Process the id command by loading the cells for every
+	// id provided as a parameter
+    if ( command_line_args->command_used( "id" ) )
+	{
+	  QList< QString > id_parameters = command_line_args->command_parameters( "id" );
+	  for ( int i = 0; i < id_parameters.size(); ++i)
+	  {
+        int id = id_parameters[ i ].toInt();
         studio_app->load_structure( id );
       }
-      else if ( arg == "-export-dae" )
+	}
+
+	// Process the export command by exporting the render scene
+	// in each format specified as a parameter
+	/*if ( command_line_args->command_used( "export" ))
+	{
+	  QList< QString > export_parameters = command_line_args->command_parameters( "export" );
+	  for ( int i = 0; i < export_parameters.size(); ++i )
+	  {
+		QString export_type = export_parameters[ i ];
+
+
+	  }
+	}*/
+		/*arg == "-export-dae" )
       {
         QString filename = argv[argidx++];
         studio_app->export_dae( filename );
@@ -125,7 +143,7 @@ int main( int argc, char** argv )
       {
         std::cerr << "unrecognized option: " << arg.toStdString() << "\n";
       }
-    }
+    }*/
 
     /*
 
