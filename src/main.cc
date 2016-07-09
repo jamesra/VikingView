@@ -1,4 +1,5 @@
 #include <QApplication>
+#include <QMessageBox>
 #include <Application/VikingViewApp.h>
 #include <Application/CommandLineArgs.h>
 #include <iostream>
@@ -117,16 +118,40 @@ int main( int argc, char** argv )
 
 	// Process the export command by exporting the render scene
 	// in each format specified as a parameter
-	/*if ( command_line_args->command_used( "export" ))
+	if ( command_line_args->command_used( "export" ))
 	{
-	  QList< QString > export_parameters = command_line_args->command_parameters( "export" );
-	  for ( int i = 0; i < export_parameters.size(); ++i )
-	  {
-		QString export_type = export_parameters[ i ];
-
-
+	  // Only run export operations if a single cell was loaded
+	  if ( !command_line_args->command_used( "id" ) 
+		|| command_line_args->command_parameters( "id" ).size() != 1 )
+   	  {
+		QMessageBox::critical( 0, "Export error", "Error! Tried to export cell geometry with no or multiple cell ids specified (use exactly 1, i.e. -id 593 )" );
+		return;
 	  }
-	}*/
+
+	  // If no filename is provided at the command line, use a default
+	  QString filename = "VikingViewExport";
+	  
+	  if ( command_line_args->command_used( "filename" ) )
+	  { 
+		if ( command_line_args->command_parameters( "filename" ).size() != 1 )
+		{ 
+		  QMessageBox::critical(0, "Export error", "Error! Tried to set export filename with no or multiple paths specified (give 1 filename, i.e. -filename test )");
+		  return;
+		}
+
+		filename = command_line_args->command_parameters( "filename" ).back();
+	  }
+
+	  QList< QString > export_file_types = command_line_args->command_parameters("export");
+
+	  for ( int i = 0; i < export_file_types.size(); ++i )
+	  {
+		QString export_type = export_file_types[ i ];
+
+		// TODO put pointers to VikingViewApp's two different export functions in a map, 
+		// then call the export function mapped to the file type
+	  }
+	}
 		/*arg == "-export-dae" )
       {
         QString filename = argv[argidx++];
