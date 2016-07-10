@@ -37,9 +37,7 @@ public:
 
   void load_structure( int id );
 
-  void export_dae( QString filename );
-
-  void export_obj( QString filename );
+  void export_cell( QString filename, QString export_type );
 
   virtual void closeEvent( QCloseEvent* event );
 
@@ -70,6 +68,12 @@ private:
   void update_table();
 
   void import_json( QString json_text );
+  
+  void export_dae( QString filename );
+  void export_obj( QString filename );
+  void initialize_export_functions();
+
+  QSharedPointer< CommandLineArgs > command_line_args_;
 
   /// designer form
   Ui_VikingViewApp* ui_;
@@ -81,6 +85,9 @@ private:
   StructureHash structures_;
 
   QList< QSharedPointer<Cell> > cells_;
+
+  typedef void ( VikingViewApp::*ExportFunction )( QString );
+  QMap< QString, ExportFunction > export_functions_;
 
   Viewer* viewer_;
 };

@@ -125,62 +125,41 @@ int main( int argc, char** argv )
 		|| command_line_args->command_parameters( "id" ).size() != 1 )
    	  {
 		QMessageBox::critical( 0, "Export error", "Error! Tried to export cell geometry with no or multiple cell ids specified (use exactly 1, i.e. -id 593 )" );
-		return;
+		return 0;
 	  }
 
 	  // If no filename is provided at the command line, use a default
 	  QString filename = "VikingViewExport";
-	  
+
 	  if ( command_line_args->command_used( "filename" ) )
 	  { 
-		if ( command_line_args->command_parameters( "filename" ).size() != 1 )
+		QList< QString > filenames = command_line_args->command_parameters( "filename" );
+		if ( filenames.size() != 1 )
 		{ 
 		  QMessageBox::critical(0, "Export error", "Error! Tried to set export filename with no or multiple paths specified (give 1 filename, i.e. -filename test )");
-		  return;
+		  return 0;
 		}
 
-		filename = command_line_args->command_parameters( "filename" ).back();
+		filename = filenames.back();
 	  }
 
 	  QList< QString > export_file_types = command_line_args->command_parameters("export");
 
+	  if ( export_file_types.empty() )
+	  {
+		QMessageBox::critical(0, "Export error", "Error! Tried to export cell without specifying export type (give at least 1 type, i.e. -export obj )");
+		return 0;
+	  }
+
 	  for ( int i = 0; i < export_file_types.size(); ++i )
 	  {
 		QString export_type = export_file_types[ i ];
-
-		// TODO put pointers to VikingViewApp's two different export functions in a map, 
-		// then call the export function mapped to the file type
+		studio_app->export_cell( filename, export_type );
 	  }
+
+	  return 0;
 	}
-		/*arg == "-export-dae" )
-      {
-        QString filename = argv[argidx++];
-        studio_app->export_dae( filename );
-        return 0;
-      }
-	  else if (arg == "-export-obj")
-	  {
-		  QString filename = argv[argidx++];
-		  studio_app->export_obj( filename );
-		  return 0;
-	  }
-      else
-      {
-        std::cerr << "unrecognized option: " << arg.toStdString() << "\n";
-      }
-    }*/
 
-    /*
-
-       // do this after "show" for mac initialization
-       studio_app->initialize_vtk();
-
-       if ( argc == 2 )
-       {
-       studio_app->open_project( QString( argv[1] ) );
-       }
-
-     */
     return app.exec();
   }
   catch ( std::exception e )

@@ -146,7 +146,8 @@ public:
 };
 
 //-----------------------------------------------------------------------------
-Viewer::Viewer()
+Viewer::Viewer( QSharedPointer< CommandLineArgs > command_line_args )
+  : command_line_args_( command_line_args )
 {
   this->renderer_ = vtkSmartPointer<vtkRenderer>::New();
 
@@ -193,13 +194,18 @@ void Viewer::set_render_window( vtkRenderWindow* render_window )
   vtkSmartPointer<vtkAxesActor> axes =
     vtkSmartPointer<vtkAxesActor>::New();
 
-  this->orientation_widget_ = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
-  this->orientation_widget_->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
-  this->orientation_widget_->SetOrientationMarker( axes );
-  this->orientation_widget_->SetInteractor( render_window->GetInteractor() );
-  this->orientation_widget_->SetViewport( 0.80, 0.80, 1, 1 );
-  this->orientation_widget_->SetEnabled( 1 );
-  //this->orientation_widget_->InteractiveOn();
+  // Don't add the orientation widget if an OBJ export is being run
+  if ( !command_line_args_->command_used( "export" )
+    || !command_line_args_->command_parameters( "export" ).contains( "obj" ))
+  {
+    this->orientation_widget_ = vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+    this->orientation_widget_->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+    this->orientation_widget_->SetOrientationMarker( axes );
+    this->orientation_widget_->SetInteractor( render_window->GetInteractor() );
+    this->orientation_widget_->SetViewport( 0.80, 0.80, 1, 1 );
+    this->orientation_widget_->SetEnabled( 1 );
+    //this->orientation_widget_->InteractiveOn();
+  }
 
   render_window->GetInteractor()->AddObserver( vtkCommand::KeyPressEvent, this->orientation_controller_ );
 }
