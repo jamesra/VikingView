@@ -294,12 +294,15 @@ void VikingViewApp::export_dae(QString filename)
 {
   std::cerr << "exporting dae to \"" << filename.toStdString() << "\"\n";
 
+  // Give a warning that dae export is unfinished
+  QMessageBox::warning(0, "export dae not implemented", "The requested cell export function is not yet fully implemented, so the resulting file will not appear as expected.");
+
   // open file
   QFile file(filename + ".xml");
 
   if (!file.open(QIODevice::WriteOnly))
   {
-	QMessageBox::warning(0, "Read only", "The file is in read only mode");
+	QMessageBox::critical(0, "Read only", "The file is in read only mode");
     return;
   }
 
