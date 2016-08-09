@@ -479,6 +479,8 @@ ELSE(APPLE)
     include(BundleUtilities)
     fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
     " COMPONENT Runtime)
+
+  install(FILES "C:/Qt/5.6/msvc2015/plugins/platforms/qwindows.dll" DESTINATION "bin/platforms")
 ENDIF(APPLE)
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
