@@ -7,7 +7,7 @@
 #include <QUrl>
 #include <QSharedPointer>
 #include <QProgressDialog>
-#include <Scale.h>
+#include <Data/Scale.h>
 
 class Structure;
 
