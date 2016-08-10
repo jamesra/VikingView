@@ -884,27 +884,45 @@ void Structure::cull_outliers()
 void Structure::cull_overlapping()
 {
   QList<long> node_id_list = this->node_map_.keys();
-
-  for (QList<long>::iterator id = node_id_list.begin(); id != node_id_list.end(); ++id)
+  while(node_id_list.size() > 0)
   {
-	  QSharedPointer<Node> n = this->node_map_[*id];
+	  long node_id = node_id_list.takeFirst();
+
+	  QSharedPointer<Node> n = this->node_map_[node_id];
 	  if (n->IsBranch() || n->IsEndpoint())
 	  {
 		  continue;
 	  }
+	    
+	  QList<long> linked_nodes = QList<long>(n->linked_nodes);
 
-	  for (QList<long>::iterator link_id = n->linked_nodes.begin(); link_id != n->linked_nodes.end(); ++link_id)
+	  while(linked_nodes.count() > 0)
 	  {
+		  long link_id = linked_nodes.takeFirst();
 		  // if the two other locations are closer together than this one is to either of them
 
-		  QSharedPointer<Node> linked_node = this->node_map_[*link_id];
+		  QSharedPointer<Node> linked_node = this->node_map_[link_id];
 		  double dist = distance(n, linked_node);
 
 		  if (distance(n, linked_node) < n->radius)
 		  {
-			  std::cerr << "removed overlapping " << n->id << "\n";
-			  this->remove_node(*id);
-			  break;
+			  //If we always remove the node we are checking we will remove each node along a process and end up with only branch points or endpoints.
+			  //Instead we remove the neighbors, and keep checking until we find a neighbor that doesn't overlap
+			  if (linked_node->IsBranch() || linked_node->IsEndpoint())
+			  {
+				  //std::cerr << "removed overlapping " << node_id << "\n";
+				  this->remove_node(node_id);
+				  break;
+			  }
+			  else
+			  {
+				  //std::cerr << "removed overlapping " << link_id << "\n";
+				  this->remove_node(link_id);
+				  node_id_list.removeAll(link_id);
+				  linked_nodes.append(linked_node->linked_nodes);
+				  linked_nodes.removeAll(link_id);
+				  linked_nodes.removeAll(node_id);
+			  }
 		  }
 	  }
   }
