@@ -103,6 +103,8 @@ void VikingViewApp::load_structure( int id )
   QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
 
   DownloadObject download_object;
+  ScaleObject scale = downloader.download_scale(end_point);
+
   if ( !downloader.download_cell( end_point, id, download_object, progress ) )
   {
     return;
@@ -113,7 +115,8 @@ void VikingViewApp::load_structure( int id )
 
   QSharedPointer<StructureHash> structures = Structure::create_structures( download_object.structure_list,
                                                                            download_object.location_list,
-                                                                           download_object.link_list );
+                                                                           download_object.link_list, 
+																	       scale);
 
   QSharedPointer<Cell> cell = QSharedPointer<Cell>( new Cell() );
 

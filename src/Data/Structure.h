@@ -7,6 +7,7 @@
 #include <QColor.h>
 
 #include <vtkSmartPointer.h>
+#include <Scale.h>
 
 class vtkPolyData;
 class vtkAppendPolyData;
@@ -57,7 +58,9 @@ public:
                                                      QList<QVariant> location_list, QList<QVariant> link_list );
 
   static QSharedPointer<StructureHash> create_structures( QList<QVariant> structure_list,
-                                                                   QList<QVariant> location_list, QList<QVariant> link_list );
+                                                          QList<QVariant> location_list, 
+														  QList<QVariant> link_list,
+													      ScaleObject scale);
 
   NodeMap get_node_map();
 

@@ -66,7 +66,8 @@ Structure::~Structure()
 //-----------------------------------------------------------------------------
 QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> structure_list,
                                                             QList<QVariant> location_list,
-                                                            QList<QVariant> link_list )
+                                                            QList<QVariant> link_list,
+															ScaleObject scale)
 {
 
   QSharedPointer<StructureHash> structures = QSharedPointer<StructureHash> ( new StructureHash() );
@@ -87,8 +88,8 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
   std::cerr << "location list length: " << location_list.size() << "\n";
   std::cerr << "link list length: " << link_list.size() << "\n";
 
-  float units_per_pixel = 2.18 / 1000.0;
-  float units_per_section = -( 90.0 / 1000.0 );
+  float units_per_pixel = scale.X.scale / 1000.0;
+  float units_per_section = scale.Z.scale / 1000.0;
 
   NodeMap full_node_map;
 
