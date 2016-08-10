@@ -7,7 +7,7 @@
 #include <QColor.h>
 
 #include <vtkSmartPointer.h>
-#include <Scale.h>
+#include <Data/Scale.h>
 
 class vtkPolyData;
 class vtkAppendPolyData;
