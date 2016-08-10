@@ -157,7 +157,7 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
 
 	structure->cull_outliers();
 
-    //structure->cull_locations();
+    structure->cull_overlapping();
 
     //structure->connect_subgraphs();
 
@@ -239,7 +239,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
 
   std::cerr << "number of nodes : " << structure->node_map_.size() << "\n";
 
-  structure->cull_locations();
+  structure->cull_overlapping();
 
   structure->connect_subgraphs();
 
@@ -748,7 +748,7 @@ void Structure::connect_subgraphs()
       n->graph_id = max_count;
       this->node_map_[it.key()] = n;
 
-      QList<int> connections = n->linked_nodes;
+      QList<long> connections = n->linked_nodes;
 
       while ( connections.size() > 0 )
       {
@@ -837,7 +837,7 @@ void Structure::connect_subgraphs()
 void Structure::remove_node(long id)
 {
 	QSharedPointer<Node> toRemove = this->node_map_[id];
-	for (QList<int>::iterator it = toRemove->linked_nodes.begin(); it != toRemove->linked_nodes.end(); ++it)
+	for (QList<long>::iterator it = toRemove->linked_nodes.begin(); it != toRemove->linked_nodes.end(); ++it)
 	{
 		QSharedPointer<Node> linkedNode = this->node_map_[*it];
 		linkedNode->linked_nodes.removeAll(id); //Remove link to node we are deleting
@@ -881,89 +881,33 @@ void Structure::cull_outliers()
 }
 
 //-----------------------------------------------------------------------------
-void Structure::cull_locations()
+void Structure::cull_overlapping()
 {
+  QList<long> node_id_list = this->node_map_.keys();
 
-  std::vector<int> remove_list;
-  do
+  for (QList<long>::iterator id = node_id_list.begin(); id != node_id_list.end(); ++id)
   {
-    remove_list.clear();
-    // cull overlapping locations
-    for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
-    {
-      QSharedPointer<Node> n = it.value();
+	  QSharedPointer<Node> n = this->node_map_[*id];
+	  if (n->IsBranch() || n->IsEndpoint())
+	  {
+		  continue;
+	  }
 
-      if ( n->linked_nodes.size() != 2 )
-      {
-        continue;
-      }
+	  for (QList<long>::iterator link_id = n->linked_nodes.begin(); link_id != n->linked_nodes.end(); ++link_id)
+	  {
+		  // if the two other locations are closer together than this one is to either of them
 
-      bool removed = false;
+		  QSharedPointer<Node> linked_node = this->node_map_[*link_id];
+		  double dist = distance(n, linked_node);
 
-      int other_id = -1;
-
-      if ( n->linked_nodes.size() == 2 )
-      {
-        // if the two other locations are closer together than this one is to either of them
-
-        QSharedPointer<Node> node_a = this->node_map_[n->linked_nodes[0]];
-        QSharedPointer<Node> node_b = this->node_map_[n->linked_nodes[1]];
-
-        double min_dist = std::min( distance( n, node_a ), distance( n, node_b ) );
-
-        if ( distance( node_a, node_b ) < min_dist )
-        {
-          //std::cerr << "removed outlier!\n";
-          removed = true;
-          remove_list.push_back( n->id );
-          other_id = n->linked_nodes[0];
-        }
-      }
-
-      foreach( int id, n->linked_nodes ) {
-
-        if ( !removed )
-        {
-          QSharedPointer<Node> other = this->node_map_[id];
-
-          if ( other->linked_nodes.size() <= n->linked_nodes.size() )  // remove the one with less links
-          {
-            if ( distance( n, other ) < std::max( n->radius, other->radius ) )
-            {
-              remove_list.push_back( n->id );
-              other_id = other->id;
-              removed = true;
-            }
-          }
-        }
-      }
-
-      if ( removed )
-      {
-        this->node_map_[other_id]->linked_nodes.removeOne( n->id );
-
-        foreach( int id, n->linked_nodes ) {
-
-          if ( id != other_id )
-          {
-            this->node_map_[other_id]->linked_nodes.append( id );
-            this->node_map_[id]->linked_nodes.removeOne( n->id );
-            this->node_map_[id]->linked_nodes.append( other_id );
-          }
-        }
-      }
-    }
-
-    //std::cerr << "remove list size : " << remove_list.size() << "\n";
-
-    for ( unsigned int i = 0; i < remove_list.size(); i++ )
-    {
-      this->node_map_.remove( remove_list[i] );
-    }
-
-    this->connect_subgraphs();
+		  if (distance(n, linked_node) < n->radius)
+		  {
+			  std::cerr << "removed overlapping " << n->id << "\n";
+			  this->remove_node(*id);
+			  break;
+		  }
+	  }
   }
-  while ( remove_list.size() > 0 );
 }
 
 //-----------------------------------------------------------------------------

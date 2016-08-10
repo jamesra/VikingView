@@ -17,7 +17,7 @@ public:
   double x, y, z, radius;
   long id;
   long parent_id;
-  QList<int> linked_nodes;
+  QList<long> linked_nodes;
   long graph_id;
   bool visited;
 
@@ -97,7 +97,7 @@ private:
     
   void cull_outliers();
 
-  void cull_locations();
+  void cull_overlapping();
 
   void link_report();
 
