@@ -213,6 +213,7 @@ SET(VIKING_VIEW_DATA_HDRS
 #  Data/PointSampler.h
   Data/Downloader.h
   Data/Structure.h
+  Data/Scale.h
   )
 SET(VIKING_VIEW_DATA_SRCS
   Data/Json.cc
