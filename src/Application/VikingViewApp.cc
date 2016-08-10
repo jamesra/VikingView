@@ -13,6 +13,7 @@
 
 // vtk
 #include <vtkRenderWindow.h>
+#include <vtkOBJExporter.h>
 
 // viking
 #include <Application/VikingViewApp.h>
@@ -28,7 +29,8 @@
 #include <ui_VikingViewApp.h>
 
 //---------------------------------------------------------------------------
-VikingViewApp::VikingViewApp( int argc, char** argv )
+VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > command_line_args )
+  : command_line_args_( command_line_args )
 {
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
@@ -43,6 +45,8 @@ VikingViewApp::VikingViewApp( int argc, char** argv )
 
   connect( &( Preferences::Instance() ), SIGNAL( preferences_changed() ), this, SLOT( on_preferences_changed() ) );
   this->on_preferences_changed();
+
+  this->initialize_export_functions();
 }
 
 //---------------------------------------------------------------------------
@@ -141,61 +145,15 @@ void VikingViewApp::load_structure( int id )
   return;
 }
 
-//---------------------------------------------------------------------------
-void VikingViewApp::export_dae( QString filename )
+vtkRenderWindow* VikingViewApp::get_render_window()
 {
-  std::cerr << "exporting dae to \"" << filename.toStdString() << "\"\n";
-
-  // open file
-  QFile file( filename );
-
-  if ( !file.open( QIODevice::WriteOnly ) )
-  {
-    QMessageBox::warning( 0, "Read only", "The file is in read only mode" );
-    return;
-  }
-
-  // -id 180 -export "z:/shared/file.dae"
-
-  // setup XML
-  QSharedPointer<QXmlStreamWriter> xml = QSharedPointer<QXmlStreamWriter>( new QXmlStreamWriter() );
-  xml->setAutoFormatting( true );
-  xml->setDevice( &file );
-  xml->writeStartDocument();
-
-  // write the root element
-  xml->writeStartElement( "COLLADA" );
-  xml->writeAttribute( "xmlns", "http://www.collada.org/2005/11/COLLADASchema" );
-  xml->writeAttribute( "version", "1.4.1" );
-
-  xml->writeStartElement( "asset" );
-
-  xml->writeStartElement( "contributor" );
-  xml->writeTextElement( "authoring_tool", "VikingView" );
-  xml->writeEndElement(); // contributor
-
-  xml->writeTextElement( "created", QDateTime::currentDateTime().toUTC().toString( Qt::ISODate ) + "Z" );
-  xml->writeTextElement( "modified", QDateTime::currentDateTime().toUTC().toString( Qt::ISODate ) + "Z" );
-
-  xml->writeStartElement( "unit" );
-  xml->writeAttribute( "meter", "1" );
-  xml->writeAttribute( "name", "meter" );
-  xml->writeEndElement(); // unit
-
-  xml->writeTextElement( "up_axis", "Z_UP" );
-
-  xml->writeEndElement(); // asset
-
-  xml->writeStartElement( "library_geometries" );
-  xml->writeEndElement(); //library_geometries
-
-  xml->writeEndElement(); // COLLADA
-  xml->writeEndDocument();
+  return this->ui_->qvtkWidget->GetRenderWindow();
 }
 
 //---------------------------------------------------------------------------
 void VikingViewApp::update_table()
 {
+  std::cerr << "Updating the table" << std::endl;
   this->ui_->table_widget->clear();
 
   this->ui_->table_widget->setRowCount( this->structures_.size() );
@@ -255,7 +213,7 @@ void VikingViewApp::on_action_preferences_triggered()
 //---------------------------------------------------------------------------
 void VikingViewApp::initialize_vtk()
 {
-  this->viewer_ = new Viewer();
+  this->viewer_ = new Viewer( command_line_args_ );
   this->viewer_->set_render_window( this->ui_->qvtkWidget->GetRenderWindow() );
   this->viewer_->redraw();
 }
@@ -294,13 +252,13 @@ void VikingViewApp::on_preferences_changed()
   this->ui_->connectome_combo->clear();
   this->ui_->connectome_combo->addItems( Preferences::Instance().get_connectome_nickname_list() );
   int last_connectome = Preferences::Instance().get_last_connectome();
-  if ( last_connectome < 0 || last_connectome >= this->ui_->connectome_combo->count() )
+  if (last_connectome < 0 || last_connectome >= this->ui_->connectome_combo->count())
   {
-    last_connectome = 0;
+	  last_connectome = 0;
   }
-  this->ui_->connectome_combo->setCurrentIndex( last_connectome );
+  this->ui_->connectome_combo->setCurrentIndex(last_connectome);
 
-  this->ui_->child_scale->setValue( Preferences::Instance().get_child_scale() );
+  this->ui_->child_scale->setValue(Preferences::Instance().get_child_scale());
 }
 
 //---------------------------------------------------------------------------
@@ -310,13 +268,92 @@ void VikingViewApp::on_connectome_configure_clicked()
 }
 
 //---------------------------------------------------------------------------
-void VikingViewApp::on_child_scale_valueChanged( double scale )
+void VikingViewApp::on_child_scale_valueChanged(double scale)
 {
   //double scale = this->ui_->child_scale->value();
-  Preferences::Instance().set_child_scale( scale );
+  Preferences::Instance().set_child_scale(scale);
 
-  if ( this->viewer_ )
+  if (this->viewer_)
   {
-    this->viewer_->display_cells( this->cells_, false );
+    this->viewer_->display_cells(this->cells_, false);
   }
+}
+
+void VikingViewApp::initialize_export_functions()
+{
+  this->export_functions_[ "dae" ] = &VikingViewApp::export_dae;
+  this->export_functions_[ "obj" ] = &VikingViewApp::export_obj;
+}
+
+void VikingViewApp::export_cell( QString filename, QString export_type )
+{
+  ExportFunction export_function = this->export_functions_[ export_type ];
+  (this->*export_function)( filename );
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::export_dae(QString filename)
+{
+  std::cerr << "exporting dae to \"" << filename.toStdString() << "\"\n";
+
+  // Give a warning that dae export is unfinished
+  QMessageBox::warning(0, "export dae not implemented", "The requested cell export function is not yet fully implemented, so the resulting file will not appear as expected.");
+
+  // open file
+  QFile file(filename + ".xml");
+
+  if (!file.open(QIODevice::WriteOnly))
+  {
+	QMessageBox::critical(0, "Read only", "The file is in read only mode");
+    return;
+  }
+
+  // -id 180 -export "z:/shared/file.dae"
+
+  // setup XML
+  QSharedPointer<QXmlStreamWriter> xml = QSharedPointer<QXmlStreamWriter>(new QXmlStreamWriter());
+  xml->setAutoFormatting(true);
+  xml->setDevice(&file);
+  xml->writeStartDocument();
+
+  // write the root element
+  xml->writeStartElement("COLLADA");
+  xml->writeAttribute("xmlns", "http://www.collada.org/2005/11/COLLADASchema");
+  xml->writeAttribute("version", "1.4.1");
+
+  xml->writeStartElement("asset");
+
+  xml->writeStartElement("contributor");
+  xml->writeTextElement("authoring_tool", "VikingView");
+  xml->writeEndElement(); // contributor
+
+  xml->writeTextElement("created", QDateTime::currentDateTime().toUTC().toString(Qt::ISODate) + "Z");
+  xml->writeTextElement("modified", QDateTime::currentDateTime().toUTC().toString(Qt::ISODate) + "Z");
+
+  xml->writeStartElement("unit");
+  xml->writeAttribute("meter", "1");
+  xml->writeAttribute("name", "meter");
+  xml->writeEndElement(); // unit
+
+  xml->writeTextElement("up_axis", "Z_UP");
+
+  xml->writeEndElement(); // asset
+
+  xml->writeStartElement("library_geometries");
+  xml->writeEndElement(); //library_geometries
+
+  xml->writeEndElement(); // COLLADA
+  xml->writeEndDocument();
+}
+
+//---------------------------------------------------------------------------
+void VikingViewApp::export_obj(QString filename)
+{
+	// Create an OBJ file exporter
+	vtkOBJExporter* vtkExporter = vtkOBJExporter::New();
+	// Give the exporter access to the render window
+	vtkRenderWindow* renderWindow = this->get_render_window();
+	vtkExporter->SetRenderWindow(renderWindow);
+	vtkExporter->SetFilePrefix(filename.toStdString().c_str());
+	vtkExporter->Write();
 }

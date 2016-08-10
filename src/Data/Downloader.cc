@@ -48,19 +48,26 @@ ScaleObject Downloader::download_scale(QString end_point)
 //-----------------------------------------------------------------------------
 bool Downloader::download_cell( QString end_point, int id, DownloadObject &download_object, QProgressDialog &progress )
 {
-  try{
+  try {
 
-    QElapsedTimer timer;
-    timer.start();
+	QElapsedTimer timer;
+	timer.start();
 
     // set number of threads to download
-    QThreadPool::globalInstance()->setMaxThreadCount( 16 );
+    QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-    QString request = QString( end_point + "/Structures?$filter=(ID eq " ) + QString::number( id )
-                      + " or ParentID eq " + QString::number( id ) + ")&$select=ID,TypeID";
-    download_object.structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
+    QString request = QString(end_point + "/Structures?$filter=(ID eq ") + QString::number(id)
+   	    + " or ParentID eq " + QString::number(id) + ")&$select=ID,TypeID";
+   	download_object.structure_list = this->download_json(request, QString("structures-") + QString::number(id));
 
     std::cerr << "structure list length = " << download_object.structure_list.size() << "\n";
+
+    if (download_object.structure_list.empty())
+    {
+	  std::cerr << "error: tried to load cell id with no structures" << "\n";
+	  QMessageBox::critical(0, "Error loading cell", "There are no structures associated with the requested cell ID. Are you sure you entered the cell ID correctly?");
+	  return false;
+	}
 
     QList< QList<QVariant> > downloaded;
     QList< QString > requests;

@@ -2,3 +2,4 @@ build/
 src/CMakeCache.txt
 src/CMakeFiles
 src/CMakeLists.txt.user
+*.swp
