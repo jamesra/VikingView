@@ -20,6 +20,9 @@ public:
   QList<int> linked_nodes;
   long graph_id;
   bool visited;
+
+  inline bool IsEndpoint() { return linked_nodes.size() < 2; }
+  inline bool IsBranch() { return linked_nodes.size() > 2; }
 };
 
 typedef QHash<long, QSharedPointer<Node> > NodeMap;
@@ -89,6 +92,10 @@ private:
   static double distance( const QSharedPointer<Node> &n1, const QSharedPointer<Node> &n2 );
 
   void connect_subgraphs();
+
+  void remove_node(long id);
+    
+  void cull_outliers();
 
   void cull_locations();
 

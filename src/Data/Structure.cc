@@ -155,9 +155,11 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
 
     //std::cerr << "number of nodes : " << structure->node_map_.size() << "\n";
 
-    structure->cull_locations();
+	structure->cull_outliers();
 
-    structure->connect_subgraphs();
+    //structure->cull_locations();
+
+    //structure->connect_subgraphs();
 
     //std::cerr << "===After location culling===\n";
     //structure->link_report();
@@ -832,6 +834,52 @@ void Structure::connect_subgraphs()
   }
 }
 
+void Structure::remove_node(long id)
+{
+	QSharedPointer<Node> toRemove = this->node_map_[id];
+	for (QList<int>::iterator it = toRemove->linked_nodes.begin(); it != toRemove->linked_nodes.end(); ++it)
+	{
+		QSharedPointer<Node> linkedNode = this->node_map_[*it];
+		linkedNode->linked_nodes.removeAll(id); //Remove link to node we are deleting
+		linkedNode->linked_nodes.append(toRemove->linked_nodes);
+		linkedNode->linked_nodes.removeAll(linkedNode->id); //Remove circular link
+	}
+
+	this->node_map_.remove(id); 
+}
+
+/*------------------------------------------------------------------------------
+Occasionally a section will be out of alignment and annotations are placed far away from the correct position at a particular Z level.
+To correct this we remove nodes whose linked nodes are closer to each other than the node itself. 
+
+Conceptually this is the difference between three points making a roughly straight line or a triangle.  If it looks like a triangle we want one of the nodes removed.
+*/
+void Structure::cull_outliers()
+{
+	QList<long> node_id_list = this->node_map_.keys(); 
+	for (QList<long>::iterator id = node_id_list.begin(); id != node_id_list.end(); ++id)
+	{  
+		QSharedPointer<Node> n = this->node_map_[*id];
+		if (n->IsBranch() || n->IsEndpoint())
+		{
+			continue;
+		}
+
+		// if the two other locations are closer together than this one is to either of them
+
+		QSharedPointer<Node> node_a = this->node_map_[n->linked_nodes[0]];
+		QSharedPointer<Node> node_b = this->node_map_[n->linked_nodes[1]];
+
+		double min_dist = std::min(distance(n, node_a), distance(n, node_b));
+
+		if (distance(node_a, node_b) < min_dist)
+		{
+			std::cerr << "removed outlier! " << n->id << "\n";
+			this->remove_node(*id);
+		}
+	}
+}
+
 //-----------------------------------------------------------------------------
 void Structure::cull_locations()
 {
@@ -847,7 +895,7 @@ void Structure::cull_locations()
 
       if ( n->linked_nodes.size() != 2 )
       {
-        //continue;
+        continue;
       }
 
       bool removed = false;
