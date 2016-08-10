@@ -1,5 +1,7 @@
 #include <QApplication>
+#include <QMessageBox>
 #include <Application/VikingViewApp.h>
+#include <Application/CommandLineArgs.h>
 #include <iostream>
 
 #ifdef _WIN32
@@ -89,8 +91,12 @@ int main( int argc, char** argv )
 
     QApplication app( argc, argv );
 
+	// Collect and parse the command line arguments into a reusable object
+	QSharedPointer<CommandLineArgs> command_line_args =
+		QSharedPointer<CommandLineArgs>( new CommandLineArgs( argc, argv ));
+
     QSharedPointer<VikingViewApp> studio_app =
-      QSharedPointer<VikingViewApp>( new VikingViewApp( argc, argv ) );
+        QSharedPointer<VikingViewApp>( new VikingViewApp( command_line_args ) );
 
     studio_app->show();
 
@@ -98,40 +104,62 @@ int main( int argc, char** argv )
 
     //studio_app->load_structure(180);
 
-    int argidx = 1;
-
-    while ( argidx < argc )
-    {
-
-      QString arg = argv[argidx++];
-      if ( arg == "-id" )
-      {
-        int id = QString( argv[argidx++] ).toInt();
+	// Process the id command by loading the cells for every
+	// id provided as a parameter
+    if ( command_line_args->command_used( "id" ) )
+	{
+	  QList< QString > id_parameters = command_line_args->command_parameters( "id" );
+	  for ( int i = 0; i < id_parameters.size(); ++i)
+	  {
+        int id = id_parameters[ i ].toInt();
         studio_app->load_structure( id );
       }
-      else if ( arg == "-export" )
-      {
-        QString filename = argv[argidx++];
-        studio_app->export_dae( filename );
-        return 0;
-      }
-      else
-      {
-        std::cerr << "unrecognized option: " << arg.toStdString() << "\n";
-      }
-    }
+	}
 
-    /*
+	// Process the export command by exporting the render scene
+	// in each format specified as a parameter
+	if ( command_line_args->command_used( "export" ))
+	{
+	  // Only run export operations if a single cell was loaded
+	  if ( !command_line_args->command_used( "id" ) 
+		|| command_line_args->command_parameters( "id" ).size() != 1 )
+   	  {
+		QMessageBox::critical( 0, "Export error", "Error! Tried to export cell geometry with no or multiple cell ids specified (use exactly 1, i.e. -id 593 )" );
+		return 0;
+	  }
 
-       // do this after "show" for mac initialization
-       studio_app->initialize_vtk();
+	  // If no filename is provided at the command line, use a default
+	  QString filename = "VikingViewExport";
 
-       if ( argc == 2 )
-       {
-       studio_app->open_project( QString( argv[1] ) );
-       }
+	  if ( command_line_args->command_used( "filename" ) )
+	  { 
+		QList< QString > filenames = command_line_args->command_parameters( "filename" );
+		if ( filenames.size() != 1 )
+		{ 
+		  QMessageBox::critical(0, "Export error", "Error! Tried to set export filename with no or multiple paths specified (give 1 filename, i.e. -filename test )");
+		  return 0;
+		}
 
-     */
+		filename = filenames.back();
+	  }
+
+	  QList< QString > export_file_types = command_line_args->command_parameters("export");
+
+	  if ( export_file_types.empty() )
+	  {
+		QMessageBox::critical(0, "Export error", "Error! Tried to export cell without specifying export type (give at least 1 type, i.e. -export obj )");
+		return 0;
+	  }
+
+	  for ( int i = 0; i < export_file_types.size(); ++i )
+	  {
+		QString export_type = export_file_types[ i ];
+		studio_app->export_cell( filename, export_type );
+	  }
+
+	  return 0;
+	}
+
     return app.exec();
   }
   catch ( std::exception e )

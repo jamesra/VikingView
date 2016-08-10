@@ -192,11 +192,13 @@ SET(VIKING_VIEW_APPLICATION_HDRS
   Application/VikingViewApp.h
   Application/Preferences.h
   Application/PreferencesWindow.h
+  Application/CommandLineArgs.h
 )
 SET(VIKING_VIEW_APPLICATION_SRCS
   Application/VikingViewApp.cc
   Application/Preferences.cc
   Application/PreferencesWindow.cc
+  Application/CommandLineArgs.cc
 )
 SET(VIKING_VIEW_APPLICATION_UIS
   Application/VikingViewApp.ui

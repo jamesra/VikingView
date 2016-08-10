@@ -55,7 +55,9 @@ public:
   ~Structure();
 
   static QSharedPointer<Structure> create_structure( int id, QList<QVariant> structure_list,
-                                                     QList<QVariant> location_list, QList<QVariant> link_list );
+                                                     QList<QVariant> location_list,
+													 QList<QVariant> link_list,
+													 ScaleObject scale);
 
   static QSharedPointer<StructureHash> create_structures( QList<QVariant> structure_list,
                                                           QList<QVariant> location_list, 
