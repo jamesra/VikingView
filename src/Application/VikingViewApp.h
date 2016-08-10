@@ -10,12 +10,16 @@
 #include <QFile>
 #include <QMap>
 
+#include <Application/CommandLineArgs.h>
 #include <Data/Structure.h>
 class Viewer;
 //class Structure;
 
 // Forward Qt class declarations
 class Ui_VikingViewApp;
+
+// Forward VTK class declarations
+class vtkRenderWindow;
 
 //! Main VikingView window
 /*!
@@ -26,16 +30,18 @@ class VikingViewApp : public QMainWindow
   Q_OBJECT
 public:
 
-  VikingViewApp( int argc, char** argv );
+  VikingViewApp( QSharedPointer< CommandLineArgs > );
   ~VikingViewApp();
 
   void initialize_vtk();
 
   void load_structure( int id );
 
-  void export_dae( QString filename );
+  void export_cell( QString filename, QString export_type );
 
   virtual void closeEvent( QCloseEvent* event );
+
+  vtkRenderWindow* get_render_window();
 
 public Q_SLOTS:
 
@@ -62,6 +68,12 @@ private:
   void update_table();
 
   void import_json( QString json_text );
+  
+  void export_dae( QString filename );
+  void export_obj( QString filename );
+  void initialize_export_functions();
+
+  QSharedPointer< CommandLineArgs > command_line_args_;
 
   /// designer form
   Ui_VikingViewApp* ui_;
@@ -73,6 +85,9 @@ private:
   StructureHash structures_;
 
   QList< QSharedPointer<Cell> > cells_;
+
+  typedef void ( VikingViewApp::*ExportFunction )( QString );
+  QMap< QString, ExportFunction > export_functions_;
 
   Viewer* viewer_;
 };

@@ -16,26 +16,62 @@ Downloader::Downloader()
 Downloader::~Downloader()
 {}
 
+bool Downloader::is_valid_odata_response(QMap<QString, QVariant> map)
+{
+	return map.contains("@odata.context");
+}
+
+ScaleObject Downloader::download_scale(QString end_point)
+{
+	QString url_string = QString(end_point + "/Scale");
+	QString response = Downloader::download_url(url_string);
+	QMap<QString, QVariant> map = Json::decode(response);
+
+	if (!is_valid_odata_response(map))
+	{
+		QString message = "Error downloading url: " + url_string + "\n\n" + response.left(256);
+		throw DownloadException(message);
+	}
+
+	QMap<QString, QVariant> X = map["X"].toMap();
+	QMap<QString, QVariant> Y = map["Y"].toMap();
+	QMap<QString, QVariant> Z = map["Z"].toMap();
+	
+	AxisScale Xscaleobj = AxisScale(X["Units"].toString(), X["Value"].toDouble());
+	AxisScale Yscaleobj = AxisScale(Y["Units"].toString(), Y["Value"].toDouble());
+	AxisScale Zscaleobj = AxisScale(Z["Units"].toString(), Z["Value"].toDouble());
+
+	ScaleObject scale = ScaleObject(Xscaleobj, Yscaleobj, Zscaleobj);
+	return scale;
+}
+
 //-----------------------------------------------------------------------------
 bool Downloader::download_cell( QString end_point, int id, DownloadObject &download_object, QProgressDialog &progress )
 {
-  try{
+  try {
 
-    QElapsedTimer timer;
-    timer.start();
+	QElapsedTimer timer;
+	timer.start();
 
     // set number of threads to download
-    QThreadPool::globalInstance()->setMaxThreadCount( 16 );
+    QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-    QString request = QString( end_point + "/Structures?$filter=(ID eq " ) + QString::number( id )
-                      + " or ParentID eq " + QString::number( id ) + ")&$select=ID,TypeID";
-    download_object.structure_list = this->download_json( request, QString( "structures-" ) + QString::number( id ) );
+    QString request = QString(end_point + "/Structures?$filter=(ID eq ") + QString::number(id)
+   	    + " or ParentID eq " + QString::number(id) + ")&$select=ID,TypeID";
+   	download_object.structure_list = this->download_json(request, QString("structures-") + QString::number(id));
 
     std::cerr << "structure list length = " << download_object.structure_list.size() << "\n";
 
+    if (download_object.structure_list.empty())
+    {
+	  std::cerr << "error: tried to load cell id with no structures" << "\n";
+	  QMessageBox::critical(0, "Error loading cell", "There are no structures associated with the requested cell ID. Are you sure you entered the cell ID correctly?");
+	  return false;
+	}
+
     QList< QList<QVariant> > downloaded;
     QList< QString > requests;
-
+	
     foreach( QVariant var, download_object.structure_list ) {
       QMap<QString, QVariant> item = var.toMap();
       int id = item["ID"].toLongLong();
@@ -77,6 +113,42 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
   return false;
 }
 
+QList<QVariant> Downloader::load_from_file(QString file_prefix)
+{
+	QList<QVariant> list;
+
+	QFile* file = new QFile("/tmp/json-" + file_prefix + ".txt");
+
+	if (!file->open(QIODevice::ReadOnly))
+	{
+		std::cerr << "Error opening file for reading\n";
+	}
+
+	QTextStream ts(file);
+
+	QMap<QString, QVariant> map = Json::decode(ts.readAll());
+
+	QList<QVariant> this_list = map["value"].toList();
+	list.append(this_list);
+
+	/*
+	int num_pages = ts.readLine().toInt();
+	for ( int i = 0; i < num_pages; i++ )
+	{
+	QString qs = ts.readLine();
+
+	QMap<QString, QVariant> map = Json::decode( qs );
+
+	QList<QVariant> this_list = map["value"].toList();
+	list.append( this_list );
+	}
+	*/
+
+	file->close();
+
+	return list;
+}
+
 //-----------------------------------------------------------------------------
 QList<QVariant> Downloader::download_json( QString url_string, QString file_prefix )
 {
@@ -88,36 +160,7 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
 
   if ( load_from_file )
   {
-    QFile* file = new QFile( "/tmp/json-" + file_prefix + ".txt" );
-
-    if ( !file->open( QIODevice::ReadOnly ) )
-    {
-      std::cerr << "Error opening file for reading\n";
-    }
-
-    QTextStream ts( file );
-
-    QMap<QString, QVariant> map = Json::decode( ts.readAll() );
-
-    QList<QVariant> this_list = map["value"].toList();
-    list.append( this_list );
-
-    /*
-       int num_pages = ts.readLine().toInt();
-       for ( int i = 0; i < num_pages; i++ )
-       {
-       QString qs = ts.readLine();
-
-          QMap<QString, QVariant> map = Json::decode( qs );
-
-          QList<QVariant> this_list = map["value"].toList();
-          list.append( this_list );
-       }
-     */
-
-    file->close();
-
-    return list;
+	  return Downloader::load_from_file(file_prefix);
   }
 
   QList<QString> pages;
@@ -132,7 +175,7 @@ QList<QVariant> Downloader::download_json( QString url_string, QString file_pref
 
     QMap<QString, QVariant> map = Json::decode( text );
 
-    if ( !map.contains( "value" ) )
+    if ( !is_valid_odata_response(map))
     {
       QString message = "Error downloading url: " + url_string + "\n\n" + text.left( 256 );
       throw DownloadException( message );

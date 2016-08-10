@@ -7,6 +7,7 @@
 #include <QColor.h>
 
 #include <vtkSmartPointer.h>
+#include <Scale.h>
 
 class vtkPolyData;
 class vtkAppendPolyData;
@@ -17,9 +18,12 @@ public:
   double x, y, z, radius;
   long id;
   long parent_id;
-  QList<int> linked_nodes;
+  QList<long> linked_nodes;
   long graph_id;
   bool visited;
+
+  inline bool IsEndpoint() { return linked_nodes.size() < 2; }
+  inline bool IsBranch() { return linked_nodes.size() > 2; }
 };
 
 typedef QHash<long, QSharedPointer<Node> > NodeMap;
@@ -51,10 +55,14 @@ public:
   ~Structure();
 
   static QSharedPointer<Structure> create_structure( int id, QList<QVariant> structure_list,
-                                                     QList<QVariant> location_list, QList<QVariant> link_list );
+                                                     QList<QVariant> location_list,
+													 QList<QVariant> link_list,
+													 ScaleObject scale);
 
   static QSharedPointer<StructureHash> create_structures( QList<QVariant> structure_list,
-                                                                   QList<QVariant> location_list, QList<QVariant> link_list );
+                                                          QList<QVariant> location_list, 
+														  QList<QVariant> link_list,
+													      ScaleObject scale);
 
   NodeMap get_node_map();
 
@@ -90,7 +98,11 @@ private:
 
   void connect_subgraphs();
 
-  void cull_locations();
+  void remove_node(long id);
+    
+  void cull_outliers();
+
+  void cull_overlapping();
 
   void link_report();
 

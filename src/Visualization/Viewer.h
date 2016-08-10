@@ -4,6 +4,8 @@
 #include <QSharedPointer>
 #include <vtkSmartPointer.h>
 
+#include <Application/CommandLineArgs.h>
+
 class vtkRenderer;
 class vtkLookupTable;
 class vtkRenderWindowInteractor;
@@ -38,7 +40,7 @@ class Viewer
 
 public:
 
-  Viewer();
+  Viewer( QSharedPointer< CommandLineArgs > command_line_args );
   ~Viewer();
 
   void set_render_window( vtkRenderWindow* render_window );
@@ -88,6 +90,8 @@ private:
 
   QHash<int, QColor> type_colors_;
   QHash<int, QColor> cell_colors_;
+
+  QSharedPointer< CommandLineArgs > command_line_args_;
 
 };
 

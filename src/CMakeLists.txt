@@ -192,11 +192,13 @@ SET(VIKING_VIEW_APPLICATION_HDRS
   Application/VikingViewApp.h
   Application/Preferences.h
   Application/PreferencesWindow.h
+  Application/CommandLineArgs.h
 )
 SET(VIKING_VIEW_APPLICATION_SRCS
   Application/VikingViewApp.cc
   Application/Preferences.cc
   Application/PreferencesWindow.cc
+  Application/CommandLineArgs.cc
 )
 SET(VIKING_VIEW_APPLICATION_UIS
   Application/VikingViewApp.ui
@@ -479,6 +481,8 @@ ELSE(APPLE)
     include(BundleUtilities)
     fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
     " COMPONENT Runtime)
+
+  install(FILES "C:/Qt/5.6/msvc2015_64/plugins/platforms/qwindows.dll" DESTINATION "bin/platforms")
 ENDIF(APPLE)
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack

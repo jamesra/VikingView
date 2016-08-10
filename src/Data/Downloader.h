@@ -7,6 +7,7 @@
 #include <QUrl>
 #include <QSharedPointer>
 #include <QProgressDialog>
+#include <Scale.h>
 
 class Structure;
 
@@ -20,6 +21,7 @@ public:
 
   QString message_;
 };
+
 
 class DownloadObject
 {
@@ -41,6 +43,10 @@ public:
   Downloader();
   ~Downloader();
 
+  
+
+  ScaleObject download_scale(QString end_point);
+
   bool download_cell( QString end_point, int id, DownloadObject &download_object, QProgressDialog &progress );
 
   QList<QVariant> get_location_list();
@@ -49,6 +55,10 @@ public:
 public Q_SLOTS:
 
 private:
+
+  static bool is_valid_odata_response(QMap<QString, QVariant> map);
+
+  static QList<QVariant> load_from_file(QString file_prefix);
 
   static QList<QVariant> download_json( QString url_string, QString file_prefix );
 
