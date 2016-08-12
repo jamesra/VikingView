@@ -123,7 +123,6 @@ public:
 
         if ( found )
         {
-		  camera->SetViewUp(0, 0, -1);
           camera->SetFocalPoint( 0, 0, 0 );
           camera->ComputeViewPlaneNormal();
           camera->OrthogonalizeViewUp();
