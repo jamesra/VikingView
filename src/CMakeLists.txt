@@ -9,10 +9,8 @@ OPTION (BUILD_SHARED_LIBS "Build shared libraries" OFF)
 OPTION (BUILD_TESTS "Build VikingView test applications." ON)
 OPTION (INSTALL_TEST_FILES "Include VikingView test images and help files in the install." OFF)
 OPTION (INSTALL_SOURCE  "Install VikingView source code." OFF)
-OPTION (USE_PRECOMPILED_HEADERS "Use precompiled headers to speed up compilation" ON)
-
+OPTION (USE_PRECOMPILED_HEADERS "Use precompiled headers to speed up compilation" OFF)
 OPTION (LOAD_DEFAULT_PROJECT "Load default project" OFF)
-
 
 MESSAGE(STATUS "** PRECOMPILED_HEADERS: ${USE_PRECOMPILED_HEADERS}")
 
@@ -26,6 +24,9 @@ IF (WIN32 AND MSVC)
   ADD_DEFINITIONS(-D_SCL_SECURE_NO_WARNINGS)
   ADD_DEFINITIONS(-D_CRT_SECURE_NO_WARNINGS)
 ENDIF (WIN32 AND MSVC)
+
+find_path(QT5_LIB_DIR NAMES lib DOC "QT5 lib directory for desired platform.  Helps locate QT packages" NO_DEFAULT_PATH)
+find_path(QT5_PLUGIN_DIR NAMES plugins DOC "QT5 plugin directory for desired platform.  Helps locate files used for distributions" NO_DEFAULT_PATH)
 
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
@@ -115,25 +116,27 @@ ENDIF (WIN32)
 # note that it's Qt4, not QT4 or qt4
 SET(QT_MIN_VERSION "4.7.4")
 #FIND_PACKAGE( Qt4 REQUIRED )
-find_package(Qt5Widgets REQUIRED)
+find_package(Qt5Widgets REQUIRED HINTS "${QT5_LIB_DIR}" "${QT5_LIB_DIR}/cmake")
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 add_definitions(${Qt5Widgets_DEFINITION_DIRS})
 
-find_package(Qt5Script REQUIRED)
+find_package(Qt5Script REQUIRED HINTS "${QT5_LIB_DIR}" "${QT5_LIB_DIR}/cmake")
 include_directories(${Qt5Script_INCLUDE_DIRS})
 add_definitions(${Qt5Script_DEFINITION_DIRS})
 
-find_package(Qt5Core REQUIRED)
+find_package(Qt5Core REQUIRED HINTS "${QT5_LIB_DIR}" "${QT5_LIB_DIR}/cmake")
 include_directories(${Qt5Core_INCLUDE_DIRS})
 add_definitions(${Qt5Core_DEFINITION_DIRS})
 
-find_package(Qt5Concurrent REQUIRED)
+find_package(Qt5Concurrent REQUIRED HINTS "${QT5_LIB_DIR}" "${QT5_LIB_DIR}/cmake")
 include_directories(${Qt5Concurrent_INCLUDE_DIRS})
 add_definitions(${Qt5Concurrent_DEFINITION_DIRS})
 
-find_package(Qt5Network REQUIRED)
+find_package(Qt5Network REQUIRED HINTS "${QT5_LIB_DIR}" "${QT5_LIB_DIR}/cmake")
 include_directories(${Qt5Network_INCLUDE_DIRS})
 add_definitions(${Qt5Network_DEFINITION_DIRS})
+
+find_file(QT_PLUGINS_PLATFORMS_QWINDOWS_DLL NAMES qwindows.dll HINTS "${QT5_PLUGIN_DIR}/platforms" DOC "Path to Qt/5.6/msvc2015_64/plugins/platforms/qwindows.dll for Windows installer" )
 
 # add some useful macros and variables
 # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that contains a path to CMake script)
@@ -483,7 +486,7 @@ ELSE(APPLE)
     fixup_bundle(\"${APPS}\" \"\${QTPLUGINS}\" \"${DIRS}\")
     " COMPONENT Runtime)
 
-  install(FILES "C:/Qt/5.6/msvc2015_64/plugins/platforms/qwindows.dll" DESTINATION "bin/platforms")
+  install(FILES ${QT_PLUGINS_PLATFORMS_QWINDOWS_DLL} DESTINATION "bin/platforms")
 ENDIF(APPLE)
 # To Create a package, one can run "cpack -G DragNDrop CPackConfig.cmake" on Mac OS X
 # where CPackConfig.cmake is created by including CPack
