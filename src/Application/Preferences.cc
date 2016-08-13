@@ -23,6 +23,7 @@ Preferences::Preferences()
   this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC1/OData";
   this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RC2/OData";
   this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/RPC1/OData";
+  this->default_connectomes_ << "http://websvc1.connectomes.utah.edu/NeitzTemporalMonkey/OData";
 
 /*
    this->default_connectome_nicknames_ << "Rabbit";
@@ -30,9 +31,10 @@ Preferences::Preferences()
    this->default_connectome_nicknames_ << "RC2";
    this->default_connectome_nicknames_ << "RPC1";
  */
-  this->default_connectome_nicknames_ << "RC1 (ODATA4)";
-  this->default_connectome_nicknames_ << "RC2 (ODATA4)";
-  this->default_connectome_nicknames_ << "RPC1 (ODATA4)";
+  this->default_connectome_nicknames_ << "RC1";
+  this->default_connectome_nicknames_ << "RC2";
+  this->default_connectome_nicknames_ << "RPC1";
+  this->default_connectome_nicknames_ << "Temporal Monkey";
 
   // ODATA 4 update
   bool odata4 = this->settings.value( "ODATA4 Update", false ).toBool();

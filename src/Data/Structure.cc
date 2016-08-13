@@ -53,9 +53,9 @@
 //#include <CGAL/Polyhe>
 
 //-----------------------------------------------------------------------------
-Structure::Structure()
+Structure::Structure(QSharedPointer<QColor> color)
 {
-  this->color_ = QColor( 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ), 128 + ( qrand() % 128 ) );
+  this->color_ = QColor(*color);
   this->num_tubes_ = 0;
 }
 
@@ -67,7 +67,8 @@ Structure::~Structure()
 QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> structure_list,
                                                             QList<QVariant> location_list,
                                                             QList<QVariant> link_list,
-															ScaleObject scale)
+															ScaleObject scale,
+															ColorMapper cmap)
 {
 
   QSharedPointer<StructureHash> structures = QSharedPointer<StructureHash> ( new StructureHash() );
@@ -78,7 +79,11 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
     QMap<QString, QVariant> item = var.toMap();
     int id = item["ID"].toLongLong();
     int type = item["TypeID"].toInt();
-    QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
+
+	bool colorMapped = false;
+	QSharedPointer<QColor> color = cmap.ColorForStructure(id, type, colorMapped);
+
+    QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure(color) );
     structure->id_ = id;
     structure->type_ = type;
     structures->insert( id, structure );
@@ -173,10 +178,11 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
 QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> structure_list,
                                                        QList<QVariant> location_list,
 													   QList<QVariant> link_list,
-													   ScaleObject scale)
+													   ScaleObject scale,
+												       QSharedPointer<QColor> color)
 {
 
-  QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure() );
+  QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure(color) );
   structure->id_ = id;
 
   float units_per_pixel = scale.X.scale / 1000.0;
@@ -241,6 +247,8 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
   structure->link_report();
 
   std::cerr << "number of nodes : " << structure->node_map_.size() << "\n";
+   
+  structure->cull_outliers();
 
   structure->cull_overlapping();
 
@@ -1047,13 +1055,13 @@ void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<
      append->AddInputData( circle->GetOutput() );
      /**/
 
-  if ( n->linked_nodes.size() != 2 )
+  if ( n->IsBranch() || n->IsEndpoint() )
   {
 
     /* sphere */
     vtkSmartPointer<vtkSphereSource> sphere = vtkSmartPointer<vtkSphereSource>::New();
     sphere->SetCenter( n->x, n->y, n->z );
-    sphere->SetRadius( n->radius * 1.05 );
+    sphere->SetRadius( n->radius );
     //sphere->SetRadius( n.radius );
 
     int resolution = 10;

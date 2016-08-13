@@ -29,11 +29,12 @@
 #include <ui_VikingViewApp.h>
 
 //---------------------------------------------------------------------------
-VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > command_line_args )
+VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > command_line_args)
   : command_line_args_( command_line_args )
 {
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
+  this->cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
 
   //this->ui_->connectome_combo->view()->setMinimumWidth( 400 );
 
@@ -120,7 +121,8 @@ void VikingViewApp::load_structure( int id )
   QSharedPointer<StructureHash> structures = Structure::create_structures( download_object.structure_list,
                                                                            download_object.location_list,
                                                                            download_object.link_list, 
-																	       scale);
+																	       scale,
+																		   cmap);
 
   QSharedPointer<Cell> cell = QSharedPointer<Cell>( new Cell() );
 

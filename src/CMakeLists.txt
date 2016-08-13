@@ -217,6 +217,7 @@ SET(VIKING_VIEW_DATA_HDRS
   Data/Downloader.h
   Data/Structure.h
   Data/Scale.h
+  Data/ColorMapper.h
   )
 SET(VIKING_VIEW_DATA_SRCS
   Data/Json.cc
@@ -225,6 +226,7 @@ SET(VIKING_VIEW_DATA_SRCS
 #  Data/PointSampler.cc
   Data/Downloader.cc
   Data/Structure.cc
+  Data/ColorMapper.cc
   )
 
 ### Visualization
@@ -438,8 +440,9 @@ install(TARGETS VikingView
 install(CODE "
    file(WRITE \"\${CMAKE_INSTALL_PREFIX}/${qtconf_dest_dir}/qt.conf\" \"\")
     " COMPONENT Runtime)
-
-
+	
+install(FILES "Static/StructureColors.txt" DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ WORLD_WRITE)
+install(FILES "Static/StructureTypeColors.txt" DESTINATION bin PERMISSIONS OWNER_READ OWNER_WRITE GROUP_READ GROUP_WRITE WORLD_READ WORLD_WRITE)
 
 MESSAGE(STATUS "Boost Library Dir " ${Boost_LIBRARY_DIR})
 
@@ -499,7 +502,7 @@ set(CPACK_PACKAGE_VENDOR "University of Utah")
 #set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
 set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "5")
-set(CPACK_PACKAGE_VERSION_PATCH "2")
+set(CPACK_PACKAGE_VERSION_PATCH "3")
 set(CPACK_PACKAGE_EXECUTABLES "VikingView" "VikingView")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 

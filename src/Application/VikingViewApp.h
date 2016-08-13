@@ -12,6 +12,8 @@
 
 #include <Application/CommandLineArgs.h>
 #include <Data/Structure.h>
+#include <Data/ColorMapper.h>
+
 class Viewer;
 //class Structure;
 
@@ -83,6 +85,8 @@ private:
   //QMap<int, QSharedPointer<Structure> > structures_;
 
   StructureHash structures_;
+
+  ColorMapper cmap;
 
   QList< QSharedPointer<Cell> > cells_;
 
