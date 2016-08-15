@@ -85,9 +85,7 @@ private:
   //QMap<int, QSharedPointer<Structure> > structures_;
 
   StructureHash structures_;
-
-  ColorMapper cmap;
-
+  
   QList< QSharedPointer<Cell> > cells_;
 
   typedef void ( VikingViewApp::*ExportFunction )( QString );

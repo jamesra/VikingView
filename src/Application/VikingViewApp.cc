@@ -32,10 +32,10 @@
 VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > command_line_args)
   : command_line_args_( command_line_args )
 {
+  this->viewer_ = NULL;
   this->ui_ = new Ui_VikingViewApp;
   this->ui_->setupUi( this );
-  this->cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
-
+  
   //this->ui_->connectome_combo->view()->setMinimumWidth( 400 );
 
   this->ui_->sampling_slider->hide();
@@ -103,6 +103,10 @@ void VikingViewApp::load_structure( int id )
   progress.setMinimumDuration( 500 );
 
   progress.setValue( 0 );
+
+
+  ColorMapper cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
+
   Downloader downloader;
 
   QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
