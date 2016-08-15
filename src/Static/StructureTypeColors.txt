@@ -1,7 +1,29 @@
 %TypeID Red Green Blue Alpha
 3 1 0 0 0.5 %Blood Vessel
-35 1 0 .2 1 %Postsynapse
-34 0 0 1 1   %Conventional Presynapse
-28 1 1 0 1  %Gap junction
-73 0 1 0 1  %Ribbon
-85 1 1 1 1  %Desmosome            
+28 1 1 0 0.5  %Gap junction
+35 .051 .027 .549 0.5 %Postsynapse
+34 0 0 1 0.5  %Conventional Presynapse
+73 0 .580 .267 0.5 %Ribbon
+81 0 0 1 0.5 %Organized SER
+85 1 1 1 0.5 %Adherens
+181 0 0 1 0.5 %Cistern Pre
+182 0 0 1 0.5 %Cistern Post
+183 0 0 1 0.5 %Cilium
+189 .051 .027 .549 0.5 %BC Conventional
+219 0 0 1 0.5 %Multicistern
+220 0 0 1 0.5 %Endocytosis
+225 0 0 1 0.5 %multivesicular body
+226 0 0 1 0.5 %Ribosome patch
+227 0 0 1 0.5 %Ribbon CLuster
+229 0 0 1 0.5 %Touch
+230 0 0 1 0.5 %Loop
+232 0 0 1 0.5 %Polysomes
+236 0 0 1 0.5 %Plaque
+237 0 0 1 0.5 %Axon
+240 0 0 1 0.5 %Plaque-like Pre
+241 0 0 1 0.5 %Plaque-like Post
+243 0 0 1 0.5 %Neuroglial adherens
+244 1 1 1 0.5 %Unknown
+245 0 0 1 0.5 %Nucleolus
+246 0 0 1 0.5 %Mitochondria
+253 1 0 1 0.5 %Annular Gap junction
