@@ -98,7 +98,7 @@ void VikingViewApp::on_delete_button_clicked()
 void VikingViewApp::load_structure( int id )
 {
 
-  QProgressDialog progress( "Downloading...", "Abort", 0, 3, this );
+  QProgressDialog progress( "Downloading Scale...", "Abort", 0, 4, this );
   progress.setWindowModality( Qt::WindowModal );
   progress.setMinimumDuration( 500 );
 
@@ -114,13 +114,16 @@ void VikingViewApp::load_structure( int id )
   DownloadObject download_object;
   ScaleObject scale = downloader.download_scale(end_point);
 
+  progress.setLabelText("Downloading Mesh...");
+  progress.setValue(1);
+
   if ( !downloader.download_cell( end_point, id, download_object, progress ) )
   {
     return;
   }
 
-  progress.setLabelText( "Generating Mesh..." );
-  progress.setValue( 1 );
+  progress.setLabelText( "Populating Morphology..." );
+  progress.setValue( 2 );
 
   QSharedPointer<StructureHash> structures = Structure::create_structures( download_object.structure_list,
                                                                            download_object.location_list,
@@ -138,11 +141,14 @@ void VikingViewApp::load_structure( int id )
     this->structures_[structure->get_id()] = structure;
   }
 
-  progress.setValue( 2 );
+  progress.setLabelText("Generating Mesh...");
+  progress.setValue( 3  );
 
   //this->viewer_->display_structures( this->structures_ );
   this->viewer_->display_cells( this->cells_, true );
-  progress.setValue( 3 );
+
+  progress.setLabelText("Updating UI...");
+  progress.setValue( 4 );
 
   this->update_table();
 
