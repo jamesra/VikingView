@@ -69,8 +69,7 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
                                                             QList<QVariant> link_list,
 															ScaleObject scale,
 															ColorMapper cmap)
-{
-
+{ 
   QSharedPointer<StructureHash> structures = QSharedPointer<StructureHash> ( new StructureHash() );
 
   QHash<int, QSharedPointer<NodeMap> > node_maps;
@@ -79,6 +78,8 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
     QMap<QString, QVariant> item = var.toMap();
     int id = item["ID"].toLongLong();
     int type = item["TypeID"].toInt();
+	int parent_id = item["ParentID"].toLongLong();
+	QString label = item["Label"].toString();
 
 	bool colorMapped = false;
 	QSharedPointer<QColor> color = cmap.ColorForStructure(id, type, colorMapped);
@@ -86,7 +87,18 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
     QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure(color) );
     structure->id_ = id;
     structure->type_ = type;
+	structure->parent_id_ = parent_id;
+	structure->label_ = label;
     structures->insert( id, structure );
+  }
+
+  foreach(QSharedPointer<Structure> s, structures->values())
+  {
+	  if (!s->has_parent())
+		  continue;
+
+	  QSharedPointer<Structure> parent = (*structures)[s->get_parent_id()];
+	  parent->structures.insert(s->get_id(), s);
   }
 
   std::cerr << "structure list length: " << structure_list.size() << "\n";
@@ -138,14 +150,15 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
       continue;
     }
 
+	if (full_node_map[link.a]->parent_id != full_node_map[link.b]->parent_id)
+	{
+		std::cerr << "ERROR: Links go between structs " << link.a << " <-> " << link.b << endl;
+		continue;
+	}
+
     full_node_map[link.a]->linked_nodes.append( link.b );
     full_node_map[link.b]->linked_nodes.append( link.a );
-
-    if ( full_node_map[link.a]->parent_id != full_node_map[link.b]->parent_id )
-    {
-      std::cerr << "links can go between structs?!\n";
-    }
-
+	  
     long parent_id = full_node_map[link.a]->parent_id;
     structures->value( parent_id )->links_.append( link );
   }
@@ -175,7 +188,7 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
 }
 
 //-----------------------------------------------------------------------------
-QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> structure_list,
+QSharedPointer<Structure> Structure::create_structure( int id,
                                                        QList<QVariant> location_list,
 													   QList<QVariant> link_list,
 													   ScaleObject scale,
@@ -188,7 +201,7 @@ QSharedPointer<Structure> Structure::create_structure( int id, QList<QVariant> s
   float units_per_pixel = scale.X.scale / 1000.0;
   float units_per_section = scale.Z.scale / 1000.0;
 
-  std::cerr << "structure list length: " << structure_list.size() << "\n";
+  std::cerr << "create structure #" << id << endl;
   std::cerr << "location list length: " << location_list.size() << "\n";
   std::cerr << "link list length: " << link_list.size() << "\n";
 
@@ -529,6 +542,12 @@ int Structure::get_id()
 int Structure::get_type()
 {
   return this->type_;
+}
+
+//-----------------------------------------------------------------------------
+int Structure::get_parent_id()
+{
+	return this->parent_id_;
 }
 
 //-----------------------------------------------------------------------------

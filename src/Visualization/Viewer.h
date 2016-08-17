@@ -48,8 +48,9 @@ public:
   void set_renderer( vtkSmartPointer<vtkRenderer> renderer );
   vtkSmartPointer<vtkRenderer> get_renderer();
 
+  void add_structure_to_view(QSharedPointer<Structure> s);
 
-  void display_cells( QList< QSharedPointer<Cell> > cells, bool reset_camera );
+  void display_cells( QList< QSharedPointer<Structure> > cells, bool reset_camera );
 
   void clear_viewer();
 

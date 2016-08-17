@@ -6,6 +6,6 @@
 #include <ProgressReporter.h>
 #include <Data/Structure.h>
 
-QList<QSharedPointer<Cell>> LoadStructures(QList<long> IDs, QString end_point, ColorMapper cmap, ProgressReporter &report_progress);
+QList<QSharedPointer<Structure>> LoadStructures(QList<long> IDs, QString end_point, ColorMapper cmap, ProgressReporter &report_progress);
 int ExportStructures(QList<long> IDs, QString end_point, QString export_dir, ColorMapper cmap, ProgressReporter &report_progress);
 

@@ -63,7 +63,7 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 	progress(0, "Downloading structures");
 
     QString request = QString(end_point + "/Structures?$filter=(ID eq ") + QString::number(id)
-   	    + " or ParentID eq " + QString::number(id) + ")&$select=ID,TypeID";
+   	    + " or ParentID eq " + QString::number(id) + ")&$select=ID,TypeID,ParentID,Label";
    	download_object.structure_list = this->download_json(request, QString("structures-") + QString::number(id));
 
     std::cerr << "structure list length = " << download_object.structure_list.size() << "\n";

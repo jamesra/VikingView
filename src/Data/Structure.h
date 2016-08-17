@@ -40,14 +40,6 @@ class Structure;
 
 typedef QHash<long, QSharedPointer<Structure> > StructureHash;
 
-
-class Cell
-{
-public:
-  int id;
-  QSharedPointer<StructureHash> structures;
-};
-
 //! Maintains data a structure (e.g. cell)
 class Structure
 {
@@ -56,7 +48,7 @@ public:
   Structure(QSharedPointer<QColor> color);
   ~Structure();
 
-  static QSharedPointer<Structure> create_structure( int id, QList<QVariant> structure_list,
+  static QSharedPointer<Structure> create_structure( int id,
                                                      QList<QVariant> location_list,
 													 QList<QVariant> link_list,
 													 ScaleObject scale,
@@ -85,12 +77,18 @@ public:
 
   int get_id();
   int get_type();
+  int get_parent_id();
+  QString get_label() { return label_; }
+
+  bool has_parent() { return parent_id_ > 0; }
 
   void set_color( QColor color );
 
   QColor get_color();
 
   vtkSmartPointer<vtkPolyData> recopy_mesh( vtkSmartPointer<vtkPolyData> mesh );
+
+  StructureHash structures;
 
 private:
 
@@ -113,11 +111,13 @@ private:
 
   int id_;
   int type_;
+  int parent_id_;
   NodeMap node_map_;
 
   QList<Link> links_;
   vtkSmartPointer<vtkPolyData> mesh_;
-
+  
+  QString label_;
   QColor color_;
 
   int num_tubes_;

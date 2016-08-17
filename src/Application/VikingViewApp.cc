@@ -112,13 +112,13 @@ void VikingViewApp::load_structure(int id)
 
 	QList<long> ids;
 	ids.append(id);
-	QList<QSharedPointer<Cell>> new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
+	QList<QSharedPointer<Structure>> new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
 	
-	foreach(QSharedPointer<Cell> new_cell, new_cells)
+	foreach(QSharedPointer<Structure> new_cell, new_cells)
 	{
 		this->cells_ << new_cell;
 
-		foreach(QSharedPointer<Structure> structure, new_cell->structures->values()) {
+		foreach(QSharedPointer<Structure> structure, new_cell->structures.values()) {
 			this->structures_[structure->get_id()] = structure;
 		}
 	}
@@ -167,7 +167,7 @@ void VikingViewApp::update_table()
   for ( int i = 0; i < this->cells_.size(); i++ )
   {
 
-    QTableWidgetItem* new_item = new QTableWidgetItem( QString::number( this->cells_[i]->id ) );
+    QTableWidgetItem* new_item = new QTableWidgetItem( QString::number( this->cells_[i]->get_id() ) );
     this->ui_->table_widget->setItem( i, 0, new_item );
 
     //new_item = new QTableWidgetItem( QString::number( this->structures_[i]->get_volume() ) );

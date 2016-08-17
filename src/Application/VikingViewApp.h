@@ -112,7 +112,7 @@ private:
 
   StructureHash structures_;
   
-  QList< QSharedPointer<Cell> > cells_;
+  QList< QSharedPointer<Structure> > cells_;
 
   typedef void ( VikingViewApp::*ExportFunction )( QString );
   QMap< QString, ExportFunction > export_functions_;
