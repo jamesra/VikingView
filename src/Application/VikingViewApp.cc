@@ -18,6 +18,7 @@
 // viking
 #include <Application/VikingViewApp.h>
 #include <Application/Preferences.h>
+#include <Application/ModelController.h>
 #include <Data/Json.h>
 //#include <Data/PointSampler.h>
 //#include <Data/AlphaShape.h>
@@ -92,69 +93,55 @@ void VikingViewApp::on_delete_button_clicked()
 //  this->viewer_->display_structures( this->structures_ );
   this->viewer_->display_cells( this->cells_, false );
   this->update_table();
-}
+} 
 
 //---------------------------------------------------------------------------
-void VikingViewApp::load_structure( int id )
+void VikingViewApp::load_structure(int id)
 {
 
-  QProgressDialog progress( "Downloading Scale...", "Abort", 0, 4, this );
-  progress.setWindowModality( Qt::WindowModal );
-  progress.setMinimumDuration( 500 );
+	QSharedPointer<QProgressDialog> progressDialog = QSharedPointer<QProgressDialog>( new QProgressDialog("Downloading Scale...", "Abort", 0, 100, this));
+	progressDialog->setWindowModality(Qt::WindowModal);
+	progressDialog->setMinimumDuration(500);
+	progressDialog->setValue(0);
+	progressDialog->setAutoClose(false);
 
-  progress.setValue( 0 );
+	WindowedProgressReporter progressReporter = WindowedProgressReporter(progressDialog);
+	  
+	ColorMapper cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
+	QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
+
+	QList<long> ids;
+	ids.append(id);
+	QList<QSharedPointer<Cell>> new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
+	
+	foreach(QSharedPointer<Cell> new_cell, new_cells)
+	{
+		this->cells_ << new_cell;
+
+		foreach(QSharedPointer<Structure> structure, new_cell->structures->values()) {
+			this->structures_[structure->get_id()] = structure;
+		}
+	}
+
+	progressReporter.set_min(0);
+	progressReporter.set_min(100);
+	progressReporter(50, "Generating Mesh...");
+	//progress.setLabelText("Generating Mesh...");
+	//progress.setValue( 3  );
+
+	  //this->viewer_->display_structures( this->structures_ );
+	  this->viewer_->display_cells( this->cells_, true );
+
+	  progressReporter(95, "Updating UI...");
+//	  progress.setLabelText("Updating UI...");
+//	  progress.setValue( 4 );
+
+	  this->update_table();
+
+	  this->viewer_->redraw();
 
 
-  ColorMapper cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
-
-  Downloader downloader;
-
-  QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
-
-  DownloadObject download_object;
-  ScaleObject scale = downloader.download_scale(end_point);
-
-  progress.setLabelText("Downloading Mesh...");
-  progress.setValue(1);
-
-  if ( !downloader.download_cell( end_point, id, download_object, progress ) )
-  {
-    return;
-  }
-
-  progress.setLabelText( "Populating Morphology..." );
-  progress.setValue( 2 );
-
-  QSharedPointer<StructureHash> structures = Structure::create_structures( download_object.structure_list,
-                                                                           download_object.location_list,
-                                                                           download_object.link_list, 
-																	       scale,
-																		   cmap);
-
-  QSharedPointer<Cell> cell = QSharedPointer<Cell>( new Cell() );
-
-  cell->id = id;
-  cell->structures = structures;
-  this->cells_ << cell;
-
-  foreach( QSharedPointer<Structure> structure, structures->values() ) {
-    this->structures_[structure->get_id()] = structure;
-  }
-
-  progress.setLabelText("Generating Mesh...");
-  progress.setValue( 3  );
-
-  //this->viewer_->display_structures( this->structures_ );
-  this->viewer_->display_cells( this->cells_, true );
-
-  progress.setLabelText("Updating UI...");
-  progress.setValue( 4 );
-
-  this->update_table();
-
-  this->viewer_->redraw();
-
-  return;
+	  return;
 }
 
 vtkRenderWindow* VikingViewApp::get_render_window()

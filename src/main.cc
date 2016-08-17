@@ -1,7 +1,9 @@
 #include <QApplication>
 #include <QMessageBox>
+#include <QCommandLineParser>
 #include <Application/VikingViewApp.h>
 #include <Application/CommandLineArgs.h>
+#include <Application/ModelController.h>
 #include <iostream>
 
 #ifdef _WIN32
@@ -76,95 +78,169 @@ void RedirectIOToConsole2()
 
 #endif // _WIN32
 
+QSharedPointer<QCommandLineParser> BuildParser()
+{
+	QSharedPointer<QCommandLineParser> parser = QSharedPointer<QCommandLineParser>(new QCommandLineParser());
+	parser->addHelpOption();
+	parser->addVersionOption();
+	parser->addPositionalArgument("IDs", "Structure IDs to load");
+
+	QCommandLineOption optExport(QStringList() << "e" << "export", "Export meshes to files.  Supports .obj or .dae (COLLADA) extensions.", "ExportPath");
+	parser->addOption(optExport);
+
+	QCommandLineOption optStructureColors(QStringList() << "sc" << "structure_colors", "Optional .txt file containing structure colors", "StructureColorsFilename", "StructureColors.txt");
+	parser->addOption(optStructureColors);
+
+	QCommandLineOption optStructureTypeColors(QStringList() << "stc" << "type_colors", "Optional .txt file containing structure colors", "StructureTypeColorsFilename", "StructureTypeColors.txt");
+	parser->addOption(optStructureTypeColors);
+
+	QCommandLineOption optEndpoint(QStringList() << "u" << "url", "Required, endpoint of Viking OData server.", "endpoint");
+	parser->addOption(optEndpoint);
+
+	return parser;
+}
+
+int LaunchConsoleVersion(QSharedPointer<QCommandLineParser> cmdArgs)
+{
+	ColorMapper cmap = ColorMapper(cmdArgs->value("StructureColorsFilename"),
+								   cmdArgs->value("StructureTypeColorsFilename")); 
+
+	QStringList id_strings = cmdArgs->values("IDs");
+	QList<long> IDs; 
+	for (int i = 0; i < id_strings.count(); i++)
+	{
+		long ID = id_strings[i].toLongLong();
+		IDs.append(ID);
+	}
+	
+	ConsoleProgressReporter pf(0,1.0);
+	ExportStructures(IDs, cmdArgs->value("endpoint"), cmdArgs->value("ExportPath"), cmap, pf);
+	
+	return 0;
+}
+
+
+int LaunchWindowedVersion(int argc, char** argv)
+{
+	try {
+#ifdef WIN32
+		::SetErrorMode(0);
+		RedirectIOToConsole2();
+#endif
+
+		QApplication app(argc, argv);
+
+		// Collect and parse the command line arguments into a reusable object
+		QSharedPointer<CommandLineArgs> command_line_args =
+			QSharedPointer<CommandLineArgs>(new CommandLineArgs(argc, argv));
+
+		QSharedPointer<VikingViewApp> studio_app =
+			QSharedPointer<VikingViewApp>(new VikingViewApp(command_line_args));
+
+		studio_app->show();
+
+		studio_app->initialize_vtk();
+
+		//studio_app->load_structure(180);
+
+		// Process the id command by loading the cells for every
+		// id provided as a parameter
+		if (command_line_args->command_used("id"))
+		{
+			QList< QString > id_parameters = command_line_args->command_parameters("id");
+			for (int i = 0; i < id_parameters.size(); ++i)
+			{
+				int id = id_parameters[i].toInt();
+				studio_app->load_structure(id);
+			}
+		}
+
+		// Process the export command by exporting the render scene
+		// in each format specified as a parameter
+		if (command_line_args->command_used("export"))
+		{
+			// Only run export operations if a single cell was loaded
+			if (!command_line_args->command_used("id")
+				|| command_line_args->command_parameters("id").size() != 1)
+			{
+				QMessageBox::critical(0, "Export error", "Error! Tried to export cell geometry with no or multiple cell ids specified (use exactly 1, i.e. -id 593 )");
+				return 0;
+			}
+
+			// If no filename is provided at the command line, use a default
+			QString filename = "VikingViewExport";
+
+			if (command_line_args->command_used("filename"))
+			{
+				QList< QString > filenames = command_line_args->command_parameters("filename");
+				if (filenames.size() != 1)
+				{
+					QMessageBox::critical(0, "Export error", "Error! Tried to set export filename with no or multiple paths specified (give 1 filename, i.e. -filename test )");
+					return 0;
+				}
+
+				filename = filenames.back();
+			}
+
+			QList< QString > export_file_types = command_line_args->command_parameters("export");
+
+			if (export_file_types.empty())
+			{
+				QMessageBox::critical(0, "Export error", "Error! Tried to export cell without specifying export type (give at least 1 type, i.e. -export obj )");
+				return 0;
+			}
+
+			for (int i = 0; i < export_file_types.size(); ++i)
+			{
+				QString export_type = export_file_types[i];
+				studio_app->export_cell(filename, export_type);
+			}
+
+			return 0;
+		}
+
+		return app.exec();
+	}
+	catch (std::exception e)
+	{
+		std::cerr << "Exception caught!" << std::endl;
+		std::cerr << e.what() << "\n";
+	}
+}
+
+
 int main( int argc, char** argv )
 {
 
-#ifdef WIN32
-  ::SetErrorMode( 0 );
-  RedirectIOToConsole2();
-#endif
   try {
 
     //cgal_main(argc, argv);
-
+	   
     std::cerr << "VikingView initializing...\n";
 
-    QApplication app( argc, argv );
-
-	// Collect and parse the command line arguments into a reusable object
-	QSharedPointer<CommandLineArgs> command_line_args =
-		QSharedPointer<CommandLineArgs>( new CommandLineArgs( argc, argv ));
-
-    QSharedPointer<VikingViewApp> studio_app =
-        QSharedPointer<VikingViewApp>( new VikingViewApp( command_line_args ) );
-
-    studio_app->show();
-
-    studio_app->initialize_vtk();
-
-    //studio_app->load_structure(180);
-
-	// Process the id command by loading the cells for every
-	// id provided as a parameter
-    if ( command_line_args->command_used( "id" ) )
+	QStringList args = QStringList();
+	for (int i = 0; i < argc; i++)
 	{
-	  QList< QString > id_parameters = command_line_args->command_parameters( "id" );
-	  for ( int i = 0; i < id_parameters.size(); ++i)
-	  {
-        int id = id_parameters[ i ].toInt();
-        studio_app->load_structure( id );
-      }
+		args.append(argv[i]);
 	}
+	
+	QSharedPointer<QCommandLineParser> parser = BuildParser();
+	parser->process(args);
 
-	// Process the export command by exporting the render scene
-	// in each format specified as a parameter
-	if ( command_line_args->command_used( "export" ))
+	
+	if (parser->isSet("ExportFilename"))
 	{
-	  // Only run export operations if a single cell was loaded
-	  if ( !command_line_args->command_used( "id" ) 
-		|| command_line_args->command_parameters( "id" ).size() != 1 )
-   	  {
-		QMessageBox::critical( 0, "Export error", "Error! Tried to export cell geometry with no or multiple cell ids specified (use exactly 1, i.e. -id 593 )" );
 		return 0;
-	  }
-
-	  // If no filename is provided at the command line, use a default
-	  QString filename = "VikingViewExport";
-
-	  if ( command_line_args->command_used( "filename" ) )
-	  { 
-		QList< QString > filenames = command_line_args->command_parameters( "filename" );
-		if ( filenames.size() != 1 )
-		{ 
-		  QMessageBox::critical(0, "Export error", "Error! Tried to set export filename with no or multiple paths specified (give 1 filename, i.e. -filename test )");
-		  return 0;
-		}
-
-		filename = filenames.back();
-	  }
-
-	  QList< QString > export_file_types = command_line_args->command_parameters("export");
-
-	  if ( export_file_types.empty() )
-	  {
-		QMessageBox::critical(0, "Export error", "Error! Tried to export cell without specifying export type (give at least 1 type, i.e. -export obj )");
-		return 0;
-	  }
-
-	  for ( int i = 0; i < export_file_types.size(); ++i )
-	  {
-		QString export_type = export_file_types[ i ];
-		studio_app->export_cell( filename, export_type );
-	  }
-
-	  return 0;
 	}
-
-    return app.exec();
+	else
+	{
+		return LaunchWindowedVersion(argc, argv);
+	}
   }
-  catch ( std::exception e )
+  catch (std::exception e)
   {
-    std::cerr << "Exception caught!" << std::endl;
-    std::cerr << e.what() << "\n";
+	  std::cerr << "Exception caught!" << std::endl;
+	  std::cerr << e.what() << "\n";
   }
 }
+

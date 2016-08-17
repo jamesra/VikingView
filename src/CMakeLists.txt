@@ -196,12 +196,14 @@ SET(VIKING_VIEW_APPLICATION_HDRS
   Application/Preferences.h
   Application/PreferencesWindow.h
   Application/CommandLineArgs.h
+  Application/ModelController.h
 )
 SET(VIKING_VIEW_APPLICATION_SRCS
   Application/VikingViewApp.cc
   Application/Preferences.cc
   Application/PreferencesWindow.cc
   Application/CommandLineArgs.cc
+  Application/ModelController.cc
 )
 SET(VIKING_VIEW_APPLICATION_UIS
   Application/VikingViewApp.ui
@@ -262,6 +264,7 @@ SET( VIKING_VIEW_SRCS
 )
 
 SET( VIKING_VIEW_HDRS
+	 ProgressReporter.h
      ${VIKING_VIEW_APPLICATION_HDRS}
      ${VIKING_VIEW_DATA_HDRS}
      ${VIKING_VIEW_GROOM_HDRS}
@@ -502,8 +505,8 @@ set(CPACK_PACKAGE_VENDOR "University of Utah")
 #set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
 set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "5")
-set(CPACK_PACKAGE_VERSION_PATCH "3")
-set(CPACK_PACKAGE_EXECUTABLES "VikingView" "VikingView")
+set(CPACK_PACKAGE_VERSION_PATCH "4")
+set(CPACK_PACKAGE_EXECUTABLES "VikingView" "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 
 

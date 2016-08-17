@@ -77,6 +77,7 @@ public:
   // vtkSmartPointer<vtkPolyData> get_mesh_union();
   vtkSmartPointer<vtkPolyData> get_mesh_parts();
   vtkSmartPointer<vtkPolyData> get_mesh_tubes();
+  vtkSmartPointer<vtkPolyData> get_mesh();
 
   double get_volume();
 

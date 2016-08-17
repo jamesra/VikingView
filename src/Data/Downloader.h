@@ -8,6 +8,7 @@
 #include <QSharedPointer>
 #include <QProgressDialog>
 #include <Data/Scale.h>
+#include <ProgressReporter.h>
 
 class Structure;
 
@@ -47,7 +48,7 @@ public:
 
   ScaleObject download_scale(QString end_point);
 
-  bool download_cell( QString end_point, int id, DownloadObject &download_object, QProgressDialog &progress );
+  bool download_cell( QString end_point, int id, DownloadObject &download_object, ProgressReporter &progress );
 
   QList<QVariant> get_location_list();
   QList<QVariant> get_link_list();

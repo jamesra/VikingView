@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QActionGroup>
+#include <QProgressDialog>
 #include <QSlider>
 #include <QLabel>
 #include <QTimer>
@@ -13,6 +14,7 @@
 #include <Application/CommandLineArgs.h>
 #include <Data/Structure.h>
 #include <Data/ColorMapper.h>
+#include <ProgressReporter.h>
 
 class Viewer;
 //class Structure;
@@ -22,6 +24,28 @@ class Ui_VikingViewApp;
 
 // Forward VTK class declarations
 class vtkRenderWindow;
+
+
+class WindowedProgressReporter : public ProgressReporter
+{
+public:
+	WindowedProgressReporter(QSharedPointer<QProgressDialog> progressDialog)
+	{
+		_dialog = progressDialog;
+		_dialog->setMinimum(0);
+		_dialog->setMaximum(1000);
+	}
+
+	void operator()(double value, QString message) {
+		_dialog->setLabelText(message);
+		double val = ((value - min_value) / (double)(max_value - min_value)) * 1000;
+		_dialog->setValue((int)val);
+	}
+
+private:
+	QSharedPointer<QProgressDialog> _dialog; 
+};
+
 
 //! Main VikingView window
 /*!
@@ -74,6 +98,8 @@ private:
   void export_dae( QString filename );
   void export_obj( QString filename );
   void initialize_export_functions();
+
+  void UpdateLoadStructureProgress(double progress, QString message);
 
   QSharedPointer< CommandLineArgs > command_line_args_;
 

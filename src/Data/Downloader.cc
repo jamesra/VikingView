@@ -46,15 +46,21 @@ ScaleObject Downloader::download_scale(QString end_point)
 }
 
 //-----------------------------------------------------------------------------
-bool Downloader::download_cell( QString end_point, int id, DownloadObject &download_object, QProgressDialog &progress )
+bool Downloader::download_cell( QString end_point, int id, DownloadObject &download_object, ProgressReporter &progress )
 {
   try {
+
+	progress.set_min(0);
+	progress.set_max(3);
 
 	QElapsedTimer timer;
 	timer.start();
 
     // set number of threads to download
-    QThreadPool::globalInstance()->setMaxThreadCount(16);
+	if(QThreadPool::globalInstance()->maxThreadCount() < 16)
+		QThreadPool::globalInstance()->setMaxThreadCount(16);
+
+	progress(0, "Downloading structures");
 
     QString request = QString(end_point + "/Structures?$filter=(ID eq ") + QString::number(id)
    	    + " or ParentID eq " + QString::number(id) + ")&$select=ID,TypeID";
@@ -69,6 +75,8 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 	  return false;
 	}
 
+	progress(1, "Downloading structure annotations");
+
     QList< QList<QVariant> > downloaded;
     QList< QString > requests;
 	
@@ -80,15 +88,15 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
     }
 
     downloaded = QtConcurrent::blockingMapped( requests, download_item );
-    progress.setValue( 1 );
-
+	 
     foreach( QList<QVariant> list, downloaded ) {
       download_object.location_list.append( list );
     }
 
+	progress(2, "Downloading annotation links");
     // download locations
     requests.clear();
-    foreach( QVariant var, download_object.structure_list ) {
+	foreach( QVariant var, download_object.structure_list ) {
       QMap<QString, QVariant> item = var.toMap();
       int id = item["ID"].toLongLong();
       request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/LocationLinks?$select=A,B";
@@ -97,10 +105,12 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 
     // download location links
     downloaded = QtConcurrent::blockingMapped( requests, download_item );
-    progress.setValue( 2 );
+	
     foreach( QList<QVariant> list, downloaded ) {
       download_object.link_list.append( list );
     }
+
+	progress(3, "Download completed");
 
     std::cerr << "Download took: " << timer.elapsed() / 1000.0 << " seconds\n";
     return true;

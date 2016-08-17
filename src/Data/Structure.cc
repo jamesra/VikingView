@@ -588,6 +588,11 @@ QColor Structure::get_color()
   return this->color_;
 }
 
+vtkSmartPointer<vtkPolyData> Structure::get_mesh()
+{
+	return this->get_mesh_tubes();
+}
+
 //-----------------------------------------------------------------------------
 vtkSmartPointer<vtkPolyData> Structure::recopy_mesh( vtkSmartPointer<vtkPolyData> mesh )
 {
