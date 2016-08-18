@@ -136,7 +136,9 @@ find_package(Qt5Network REQUIRED HINTS "${QT5_LIB_DIR}" "${QT5_LIB_DIR}/cmake")
 include_directories(${Qt5Network_INCLUDE_DIRS})
 add_definitions(${Qt5Network_DEFINITION_DIRS})
 
-find_file(QT_PLUGINS_PLATFORMS_QWINDOWS_DLL NAMES qwindows.dll HINTS "${QT5_PLUGIN_DIR}/platforms" DOC "Path to Qt/5.6/msvc2015_64/plugins/platforms/qwindows.dll for Windows installer" )
+IF(WIN32)
+	find_file(QT_PLUGINS_PLATFORMS_QWINDOWS_DLL NAMES qwindows.dll HINTS "${QT5_PLUGIN_DIR}/platforms" DOC "Path to Qt/5.6/msvc2015_64/plugins/platforms/qwindows.dll for Windows installer" )
+ENDIF(WIN32)
 
 # add some useful macros and variables
 # (QT_USE_FILE is a variable defined by FIND_PACKAGE( Qt4 ) that contains a path to CMake script)
@@ -343,22 +345,37 @@ ADD_EXECUTABLE( VikingView MACOSX_BUNDLE WIN32
   ${VIKING_VIEW_MOC_HDRS}
   )
 
-TARGET_LINK_LIBRARIES( VikingView
-  ${QT_LIBRARIES} 
-  ${ITK_LIBRARIES}
-  ${Boost_THREAD_LIBRARY}
-  ${Boost_SYSTEM_LIBRARY}
-  ${Boost_FILESYSTEM_LIBRARY}
-  ${VTK_LIBRARIES}
-  Qt5::Widgets
-  Qt5::Core
-  Qt5::Network
-  Qt5::Script
-  Qt5::Concurrent
-  Qt5::WinMain
+IF(WIN32)
+	TARGET_LINK_LIBRARIES( VikingView
+	  ${QT_LIBRARIES} 
+	  ${ITK_LIBRARIES}
+	  ${Boost_THREAD_LIBRARY}
+	  ${Boost_SYSTEM_LIBRARY}
+	  ${Boost_FILESYSTEM_LIBRARY}
+	  ${VTK_LIBRARIES}
+	  Qt5::Widgets
+	  Qt5::Core
+	  Qt5::Network
+	  Qt5::Script
+	  Qt5::Concurrent
+	  Qt5::WinMain
   )
-
-
+ELSE(WIN32)
+	TARGET_LINK_LIBRARIES( VikingView
+	  ${QT_LIBRARIES} 
+	  ${ITK_LIBRARIES}
+	  ${Boost_THREAD_LIBRARY}
+	  ${Boost_SYSTEM_LIBRARY}
+	  ${Boost_FILESYSTEM_LIBRARY}
+	  ${VTK_LIBRARIES}
+	  Qt5::Widgets
+	  Qt5::Core
+	  Qt5::Network
+	  Qt5::Script
+	  Qt5::Concurrent
+  )
+ENDIF(WIN32)
+ 
 #-- Add an Option to toggle the generation of the API documentation
 option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
 if(BUILD_DOCUMENTATION)
