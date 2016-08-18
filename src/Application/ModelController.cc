@@ -2,7 +2,7 @@
 #include <Data/Downloader.h>
 #include <Data/Structure.h>
 
-QSharedPointer<Structure> LoadRootStructure(long ID, QString end_point, ScaleObject scale, ColorMapper cmap, ProgressReporter &report_progress = NoProgressReporter())
+QSharedPointer<Structure> LoadRootStructure(long ID, QString end_point, ScaleObject scale, ColorMapper cmap, ProgressReporter &report_progress)
 {
 	Downloader downloader;
 	DownloadObject download_object;
@@ -21,7 +21,7 @@ QSharedPointer<Structure> LoadRootStructure(long ID, QString end_point, ScaleObj
 	return (*structures)[ID];
 }
 
-QList<QSharedPointer<Structure>> LoadStructures(QList<long> IDs, QString end_point, ColorMapper cmap, ProgressReporter &report_progress = NoProgressReporter())
+QList<QSharedPointer<Structure> > LoadStructures(QList<long> IDs, QString end_point, ColorMapper cmap, ProgressReporter &report_progress)
 {
 	double num_reports = 4 + IDs.count();
 	int report_index = 0;
@@ -29,7 +29,7 @@ QList<QSharedPointer<Structure>> LoadStructures(QList<long> IDs, QString end_poi
 	Downloader downloader;
 	ScaleObject scale = downloader.download_scale(end_point);
 
-	QList<QSharedPointer<Structure>> listCells;
+	QList<QSharedPointer<Structure> > listCells;
 
 	for (int i = 0; i < IDs.count(); i++)
 	{
@@ -50,14 +50,14 @@ QList<QSharedPointer<Structure>> LoadStructures(QList<long> IDs, QString end_poi
 	return listCells;
 }
 
-void GenerateMeshes(QList<QSharedPointer<Structure>> root_structures)
+void GenerateMeshes(QList<QSharedPointer<Structure> > root_structures)
 {
 	
 }
 
-int ExportStructures(QList<long> IDs, QString end_point, QString export_dir, ColorMapper cmap, ProgressReporter &report_progress = NoProgressReporter())
+int ExportStructures(QList<long> IDs, QString end_point, QString export_dir, ColorMapper cmap, ProgressReporter &report_progress)
 {
-	QList<QSharedPointer<Structure>> structures = LoadStructures(IDs, end_point, cmap, report_progress);
+	QList<QSharedPointer<Structure> > structures = LoadStructures(IDs, end_point, cmap, report_progress);
 	 
 	foreach(QSharedPointer<Structure> root_structure, structures)
 	{

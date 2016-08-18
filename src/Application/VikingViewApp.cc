@@ -112,7 +112,7 @@ void VikingViewApp::load_structure(int id)
 
 	QList<long> ids;
 	ids.append(id);
-	QList<QSharedPointer<Structure>> new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
+	QList<QSharedPointer<Structure> > new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
 	
 	foreach(QSharedPointer<Structure> new_cell, new_cells)
 	{

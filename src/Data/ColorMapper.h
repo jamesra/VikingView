@@ -16,13 +16,13 @@ protected:
 	ColorMap StructureTypeColors;
 
 public:
-	ColorMapper::ColorMapper()
+	ColorMapper()
 	{
 		this->StructureColors = ColorMap();
 		this->StructureTypeColors = ColorMap();
 	}
 
-	ColorMapper::ColorMapper(QString StructureTypesMapFilename, QString StructureMapFilename)
+	ColorMapper(QString StructureTypesMapFilename, QString StructureMapFilename)
 	{
 		this->StructureColors = LoadIDColorMapFromFile(StructureMapFilename);
 		this->StructureTypeColors = LoadIDColorMapFromFile(StructureTypesMapFilename);

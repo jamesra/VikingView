@@ -16,9 +16,9 @@ public:
 	virtual double get_val(double val) { return val; }
 
 protected:
-	double val = 0;
-	double min_value = 0;
-	double max_value = 100;
+    double val;
+    double min_value;
+    double max_value;
 };
 
 class NoProgressReporter : public ProgressReporter

@@ -12,6 +12,8 @@
 	#include <io.h>
 	#include <iostream>
 	#include <fstream>
+#else
+#include<iostream>
 #endif
 
 
@@ -56,7 +58,7 @@ ColorMap LoadIDColorMapFromFile(QString filepath)
 				if (IsComment(rx.cap(1)))
 					continue; 
 
-				std::cout << rx.cap(0).toStdString() << " " << rx.cap(1).toStdString() << " " << rx.cap(2).toStdString() << " " << rx.cap(3).toStdString() << " " << rx.cap(4).toStdString() << endl;
+                std::cout << rx.cap(0).toStdString() << " " << rx.cap(1).toStdString() << " " << rx.cap(2).toStdString() << " " << rx.cap(3).toStdString() << " " << rx.cap(4).toStdString() << std::endl;
 				long ID = rx.cap(2).toLongLong();
 				double R = rx.cap(3).toDouble();
 				double G = rx.cap(4).toDouble();
