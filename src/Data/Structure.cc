@@ -52,6 +52,26 @@
 
 //#include <CGAL/Polyhe>
 
+QList<QSharedPointer<Structure>> GatherStructures(QList<QSharedPointer<Structure>> root_structures)
+{
+	//Gathers root_structures and all children recursively into a single flat list
+	QList<QSharedPointer<Structure>> list = QList<QSharedPointer<Structure>>(root_structures);
+	
+	foreach(QSharedPointer<Structure> root_structure, root_structures)
+	{
+		list.append(GatherStructures(root_structure->structures.values()));
+	}
+
+	return list;
+}
+
+//-----------------------------------------------------------------------------
+Structure::Structure()
+{
+	this->color_ = QColor();
+	this->num_tubes_ = 0;
+}
+
 //-----------------------------------------------------------------------------
 Structure::Structure(QSharedPointer<QColor> color)
 {
@@ -63,33 +83,44 @@ Structure::Structure(QSharedPointer<QColor> color)
 Structure::~Structure()
 {}
 
+QSharedPointer<Structure>  Structure::structure_from_json(QVariant var)
+{
+	QMap<QString, QVariant> item = var.toMap();
+	int id = item["ID"].toLongLong();
+	int type = item["TypeID"].toInt();
+	int parent_id = item["ParentID"].toLongLong();
+	QString label = item["Label"].toString();
+
+	QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure());
+	structure->id_ = id;
+	structure->type_ = type;
+	structure->parent_id_ = parent_id;
+	structure->label_ = label;
+
+	return structure;
+}
+
 //-----------------------------------------------------------------------------
 QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> structure_list,
                                                             QList<QVariant> location_list,
                                                             QList<QVariant> link_list,
-															ScaleObject scale,
+															QSharedPointer<ScaleObject> scale,
 															ColorMapper cmap)
 { 
+	
   QSharedPointer<StructureHash> structures = QSharedPointer<StructureHash> ( new StructureHash() );
 
   QHash<int, QSharedPointer<NodeMap> > node_maps;
 
   foreach( QVariant var, structure_list ) {
-    QMap<QString, QVariant> item = var.toMap();
-    int id = item["ID"].toLongLong();
-    int type = item["TypeID"].toInt();
-	int parent_id = item["ParentID"].toLongLong();
-	QString label = item["Label"].toString();
+	  QSharedPointer<Structure> structure = structure_from_json(var);
 
-	bool colorMapped = false;
-	QSharedPointer<QColor> color = cmap.ColorForStructure(id, type, colorMapped);
+	  bool colorMapped = false;
+	  QSharedPointer<QColor> color = cmap.ColorForStructure(structure->get_id(), structure->get_type(), colorMapped);
+	  structure->set_color(*color);
+	  structure->scale = scale;
 
-    QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure(color) );
-    structure->id_ = id;
-    structure->type_ = type;
-	structure->parent_id_ = parent_id;
-	structure->label_ = label;
-    structures->insert( id, structure );
+	  structures->insert(structure->get_id(), structure);
   }
 
   foreach(QSharedPointer<Structure> s, structures->values())
@@ -105,8 +136,8 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
   std::cerr << "location list length: " << location_list.size() << "\n";
   std::cerr << "link list length: " << link_list.size() << "\n";
 
-  float units_per_pixel = scale.X.scale / 1000.0;
-  float units_per_section = scale.Z.scale / 1000.0;
+  float units_per_pixel = scale->X.scale;
+  float units_per_section = scale->Z.scale;
 
   NodeMap full_node_map;
 
@@ -185,91 +216,6 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
   }
 
   return structures;
-}
-
-//-----------------------------------------------------------------------------
-QSharedPointer<Structure> Structure::create_structure( int id,
-                                                       QList<QVariant> location_list,
-													   QList<QVariant> link_list,
-													   ScaleObject scale,
-												       QSharedPointer<QColor> color)
-{
-
-  QSharedPointer<Structure> structure = QSharedPointer<Structure>( new Structure(color) );
-  structure->id_ = id;
-
-  float units_per_pixel = scale.X.scale / 1000.0;
-  float units_per_section = scale.Z.scale / 1000.0;
-
-  std::cerr << "create structure #" << id << endl;
-  std::cerr << "location list length: " << location_list.size() << "\n";
-  std::cerr << "link list length: " << link_list.size() << "\n";
-
-  // construct nodes
-  foreach( QVariant var, location_list ) {
-    QSharedPointer<Node> n = QSharedPointer<Node>( new Node() );
-    QMap<QString, QVariant> item = var.toMap();
-    n->id = item["ID"].toLongLong();
-    n->x = item["VolumeX"].toDouble();
-    n->y = item["VolumeY"].toDouble();
-    n->z = item["Z"].toDouble();
-    n->radius = item["Radius"].toDouble();
-    n->parent_id = item["ParentID"].toLongLong();
-    n->graph_id = -1;
-
-    // scale
-    n->x = n->x * units_per_pixel;
-    n->y = n->y * units_per_pixel;
-    n->z = n->z * units_per_section;
-    n->radius = n->radius * units_per_pixel;
-
-    if ( item["ParentID"] == id )
-    {
-      structure->node_map_[n->id] = n;
-    }
-  }
-
-  std::cerr << "Found " << structure->node_map_.size() << " nodes\n";
-
-  foreach( QVariant var, link_list ) {
-    Link link;
-    QMap<QString, QVariant> item = var.toMap();
-
-    link.a = item["A"].toLongLong();
-    link.b = item["B"].toLongLong();
-
-    if ( structure->node_map_.find( link.a ) == structure->node_map_.end()
-         || structure->node_map_.find( link.b ) == structure->node_map_.end() )
-    {
-      continue;
-    }
-
-    structure->node_map_[link.a]->linked_nodes.append( link.b );
-    structure->node_map_[link.b]->linked_nodes.append( link.a );
-    structure->links_.append( link );
-  }
-
-  std::cerr << "Found " << structure->links_.size() << " links\n";
-
-  std::cerr << "===Initial===\n";
-  structure->link_report();
-
-  structure->connect_subgraphs();
-
-  std::cerr << "===After graph connection===\n";
-  structure->link_report();
-
-  std::cerr << "number of nodes : " << structure->node_map_.size() << "\n";
-   
-  structure->cull_outliers();
-
-  structure->cull_overlapping();
-
-  structure->connect_subgraphs();
-
-  std::cerr << "===After location culling===\n";
-  structure->link_report();
-  return structure;
 }
 
 //-----------------------------------------------------------------------------
@@ -922,6 +868,10 @@ void Structure::cull_overlapping()
   while(node_id_list.size() > 0)
   {
 	  long node_id = node_id_list.takeFirst();
+	  if (!this->node_map_.contains(node_id))
+	  {
+		  continue;
+	  }
 
 	  QSharedPointer<Node> n = this->node_map_[node_id];
 	  if (n->IsBranch() || n->IsEndpoint())
@@ -947,6 +897,9 @@ void Structure::cull_overlapping()
 			  {
 				  //std::cerr << "removed overlapping " << node_id << "\n";
 				  this->remove_node(node_id);
+
+				  //Make sure we recheck our linked nodes, because they may now overlap the endpoint
+				  node_id_list.append(linked_nodes);
 				  break;
 			  }
 			  else
@@ -1010,7 +963,7 @@ vtkSmartPointer<vtkPolyData> Structure::get_mesh_tubes()
   for ( NodeMap::iterator it = this->node_map_.begin(); it != this->node_map_.end(); ++it )
   {
     QSharedPointer<Node> n = it.value();
-    if ( n->linked_nodes.size() == 1 || n->linked_nodes.size() == 0 )
+    if ( n->IsEndpoint())
     {
       root = n->id;
       break;
@@ -1232,6 +1185,7 @@ void Structure::add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<
       //tube->SetRadius(n.radius);
       //tube->SetRadius( 0.1 );
       tube->SetNumberOfSides( 15 );
+	  tube->SidesShareVerticesOn();
       tube->Update();
 
       poly_data = tube->GetOutput();

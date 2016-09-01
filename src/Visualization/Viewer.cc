@@ -1,3 +1,5 @@
+#include <vtkObject.h>
+#include <vtkObjectFactory.h>
 #include <vtkPointData.h>
 #include <vtkUnsignedLongArray.h>
 #include <vtkSphereSource.h>
@@ -29,13 +31,80 @@
 #include <vtkOrientationMarkerWidget.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkCamera.h>
+#include <vtkLabeledDataMapper.h>
+#include <vtkInteractorStyleTrackballCamera.h>
+#include <vtkSetGet.h>
 
+#include <QApplication>
+#include <QClipboard>
 #include <QKeyEvent>
 
 #include <Data/Structure.h>
 #include <Application/Preferences.h>
 
 #include <Visualization/Viewer.h>
+#include <Application/ModelController.h>
+
+
+
+// Handle mouse events
+class MouseInteractorStyle2 : public vtkInteractorStyleTrackballCamera
+{
+public:
+	static MouseInteractorStyle2* New();
+	vtkTypeMacro(MouseInteractorStyle2, vtkInteractorStyleTrackballCamera);
+
+	QSharedPointer<ScaleObject> scale;
+
+	virtual void OnLeftButtonDown()
+	{
+		int* clickPos = this->GetInteractor()->GetEventPosition();
+
+		// Pick from this location.
+		vtkSmartPointer<vtkPropPicker>  picker =
+			vtkSmartPointer<vtkPropPicker>::New();
+		picker->Pick(clickPos[0], clickPos[1], 0, this->GetDefaultRenderer());
+
+		double* pos = picker->GetPickPosition();
+
+		double X = pos[0];
+		double Y = pos[1];
+		double Z = pos[2];
+
+		if (!scale.isNull())
+		{
+			X /= scale->X.scale;
+			Y /= scale->Y.scale;
+			Z /= scale->Z.scale;
+		}
+
+		std::cout << "Pick position (world coordinates) is: "
+			<< pos[0] << " " << pos[1]
+			<< " " << pos[2] << std::endl;
+
+		vtkActor *actor = picker->GetActor(); 
+		if (actor == NULL)
+		{
+			vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+			return; 
+		} 
+
+		QClipboard *clipboard = QApplication::clipboard();
+		QString coords = QString("X: %1 Y: %2 Z: %3 DS: 2").arg(X).arg(Y).arg((int)Z);
+		clipboard->setText(coords);
+
+		std::cout << "Picked actor: " << picker->GetActor() << std::endl;
+		 
+		// Forward events
+		vtkInteractorStyleTrackballCamera::OnLeftButtonDown();
+	}
+	 
+
+private:
+
+};
+
+vtkStandardNewMacro(MouseInteractorStyle2);
 
 // Callback for the interaction
 // This does the actual work: updates the vtkPlane implicit function.
@@ -96,6 +165,29 @@ void SetCameraToZX_YOut(vtkCamera* camera)
 	camera->SetViewUp(0, 0, 1);
 }
 
+/* Parse a coordinate string in the form X: 0 Y: 0 Z: 0 DS: 4
+*/
+double* CoordsFromText(QString coordString)
+{
+	QRegExp rx("^\\s*X:\\s*(\\d+|\\d+\.\\d+|\.\\d+)\\s*Y:\\s*(\\d+|\\d+\.\\d+|\.\\d+)\\s*Z:\\s*(\\d+|\\d+\.\\d+|\.\\d+)\\s*DS:(\\d+|\\d+\.\\d+|\.\\d+).*");
+
+	bool matched = rx.exactMatch(coordString);
+	if (matched)
+	{  
+		std::cout << rx.cap(0).toStdString() << " " << rx.cap(1).toStdString() << " " << rx.cap(2).toStdString() << " " << rx.cap(3).toStdString() << " " << rx.cap(4).toStdString() << std::endl;
+		double X = rx.cap(1).toDouble();
+		double Y = rx.cap(2).toDouble();
+		double Z = rx.cap(3).toDouble();
+		double DS = rx.cap(4).toDouble(); 
+		 
+		double* coords = new double[4] { X,Y,Z,DS };
+
+		return coords;
+	}
+
+	return NULL;
+}
+
 //-----------------------------------------------------------------------------
 class OrientationController : public vtkCommand
 {
@@ -108,6 +200,8 @@ public:
 	OrientationController()
 	{}
 
+	QSharedPointer<ScaleObject> scale;
+
 	void Execute(vtkObject* obj, unsigned long event_id, void* call_data)
 	{
 		// get QKeyEvent
@@ -118,12 +212,27 @@ public:
 			vtkCamera* camera = this->viewer_->get_renderer()->GetActiveCamera();
 			Qt::Key keyPressed = (Qt::Key)key_event->key();
 			bool ShiftPressed = key_event->modifiers() & Qt::ShiftModifier;
+			bool CtrlPressed = key_event->modifiers() & Qt::ControlModifier;
 			float distance = camera->GetDistance();
 			float parallel_scale = camera->GetParallelScale();
 			bool found = true;
 
 			switch (keyPressed)
 			{
+			case Qt::Key_V:
+				if (CtrlPressed)
+				{
+					QClipboard *clipboard = QApplication::clipboard();
+					QString clipboardText = clipboard->text();
+					double *coords = CoordsFromText(clipboardText);
+					camera->SetFocalPoint(coords[0] * scale->X.scale, coords[1] * scale->Y.scale, coords[2] * scale->Z.scale);
+					//Coords[3] is downsample value
+					camera->SetPosition(coords[0] * scale->X.scale, coords[1] * scale->Y.scale, (coords[2] * scale->Z.scale) - distance);
+					this->viewer_->get_renderer()->ResetCameraClippingRange();
+					this->viewer_->redraw();
+					found = false; 
+				}
+				break;
 			case Qt::Key_X:
 				if (ShiftPressed)
 					SetCameraToZX_YIn(camera);
@@ -173,8 +282,7 @@ public:
 			if (found)
 			{
 				camera->SetFocalPoint(0, 0, 0);
-				camera->ComputeViewPlaneNormal();
-				camera->OrthogonalizeViewUp();
+				//camera->OrthogonalizeViewUp();
 
 				this->viewer_->get_renderer()->ResetCamera();
 
@@ -253,9 +361,19 @@ void Viewer::set_render_window(vtkRenderWindow* render_window)
 		this->orientation_widget_->SetViewport(0.80, 0.80, 1, 1);
 		this->orientation_widget_->SetEnabled(1);
 		//this->orientation_widget_->InteractiveOn();
-	}
+	} 
+
+	vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor = vtkSmartPointer<vtkRenderWindowInteractor>::New();
+	renderWindowInteractor->SetRenderWindow(render_window);
+
+	// Set the custom stype to use for interaction.
+	mouse_interactor_ = vtkSmartPointer<MouseInteractorStyle2>::New();
+	mouse_interactor_->SetDefaultRenderer(this->renderer_);
+
+	renderWindowInteractor->SetInteractorStyle(mouse_interactor_);
 
 	render_window->GetInteractor()->AddObserver(vtkCommand::KeyPressEvent, this->orientation_controller_);
+
 }
 
 void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
@@ -263,12 +381,16 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
 	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
+//	vtkSmartPointer<vtkLabeledDataMapper> labelMapper = vtkSmartPointer<vtkLabeledDataMapper>::New();
+//	vtkSmartPointer<vtkTextActor> labelActor = vtkSmartPointer<vtkTextActor>::New();
+
 	vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
 
 	if (mesh)
 	{
-
 		mesh = this->scale_mesh(s);
+		
+//		this->renderer_->AddActor2D(labelActor);
 
 		mapper->SetInputData(mesh);
 		actor->SetMapper(mapper);
@@ -279,13 +401,13 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 		actor->GetProperty()->SetOpacity(color.alpha() / 255.0);
 		actor->GetProperty()->SetSpecular(0.2);
 		actor->GetProperty()->SetSpecularPower(15);
-		actor->GetProperty()->BackfaceCullingOn();
-
+		actor->GetProperty()->BackfaceCullingOn();  
+		
 		//actor->GetProperty()->SetRepresentationToWireframe();
 
 		mapper->ScalarVisibilityOff();
 		//mapper->ScalarVisibilityOn();
-
+		  
 		this->renderer_->AddActor(actor);
 
 		this->surface_actors_.append(actor);
@@ -294,8 +416,7 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 
 	foreach(QSharedPointer<Structure> child, s->structures.values()) {
 		add_structure_to_view(child);
-	}
-
+	} 
 }
 
 //-----------------------------------------------------------------------------
@@ -310,8 +431,20 @@ void Viewer::display_cells(QList< QSharedPointer<Structure> > cells, bool reset_
 	this->surface_mappers_.clear();
 	this->renderer_->RemoveAllViewProps();
 
+	GenerateMeshes(cells);
+
 	foreach(QSharedPointer<Structure> cell, cells) {
 		add_structure_to_view(cell); 
+
+		if (this->mouse_interactor_ != NULL)
+		{
+			this->mouse_interactor_->scale = cell->scale;
+		}
+
+		if (this->orientation_controller_ != NULL)
+		{
+			orientation_controller_->scale = cell->scale;
+		}
 	}
 
 	if (reset_camera)

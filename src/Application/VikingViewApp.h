@@ -61,7 +61,7 @@ public:
 
   void initialize_vtk();
 
-  void load_structure( int id );
+  void load_structures( QList<long> ids );
 
   void export_cell( QString filename, QString export_type );
 

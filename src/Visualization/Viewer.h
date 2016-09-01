@@ -23,6 +23,7 @@ class vtkIPWCallback;
 class vtkOrientationMarkerWidget;
 
 class OrientationController;
+class MouseInteractorStyle2;
 
 class Viewer;
 class Structure;
@@ -69,8 +70,7 @@ private:
   vtkSmartPointer<vtkPolyData> poly_data_;
 
   void update_actors();
-
-
+  
   QColor get_color(QSharedPointer<Structure> s);
 
   vtkSmartPointer<vtkPolyData> scale_mesh(QSharedPointer<Structure> s);
@@ -88,7 +88,8 @@ private:
   vtkSmartPointer<OrientationController>      orientation_controller_;
   vtkSmartPointer<vtkOrientationMarkerWidget> orientation_widget_;
 
-
+  vtkSmartPointer<MouseInteractorStyle2> mouse_interactor_;
+   
   QHash<int, QColor> type_colors_;
   QHash<int, QColor> cell_colors_;
 

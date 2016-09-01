@@ -66,11 +66,12 @@ void VikingViewApp::on_add_button_clicked()
   {
 
     QStringList pieces = text.split( " " );
-
+	QList<long> ids;
     foreach( QString str, pieces ) {
-      int id = str.toInt();
-      this->load_structure( id );
+		ids.append(str.toInt());
     }
+
+	this->load_structures(ids);
   }
 }
 
@@ -96,7 +97,7 @@ void VikingViewApp::on_delete_button_clicked()
 } 
 
 //---------------------------------------------------------------------------
-void VikingViewApp::load_structure(int id)
+void VikingViewApp::load_structures(QList<long> ids)
 {
 
 	QSharedPointer<QProgressDialog> progressDialog = QSharedPointer<QProgressDialog>( new QProgressDialog("Downloading Scale...", "Abort", 0, 100, this));
@@ -109,9 +110,7 @@ void VikingViewApp::load_structure(int id)
 	  
 	ColorMapper cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
 	QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
-
-	QList<long> ids;
-	ids.append(id);
+	  
 	QList<QSharedPointer<Structure> > new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
 	
 	foreach(QSharedPointer<Structure> new_cell, new_cells)

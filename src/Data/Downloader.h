@@ -43,12 +43,10 @@ class Downloader : public QObject
 public:
   Downloader();
   ~Downloader();
+   
+  QSharedPointer<ScaleObject> download_scale(QString end_point);
 
-  
-
-  ScaleObject download_scale(QString end_point);
-
-  bool download_cell( QString end_point, int id, DownloadObject &download_object, ProgressReporter &progress );
+  bool download_cells( QString end_point, QList<long> ids, DownloadObject &download_object, ProgressReporter &progress );
 
   QList<QVariant> get_location_list();
   QList<QVariant> get_link_list();
@@ -56,6 +54,10 @@ public:
 public Q_SLOTS:
 
 private:
+
+  QList<QVariant> download_structures(QString end_point, QList<long> StructureIDs);
+  QList<QVariant> download_locations(QString end_point, QList<long> StructureIDs);
+  QList<QVariant> download_locationlinks(QString end_point, QList<long> StructureIDs);
 
   static bool is_valid_odata_response(QMap<QString, QVariant> map);
 

@@ -38,6 +38,8 @@ public:
 
 class Structure;
 
+QList<QSharedPointer<Structure>> GatherStructures(QList<QSharedPointer<Structure>> root_structures);
+
 typedef QHash<long, QSharedPointer<Structure> > StructureHash;
 
 //! Maintains data a structure (e.g. cell)
@@ -48,16 +50,10 @@ public:
   Structure(QSharedPointer<QColor> color);
   ~Structure();
 
-  static QSharedPointer<Structure> create_structure( int id,
-                                                     QList<QVariant> location_list,
-													 QList<QVariant> link_list,
-													 ScaleObject scale,
-													 QSharedPointer<QColor> color);
-
   static QSharedPointer<StructureHash> create_structures( QList<QVariant> structure_list,
                                                           QList<QVariant> location_list, 
 														  QList<QVariant> link_list,
-													      ScaleObject scale,
+														  QSharedPointer<ScaleObject> scale,
 														  ColorMapper cmap);
 
   NodeMap get_node_map();
@@ -70,6 +66,8 @@ public:
   vtkSmartPointer<vtkPolyData> get_mesh_parts();
   vtkSmartPointer<vtkPolyData> get_mesh_tubes();
   vtkSmartPointer<vtkPolyData> get_mesh();
+
+  QSharedPointer<ScaleObject> scale;
 
   double get_volume();
 
@@ -93,6 +91,8 @@ public:
 private:
 
   Structure(); // private
+
+  static QSharedPointer<Structure>  structure_from_json(QVariant var);
 
   void add_polydata( QSharedPointer<Node> n, int from, vtkSmartPointer<vtkAppendPolyData> append, 
     QList<int> current_line );

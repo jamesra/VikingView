@@ -21,7 +21,7 @@ bool Downloader::is_valid_odata_response(QMap<QString, QVariant> map)
 	return map.contains("@odata.context");
 }
 
-ScaleObject Downloader::download_scale(QString end_point)
+QSharedPointer<ScaleObject> Downloader::download_scale(QString end_point)
 {
 	QString url_string = QString(end_point + "/Scale");
 	QString response = Downloader::download_url(url_string);
@@ -41,12 +41,77 @@ ScaleObject Downloader::download_scale(QString end_point)
 	AxisScale Yscaleobj = AxisScale(Y["Units"].toString(), Y["Value"].toDouble());
 	AxisScale Zscaleobj = AxisScale(Z["Units"].toString(), Z["Value"].toDouble());
 
-	ScaleObject scale = ScaleObject(Xscaleobj, Yscaleobj, Zscaleobj);
+	QSharedPointer<ScaleObject> scale = QSharedPointer<ScaleObject>(new ScaleObject(Xscaleobj, Yscaleobj, Zscaleobj));
 	return scale;
 }
 
+QList<QVariant> Downloader::download_structures(QString end_point, QList<long> StructureIDs)
+{
+	QList<QString> requests;
+
+	foreach(long StructureID, StructureIDs)
+	{
+		QString request = QString(end_point + "/Structures?$filter=(ID eq ") + QString::number(StructureID)
+			+ " or ParentID eq " + QString::number(StructureID) + ")&$select=ID,TypeID,ParentID,Label";
+
+		requests.append(request);
+	}
+
+	QList< QList<QVariant> > downloaded = QtConcurrent::blockingMapped(requests, download_item);;
+	
+	QList<QVariant> rows;
+	foreach(QList<QVariant> row, downloaded)
+	{
+		rows.append(row);
+	}
+
+	return rows;
+}
+
+QList<QVariant> Downloader::download_locations(QString end_point, QList<long> StructureIDs)
+{
+	QList<QString> requests;
+
+	foreach(long StructureID, StructureIDs)
+	{
+		QString request = QString(end_point + "/Structures(") + QString::number(StructureID) + ")/Locations?$select=ID,VolumeX,VolumeY,Z,Radius,ParentID,VolumeShape";
+		requests.append(request);
+	}
+
+	QList< QList<QVariant> > downloaded = QtConcurrent::blockingMapped(requests, download_item);
+
+	QList<QVariant> rows;
+	foreach(QList<QVariant> row, downloaded)
+	{
+		rows.append(row);
+	}
+
+	return rows;
+}
+
+QList<QVariant> Downloader::download_locationlinks(QString end_point, QList<long> StructureIDs)
+{
+	QList<QString> requests;
+
+	foreach(long StructureID, StructureIDs)
+	{
+		QString request = QString(end_point + "/Structures(") + QString::number(StructureID) + ")/LocationLinks?$select=A,B";
+		requests.append(request);
+	}
+
+	QList< QList<QVariant> > downloaded = QtConcurrent::blockingMapped(requests, download_item);
+
+	QList<QVariant> rows;
+	foreach(QList<QVariant> row, downloaded)
+	{
+		rows.append(row);
+	}
+
+	return rows;
+}
+
 //-----------------------------------------------------------------------------
-bool Downloader::download_cell( QString end_point, int id, DownloadObject &download_object, ProgressReporter &progress )
+bool Downloader::download_cells( QString end_point, QList<long> ids, DownloadObject &download_object, ProgressReporter &progress )
 {
   try {
 
@@ -62,9 +127,7 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 
 	progress(0, "Downloading structures");
 
-    QString request = QString(end_point + "/Structures?$filter=(ID eq ") + QString::number(id)
-   	    + " or ParentID eq " + QString::number(id) + ")&$select=ID,TypeID,ParentID,Label";
-   	download_object.structure_list = this->download_json(request, QString("structures-") + QString::number(id));
+	download_object.structure_list = download_structures(end_point, ids);
 
     std::cerr << "structure list length = " << download_object.structure_list.size() << "\n";
 
@@ -75,41 +138,22 @@ bool Downloader::download_cell( QString end_point, int id, DownloadObject &downl
 	  return false;
 	}
 
+	QList<long> AllStructureIDs;
+	foreach(QVariant struct_json, download_object.structure_list)
+	{
+		QMap<QString, QVariant> item = struct_json.toMap();
+		int id = item["ID"].toLongLong();
+		AllStructureIDs.append(id);
+	}
+
 	progress(1, "Downloading structure annotations");
-
-    QList< QList<QVariant> > downloaded;
-    QList< QString > requests;
 	
-    foreach( QVariant var, download_object.structure_list ) {
-      QMap<QString, QVariant> item = var.toMap();
-      int id = item["ID"].toLongLong();
-      request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/Locations?$select=ID,VolumeX,VolumeY,Z,Radius,ParentID";
-      requests.append( request );
-    }
-
-    downloaded = QtConcurrent::blockingMapped( requests, download_item );
-	 
-    foreach( QList<QVariant> list, downloaded ) {
-      download_object.location_list.append( list );
-    }
+	download_object.location_list = download_locations(end_point, AllStructureIDs);
 
 	progress(2, "Downloading annotation links");
-    // download locations
-    requests.clear();
-	foreach( QVariant var, download_object.structure_list ) {
-      QMap<QString, QVariant> item = var.toMap();
-      int id = item["ID"].toLongLong();
-      request = QString( end_point + "/Structures(" ) + QString::number( id ) + ")/LocationLinks?$select=A,B";
-      requests.append( request );
-    }
 
-    // download location links
-    downloaded = QtConcurrent::blockingMapped( requests, download_item );
-	
-    foreach( QList<QVariant> list, downloaded ) {
-      download_object.link_list.append( list );
-    }
-
+	download_object.link_list = download_locationlinks(end_point, AllStructureIDs);
+	 
 	progress(3, "Download completed");
 
     std::cerr << "Download took: " << timer.elapsed() / 1000.0 << " seconds\n";
