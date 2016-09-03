@@ -7,6 +7,7 @@
 #include <QColor.h>
 
 #include <vtkSmartPointer.h>
+#include <vtkBoundingBox.h>
 #include <Data/Scale.h>
 #include <Data/ColorMapper.h>
 
@@ -83,6 +84,8 @@ public:
   void set_color( QColor color );
 
   QColor get_color();
+
+  QSharedPointer<vtkBoundingBox> get_bbox();
 
   vtkSmartPointer<vtkPolyData> recopy_mesh( vtkSmartPointer<vtkPolyData> mesh );
 

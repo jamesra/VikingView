@@ -4,6 +4,10 @@
 #include <vtkUnsignedLongArray.h>
 #include <vtkSphereSource.h>
 #include <vtkGlyph3D.h>
+#include <vtkBoundingBox.h>
+#include <vtkProperty2D.h>
+#include <vtkFollower.h>
+#include <vtkVectorText.h>
 #include <vtkProperty.h>
 #include <vtkLookupTable.h>
 #include <vtkTransformPolyDataFilter.h>
@@ -381,37 +385,77 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 	vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();
 	vtkSmartPointer<vtkPolyDataMapper> mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
 
-//	vtkSmartPointer<vtkLabeledDataMapper> labelMapper = vtkSmartPointer<vtkLabeledDataMapper>::New();
-//	vtkSmartPointer<vtkTextActor> labelActor = vtkSmartPointer<vtkTextActor>::New();
-
 	vtkSmartPointer<vtkPolyData> mesh = s->get_mesh_tubes();
 
 	if (mesh)
 	{
+		QColor color = s->get_color();
+
 		mesh = this->scale_mesh(s);
-		
-//		this->renderer_->AddActor2D(labelActor);
 
 		mapper->SetInputData(mesh);
 		actor->SetMapper(mapper);
-
-		QColor color = s->get_color();
 
 		actor->GetProperty()->SetDiffuseColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
 		actor->GetProperty()->SetOpacity(color.alpha() / 255.0);
 		actor->GetProperty()->SetSpecular(0.2);
 		actor->GetProperty()->SetSpecularPower(15);
-		actor->GetProperty()->BackfaceCullingOn();  
+		actor->GetProperty()->BackfaceCullingOn();
 		
 		//actor->GetProperty()->SetRepresentationToWireframe();
 
 		mapper->ScalarVisibilityOff();
 		//mapper->ScalarVisibilityOn();
 		  
-		this->renderer_->AddActor(actor);
+		this->renderer_->AddActor(actor); 
 
 		this->surface_actors_.append(actor);
 		this->surface_mappers_.append(mapper);
+
+		if (s->get_type() == 1)
+		{
+			vtkSmartPointer<vtkVectorText> textSource =
+				vtkSmartPointer<vtkVectorText>::New();
+
+			QString label = QString::number(s->get_id());
+			if (s->get_label().length() > 0)
+			{
+				label += "\n" + s->get_label();
+			}
+			
+			textSource->SetText(label.toStdString().c_str());
+
+			vtkSmartPointer<vtkPolyDataMapper> text_mapper = vtkSmartPointer<vtkPolyDataMapper>::New();
+			text_mapper->SetInputConnection(textSource->GetOutputPort());
+
+			// Create a subclass of vtkActor: a vtkFollower that remains facing the camera
+			vtkSmartPointer<vtkFollower> follower =
+				vtkSmartPointer<vtkFollower>::New();
+			follower->SetMapper(text_mapper);
+			follower->GetProperty()->SetColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0); // red 
+			follower->SetPosition(0, 0, 0);
+			follower->SetScale(10000);
+			follower->SetForceOpaque(true);
+			follower->GetProperty()->SetDiffuseColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
+			follower->GetProperty()->SetOpacity(color.alpha() / 255.0);
+			follower->GetProperty()->SetSpecular(0.2);
+			follower->GetProperty()->SetSpecularPower(15);
+			follower->GetProperty()->BackfaceCullingOn();
+
+			follower->SetCamera(this->renderer_->GetActiveCamera());
+			
+			QSharedPointer<vtkBoundingBox> bbox = s->get_bbox();
+			double center[3];
+			
+			bbox->GetCenter(center);
+			const double* max = bbox->GetMaxPoint();
+			const double* min = bbox->GetMinPoint();
+			double length = bbox->GetMaxLength();
+			follower->SetPosition(center[0], center[1], min[2]);
+			follower->SetScale(length / 25.0);
+
+			this->renderer_->AddActor(follower);
+		} 
 	}
 
 	foreach(QSharedPointer<Structure> child, s->structures.values()) {

@@ -128,8 +128,13 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
 	  if (!s->has_parent())
 		  continue;
 
-	  QSharedPointer<Structure> parent = (*structures)[s->get_parent_id()];
-	  parent->structures.insert(s->get_id(), s);
+	  if (structures->contains(s->get_parent_id()))
+	  {
+		  QSharedPointer<Structure> parent = (*structures)[s->get_parent_id()];
+		  //If we get a child using a query, but no parent, the parent may not be in the hashtable.
+
+		  parent->structures.insert(s->get_id(), s);
+	  }
   }
 
   std::cerr << "structure list length: " << structure_list.size() << "\n";
@@ -510,6 +515,17 @@ double Structure::get_volume()
 
   return mass_properties->GetVolume();
   */
+}
+
+QSharedPointer<vtkBoundingBox> Structure::get_bbox()
+{
+	QSharedPointer<vtkBoundingBox> bbox = QSharedPointer<vtkBoundingBox>(new vtkBoundingBox());
+	foreach(QSharedPointer<Node> n, this->node_map_.values())
+	{
+		bbox->AddPoint(n->x, n->y, n->z);
+	}
+
+	return bbox;
 }
 
 //-----------------------------------------------------------------------------
