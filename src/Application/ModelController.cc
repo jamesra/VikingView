@@ -12,26 +12,78 @@
 #include <Data/Downloader.h>
 #include <Data/Structure.h>
 
-/*
-QSharedPointer<Structure> LoadRootStructure(long ID, QString end_point, QSharedPointer<ScaleObject> scale, ColorMapper cmap, ProgressReporter &report_progress)
-{
-	Downloader downloader;
-	DownloadObject download_object;
+#include <Application/Preferences.h>
 
-	if (!downloader.download_cells(end_point, ID, download_object, report_progress))
+QList<long> ParseInputFile(QString filepath);
+
+QList<long> FetchIDsFromInputString(QString str)
+{
+	//Parses an input string, which can be any of the following
+	//1. Numbers
+	//2. A filename
+	//3. An OData query
+	QList<long> ids;
+
+	bool isNumber = false;
+	long ID = str.toInt(&isNumber);
+	if (isNumber)
 	{
-		return QSharedPointer<Structure>();
+		ids.append(ID);
+		return ids;
+	}
+	else
+	{
+		//Must be filename or OData query
+		if (QFile::exists(str))
+		{
+			//A file
+			ids.append(ParseInputFile(str));
+		}
+		else
+		{
+			//OData query
+			QString endpoint = Preferences::Instance().active_endpoint();
+			ids.append(Downloader::FetchStructureIDsFromODataQuery(Preferences::Instance().active_endpoint(), str));
+		}
+	} 
+
+	return ids;
+}
+
+QList<long> ParseInputFile(QString filepath)
+{
+	QList<long> ids;
+	QFile inputFile(filepath);
+	if (inputFile.open(QIODevice::ReadOnly))
+	{
+		QTextStream in(&inputFile);
+		while (!in.atEnd())
+		{
+			QString line = in.readLine();
+			ids.append(FetchIDsFromInputString(line));
+		}
 	}
 
-	QSharedPointer<StructureHash> structures = Structure::create_structures(download_object.structure_list,
-		download_object.location_list,
-		download_object.link_list,
-		scale,
-		cmap);
-
-	return (*structures)[ID];
+	return ids;
 }
-*/
+
+QList<long> ParseInputArray(QString input)
+{
+	//Parses an input string, which can be any of the following
+	//1. Numbers
+	//2. A filename
+	//3. An OData query
+
+	QStringList pieces = input.split(" ");
+	QList<long> ids;
+	foreach(QString str, pieces) {
+		QList<long> new_ids = FetchIDsFromInputString(str);
+		ids.append(new_ids);
+	}
+
+	//Convert to set and back to remove duplicates
+	return ids.toSet().toList();
+}
 
 QList<QSharedPointer<Structure> > LoadStructures(QList<long> IDs, QString end_point, ColorMapper cmap, ProgressReporter &report_progress)
 {

@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <QtConcurrentMap>
 #include <QElapsedTimer>
+#include <QJsonArray>
+#include <QJsonObject>
 
 Downloader::Downloader()
 {}
@@ -19,6 +21,47 @@ Downloader::~Downloader()
 bool Downloader::is_valid_odata_response(QMap<QString, QVariant> map)
 {
 	return map.contains("@odata.context");
+}
+
+QList<long> Downloader::FetchStructureIDsFromODataQuery(QString end_point, QString query)
+{
+	QString url_string = QString(end_point + "/" + query);
+	QString response = Downloader::download_url(url_string);
+	QMap<QString, QVariant> map = Json::decode(response);
+	QList<long> IDs;
+
+	if (!is_valid_odata_response(map))
+	{
+		QString message = "Error downloading url: " + url_string + "\n\n" + response.left(256);
+		std::cout << message.toStdString();
+		return IDs;
+	}
+
+	//OK, the response could be an array of integers, or a set of objects with an ID field.
+	if (map.contains("value"))
+	{
+		if (!map.value("value").canConvert<QVariantList>())
+			return IDs;
+
+		QVariantList items = map.value("value").toList();
+		foreach(QVariant item, items)
+		{
+			if (item.canConvert<int>())
+			{
+				IDs.append(item.toLongLong());
+			}
+			else if (item.canConvert<QMap<QString, QVariant>>())
+			{
+				QMap<QString, QVariant> obj = item.toMap();
+				if (obj.contains("ID"))
+				{
+					IDs.append(obj["ID"].toInt());
+				}
+			}
+		}
+	}
+
+	return IDs; 
 }
 
 QSharedPointer<ScaleObject> Downloader::download_scale(QString end_point)
@@ -125,7 +168,8 @@ bool Downloader::download_cells( QString end_point, QList<long> ids, DownloadObj
 	if(QThreadPool::globalInstance()->maxThreadCount() < 16)
 		QThreadPool::globalInstance()->setMaxThreadCount(16);
 
-	progress(0, "Downloading structures");
+	QString message = "Downloading " + QString::number(ids.count()) + " structures";
+	progress(0, message);
 
 	download_object.structure_list = download_structures(end_point, ids);
 
@@ -146,7 +190,8 @@ bool Downloader::download_cells( QString end_point, QList<long> ids, DownloadObj
 		AllStructureIDs.append(id);
 	}
 
-	progress(1, "Downloading structure annotations");
+	message = "Downloading " + QString::number(AllStructureIDs.count()) + " structure annotations";
+	progress(1, message);
 	
 	download_object.location_list = download_locations(end_point, AllStructureIDs);
 

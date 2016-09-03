@@ -34,10 +34,16 @@ public:
   QStringList get_connectome_list();
   void set_connectome_list( QStringList nicknames, QStringList list );
 
+  void add_connectome(QString nickname, QString endpoint);
+
   QStringList get_connectome_nickname_list();
 
   int get_last_connectome();
   void set_last_connectome( int id );
+
+  int get_active_endpoint() { return iActiveEndpoint; };
+
+  QString active_endpoint() { return default_connectomes_[iActiveEndpoint]; }
 
   double get_child_scale();
   void set_child_scale( double scale );
@@ -45,10 +51,14 @@ public:
   /// restore all default values
   void restore_defaults();
 
+public Q_SLOTS: 
+  void set_active_endpoint(int id);
+   
 Q_SIGNALS:
   //void color_scheme_changed( int newIndex );
   //void glyph_properties_changed();
   void preferences_changed();
+  void active_endpoint_changed();
 
 private:
 
@@ -70,6 +80,8 @@ private:
 
   QStringList default_connectomes_;
   QStringList default_connectome_nicknames_;
+
+  int iActiveEndpoint = 0;
 };
 
 #endif // ifndef VIKINGVIEW_APPLICATION_PREFERENCES_H

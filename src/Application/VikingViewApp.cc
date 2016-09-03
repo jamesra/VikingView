@@ -25,6 +25,7 @@
 #include <Data/Downloader.h>
 #include <Data/Structure.h>
 #include <Visualization/Viewer.h>
+#include <Application/ModelController.h>
 
 // ui
 #include <ui_VikingViewApp.h>
@@ -46,6 +47,7 @@ VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > command_line_arg
   this->resize( Preferences::Instance().get_main_window_size() );
 
   connect( &( Preferences::Instance() ), SIGNAL( preferences_changed() ), this, SLOT( on_preferences_changed() ) );
+  connect(this->ui_->connectome_combo, SIGNAL(currentIndexChanged(int)), &(Preferences::Instance()), SLOT(set_active_endpoint(int)) );
   this->on_preferences_changed();
 
   this->initialize_export_functions();
@@ -64,13 +66,7 @@ void VikingViewApp::on_add_button_clicked()
                                         "", &ok );
   if ( ok && !text.isEmpty() )
   {
-
-    QStringList pieces = text.split( " " );
-	QList<long> ids;
-    foreach( QString str, pieces ) {
-		ids.append(str.toInt());
-    }
-
+	QList<long> ids = ParseInputArray(text);
 	this->load_structures(ids);
   }
 }
@@ -99,6 +95,8 @@ void VikingViewApp::on_delete_button_clicked()
 //---------------------------------------------------------------------------
 void VikingViewApp::load_structures(QList<long> ids)
 {
+	if (ids.count() == 0)
+		return;
 
 	QSharedPointer<QProgressDialog> progressDialog = QSharedPointer<QProgressDialog>( new QProgressDialog("Downloading Scale...", "Abort", 0, 100, this));
 	progressDialog->setWindowModality(Qt::WindowModal);

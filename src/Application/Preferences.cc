@@ -91,6 +91,14 @@ void Preferences::set_connectome_list( QStringList nicknames, QStringList list )
   emit preferences_changed();
 }
 
+void Preferences::add_connectome(QString nickname, QString endpoint)
+{
+	this->default_connectomes_ << endpoint;
+	this->default_connectome_nicknames_ << nickname;
+
+	emit preferences_changed();
+}
+
 //-----------------------------------------------------------------------------
 int Preferences::get_last_connectome()
 {
@@ -114,6 +122,22 @@ void Preferences::set_last_connectome( int id )
 {
   this->settings.setValue( "LastConnectome", id );
   emit preferences_changed();
+}
+
+void Preferences::set_active_endpoint(int id)
+{
+	if (id < 0)
+	{
+		id = 0;
+	}
+	if (id >= this->default_connectomes_.count())
+	{
+		id = this->default_connectomes_.count() - 1;
+	}
+
+	this->iActiveEndpoint = id;
+
+	emit active_endpoint_changed();
 }
 
 //-----------------------------------------------------------------------------

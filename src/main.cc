@@ -16,6 +16,9 @@
 #include <iostream>
 #include <fstream>
 
+#include <Application/Preferences.h>
+
+
 //#include <Data/AlphaShape.h>
 
 #ifndef _USE_OLD_IOSTREAMS
@@ -127,6 +130,9 @@ int LaunchConsoleVersion(int argc, char** argv)
 	ConsoleProgressReporter pf(0,1.0);
 	QString endpoint = cmdArgs->value("u");
 	QString export_path = cmdArgs->value("e");
+
+	Preferences::Instance().add_connectome("Default", endpoint);
+
 	ExportStructures(IDs, endpoint, export_path, cmap, pf);
 	
 	return 0;
