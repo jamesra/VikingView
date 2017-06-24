@@ -105,7 +105,8 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
                                                             QList<QVariant> location_list,
                                                             QList<QVariant> link_list,
 															QSharedPointer<ScaleObject> scale,
-															ColorMapper cmap)
+															ColorMapper cmap,
+														    bool reverse_Z)
 { 
 	
   QSharedPointer<StructureHash> structures = QSharedPointer<StructureHash> ( new StructureHash() );
@@ -153,7 +154,7 @@ QSharedPointer<StructureHash> Structure::create_structures( QList<QVariant> stru
     n->id = item["ID"].toLongLong();
     n->x = item["VolumeX"].toDouble();
     n->y = item["VolumeY"].toDouble();
-    n->z = item["Z"].toDouble();
+    n->z = reverse_Z ? -(item["Z"].toDouble()) : item["Z"].toDouble();
     n->radius = item["Radius"].toDouble();
     n->parent_id = item["ParentID"].toLongLong();
     n->graph_id = -1;

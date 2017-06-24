@@ -27,6 +27,8 @@ PreferencesWindow::PreferencesWindow( QWidget* parent /*= 0 */ )
   QPushButton* ok_button = this->ui_->button_box->button( QDialogButtonBox::Ok );
   QObject::connect( ok_button, SIGNAL( clicked() ), this, SLOT( close() ) );
 
+  QCheckBox* reverse_Z_checkbox = this->ui_->checkReverseZ;
+  QObject::connect(reverse_Z_checkbox, SIGNAL( clicked()), this, SLOT(on_reverse_Z_checkbox_changed()));
 }
 
 //-----------------------------------------------------------------------------
@@ -36,10 +38,14 @@ void PreferencesWindow::restore_defaults()
   this->set_values_from_preferences();
 }
 
+void PreferencesWindow::on_reverse_Z_checkbox_changed()
+{
+	Preferences::Instance().set_reverse_Z(this->ui_->checkReverseZ->isChecked() );
+}
+
 //-----------------------------------------------------------------------------
 void PreferencesWindow::set_values_from_preferences()
 {
-
   QStringList nicknames = Preferences::Instance().get_connectome_nickname_list();
   QStringList urls = Preferences::Instance().get_connectome_list();
 
@@ -74,6 +80,8 @@ void PreferencesWindow::set_values_from_preferences()
   this->ui_->connectome_table->resizeColumnsToContents();
   this->ui_->connectome_table->horizontalHeader()->setStretchLastSection( true );
   this->ui_->connectome_table->setSelectionBehavior( QAbstractItemView::SelectRows );
+
+  this->ui_->checkReverseZ->setChecked(Preferences::Instance().get_reverse_Z());
 }
 
 //-----------------------------------------------------------------------------

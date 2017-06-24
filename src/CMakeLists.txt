@@ -199,6 +199,7 @@ SET(VIKING_VIEW_APPLICATION_HDRS
   Application/PreferencesWindow.h
   Application/CommandLineArgs.h
   Application/ModelController.h
+  Application/ChooseStructuresDialog.h
 )
 SET(VIKING_VIEW_APPLICATION_SRCS
   Application/VikingViewApp.cc
@@ -206,10 +207,12 @@ SET(VIKING_VIEW_APPLICATION_SRCS
   Application/PreferencesWindow.cc
   Application/CommandLineArgs.cc
   Application/ModelController.cc
+  Application/ChooseStructuresDialog.cc
 )
 SET(VIKING_VIEW_APPLICATION_UIS
   Application/VikingViewApp.ui
   Application/PreferencesWindow.ui
+  Application/ChooseStructuresDialog.ui
 )
 
 ### Data
@@ -522,7 +525,7 @@ set(CPACK_PACKAGE_VENDOR "University of Utah")
 #set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/Copyright.txt")
 set(CPACK_PACKAGE_VERSION_MAJOR "0")
 set(CPACK_PACKAGE_VERSION_MINOR "5")
-set(CPACK_PACKAGE_VERSION_PATCH "7")
+set(CPACK_PACKAGE_VERSION_PATCH "10")
 set(CPACK_PACKAGE_EXECUTABLES "VikingView" "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "VikingView ${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}")
 

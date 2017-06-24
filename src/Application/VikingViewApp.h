@@ -7,6 +7,8 @@
 #include <QSlider>
 #include <QLabel>
 #include <QTimer>
+#include <QDropEvent>
+#include <QMimeData>
 
 #include <QFile>
 #include <QMap>
@@ -69,7 +71,14 @@ public:
 
   vtkRenderWindow* get_render_window();
 
+protected:
+
+	void dragEnterEvent(QDragEnterEvent *event);
+	void dragMoveEvent(QDragMoveEvent* event);
+	void dropEvent(QDropEvent *event);
+    
 public Q_SLOTS:
+
 
   void on_action_quit_triggered();
   void on_action_preferences_triggered();

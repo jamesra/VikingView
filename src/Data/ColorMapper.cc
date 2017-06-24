@@ -6,7 +6,6 @@
 #include <QRegExp>
 
 #ifdef _WIN32
-
 	#include <stdio.h>
 	#include <fcntl.h>
 	#include <io.h>
@@ -16,12 +15,6 @@
 #include<iostream>
 #endif
 
-
-	//#include <Data/AlphaShape.h>
-
-#ifndef _USE_OLD_IOSTREAMS
-using namespace std;
-#endif
 
 bool IsComment(QString line)
 {

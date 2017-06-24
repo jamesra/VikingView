@@ -82,6 +82,11 @@ public:
 			Z /= scale->Z.scale;
 		}
 
+		bool reverse_Z = Preferences::Instance().get_reverse_Z();
+
+		if (reverse_Z)
+			Z = -Z;
+
 		std::cout << "Pick position (world coordinates) is: "
 			<< pos[0] << " " << pos[1]
 			<< " " << pos[2] << std::endl;
@@ -142,7 +147,7 @@ void SetCameraToXY_ZIn(vtkCamera* camera)
 void SetCameraToXY_ZOut(vtkCamera* camera)
 {
 	camera->SetPosition(0, 0, -1);
-	camera->SetViewUp(0, -1, 0);
+	camera->SetViewUp(0, 1, 0);
 }
 
 void SetCameraToYZ_XIn(vtkCamera* camera)
@@ -169,9 +174,22 @@ void SetCameraToZX_YOut(vtkCamera* camera)
 	camera->SetViewUp(0, 0, 1);
 }
 
+vtkSmartPointer<vtkTransform> CreateInverseZTransform()
+{
+	const double flipZMatrix[16] = { 1, 0, 0, 0,
+		0, 1, 0, 0,
+		0, 0, -1, 0,
+		0, 0, 0, 1 };
+
+	vtkSmartPointer<vtkTransform> transform = vtkTransform::New();
+	transform->SetMatrix(flipZMatrix);
+
+	return transform;
+}
+
 /* Parse a coordinate string in the form X: 0 Y: 0 Z: 0 DS: 4
 */
-double* CoordsFromText(QString coordString)
+double* CoordsFromText(QString coordString, bool ReverseZ)
 {
 	QRegExp rx("^\\s*X:\\s*(\\d+|\\d+\.\\d+|\.\\d+)\\s*Y:\\s*(\\d+|\\d+\.\\d+|\.\\d+)\\s*Z:\\s*(\\d+|\\d+\.\\d+|\.\\d+)\\s*DS:(\\d+|\\d+\.\\d+|\.\\d+).*");
 
@@ -183,7 +201,10 @@ double* CoordsFromText(QString coordString)
 		double Y = rx.cap(2).toDouble();
 		double Z = rx.cap(3).toDouble();
 		double DS = rx.cap(4).toDouble(); 
-		 
+		/*
+		if (ReverseZ)
+			Z = -Z;
+		 */
 		double* coords = new double[4] { X,Y,Z,DS };
 
 		return coords;
@@ -220,15 +241,16 @@ public:
 			float distance = camera->GetDistance();
 			float parallel_scale = camera->GetParallelScale();
 			bool found = true;
-
+			  
 			switch (keyPressed)
 			{
 			case Qt::Key_V:
 				if (CtrlPressed)
 				{
+					bool reverse_Z = Preferences::Instance().get_reverse_Z();
 					QClipboard *clipboard = QApplication::clipboard();
 					QString clipboardText = clipboard->text();
-					double *coords = CoordsFromText(clipboardText);
+					double *coords = CoordsFromText(clipboardText, reverse_Z);
 					camera->SetFocalPoint(coords[0] * scale->X.scale, coords[1] * scale->Y.scale, coords[2] * scale->Z.scale);
 					//Coords[3] is downsample value
 					camera->SetPosition(coords[0] * scale->X.scale, coords[1] * scale->Y.scale, (coords[2] * scale->Z.scale) - distance);
@@ -375,9 +397,9 @@ void Viewer::set_render_window(vtkRenderWindow* render_window)
 	mouse_interactor_->SetDefaultRenderer(this->renderer_);
 
 	renderWindowInteractor->SetInteractorStyle(mouse_interactor_);
+	 
 
 	render_window->GetInteractor()->AddObserver(vtkCommand::KeyPressEvent, this->orientation_controller_);
-
 }
 
 void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
@@ -394,6 +416,7 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 		mesh = this->scale_mesh(s);
 
 		mapper->SetInputData(mesh);
+		  
 		actor->SetMapper(mapper);
 
 		actor->GetProperty()->SetDiffuseColor(color.red() / 255.0, color.green() / 255.0, color.blue() / 255.0);
@@ -401,7 +424,7 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 		actor->GetProperty()->SetSpecular(0.2);
 		actor->GetProperty()->SetSpecularPower(15);
 		actor->GetProperty()->BackfaceCullingOn();
-		
+		  
 		//actor->GetProperty()->SetRepresentationToWireframe();
 
 		mapper->ScalarVisibilityOff();
@@ -450,9 +473,13 @@ void Viewer::add_structure_to_view(QSharedPointer<Structure> s)
 			bbox->GetCenter(center);
 			const double* max = bbox->GetMaxPoint();
 			const double* min = bbox->GetMinPoint();
-			double length = bbox->GetMaxLength();
-			follower->SetPosition(center[0], center[1], min[2]);
-			follower->SetScale(length / 25.0);
+			double lengths[3];
+			
+			bbox->GetLengths(lengths);			
+			double minLength = lengths[0] < lengths[1] ? lengths[0] : lengths[1];
+			minLength = minLength < lengths[2] ? minLength : lengths[2];
+			follower->SetPosition(center[0], center[1], min[2]-(4.0*minLength/20.0));
+			follower->SetScale(minLength / 20.0);
 
 			this->renderer_->AddActor(follower);
 		} 

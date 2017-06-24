@@ -55,7 +55,8 @@ public:
                                                           QList<QVariant> location_list, 
 														  QList<QVariant> link_list,
 														  QSharedPointer<ScaleObject> scale,
-														  ColorMapper cmap);
+														  ColorMapper cmap, 
+														  bool reverse_Z);
 
   NodeMap get_node_map();
 

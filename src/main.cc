@@ -8,22 +8,29 @@
 #include <iostream>
 
 #ifdef _WIN32
+/*
+	#define _CRTDBG_MAP_ALLOC
+	#include <stdlib.h>
+	#include <crtdbg.h>
+*/
 
-#include <windows.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <io.h>
-#include <iostream>
-#include <fstream>
+	#include <windows.h>
+	#include <stdio.h>
+	#include <fcntl.h>
+	#include <io.h>
+	#include <iostream>
+	#include <fstream>
+
+#endif
 
 #include <Application/Preferences.h>
 
 
 //#include <Data/AlphaShape.h>
 
-#ifndef _USE_OLD_IOSTREAMS
+//#ifndef _USE_OLD_IOSTREAMS
 using namespace std;
-#endif
+//#endif
 
 // maximum number of lines the output console should have
 static const WORD MAX_CONSOLE_LINES = 500;
@@ -84,8 +91,6 @@ void RedirectIOToConsole2()
 
   std::cout << "Console window allocated" << flush;
 }
-
-#endif // _WIN32
 
 QSharedPointer<QCommandLineParser> BuildParser()
 {

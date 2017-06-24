@@ -164,9 +164,11 @@ bool Downloader::download_cells( QString end_point, QList<long> ids, DownloadObj
 	QElapsedTimer timer;
 	timer.start();
 
-    // set number of threads to download
-	if(QThreadPool::globalInstance()->maxThreadCount() < 16)
-		QThreadPool::globalInstance()->setMaxThreadCount(16);
+    // set number of threads to download and parse
+	int idealDownloadThreadCount = QThread::idealThreadCount() * 2;
+
+	if(QThreadPool::globalInstance()->maxThreadCount() < idealDownloadThreadCount)
+		QThreadPool::globalInstance()->setMaxThreadCount(idealDownloadThreadCount);
 
 	QString message = "Downloading " + QString::number(ids.count()) + " structures";
 	progress(0, message);
@@ -202,13 +204,17 @@ bool Downloader::download_cells( QString end_point, QList<long> ids, DownloadObj
 	progress(3, "Download completed");
 
     std::cerr << "Download took: " << timer.elapsed() / 1000.0 << " seconds\n";
+
+	QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount());
     return true;
   }
   catch ( DownloadException e )
   {
     std::cerr << e.message_.toStdString() << "\n";
     QMessageBox::critical( 0, "Error", e.message_ );
-  }
+  } 
+
+  QThreadPool::globalInstance()->setMaxThreadCount(QThread::idealThreadCount());
   return false;
 }
 

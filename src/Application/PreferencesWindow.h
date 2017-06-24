@@ -24,6 +24,7 @@ public Q_SLOTS:
 
   void on_add_connectome_button_clicked();
   void on_delete_connectome_button_clicked();
+  void on_reverse_Z_checkbox_changed();
 
   void restore_defaults();
 

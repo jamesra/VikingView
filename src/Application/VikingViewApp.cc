@@ -26,6 +26,7 @@
 #include <Data/Structure.h>
 #include <Visualization/Viewer.h>
 #include <Application/ModelController.h>
+#include <Application/ChooseStructuresDialog.h>
 
 // ui
 #include <ui_VikingViewApp.h>
@@ -46,24 +47,85 @@ VikingViewApp::VikingViewApp( QSharedPointer< CommandLineArgs > command_line_arg
   // resize from preferences
   this->resize( Preferences::Instance().get_main_window_size() );
 
+  this->setAcceptDrops(true);
+  /*this->ui_->table_widget->setAcceptDrops(true);
+  this->ui_->centralwidget->setAcceptDrops(true);
+  
+  bool dropsOK = this->ui_->centralwidget->acceptDrops();
+  */
+  bool dropsOK = this->acceptDrops();
+  
   connect( &( Preferences::Instance() ), SIGNAL( preferences_changed() ), this, SLOT( on_preferences_changed() ) );
   connect(this->ui_->connectome_combo, SIGNAL(currentIndexChanged(int)), &(Preferences::Instance()), SLOT(set_active_endpoint(int)) );
+  /*
+  connect(this->ui_->centralwidget, SIGNAL(dragEnterEvent(QDragEnterEvent *)), this, SLOT(dragEnterEvent(QDragEnterEvent *)));
+  connect(this->ui_->centralwidget, SIGNAL(dropEvent(QDropEvent *)), this, SLOT(dropEvent(QDropEvent *)));
+  connect(this->ui_->table_widget, SIGNAL(dragEnterEvent(QDragEnterEvent *)), this, SLOT(dragEnterEvent(QDragEnterEvent *)));
+  connect(this->ui_->table_widget, SIGNAL(dropEvent(QDropEvent *)), this, SLOT(dropEvent(QDropEvent *)));
+  */
   this->on_preferences_changed();
 
   this->initialize_export_functions();
+
 }
 
 //---------------------------------------------------------------------------
 VikingViewApp::~VikingViewApp()
 {}
 
+void VikingViewApp::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasFormat("text/plain"))
+		event->acceptProposedAction();
+
+	if (event->mimeData()->hasText())
+		event->acceptProposedAction();
+
+	if (event->mimeData()->hasUrls())
+		event->acceptProposedAction();
+}
+
+void VikingViewApp::dragMoveEvent(QDragMoveEvent* event)
+{
+	// if some actions should not be usable, like move, this code must be adopted
+	event->acceptProposedAction();
+}
+
+void VikingViewApp::dropEvent(QDropEvent * event)
+{
+	QList<long> ids;
+
+	if (event->mimeData()->hasUrls())
+	{
+		QList<QUrl> StructureIDs = event->mimeData()->urls();
+		foreach(QUrl url, StructureIDs)
+		{
+			if(url.isLocalFile())
+				ids.append(ParseInputArray(url.toLocalFile()));
+			else
+				ids.append(ParseInputArray(url.toString()));
+		}
+	}
+	else if (event->mimeData()->hasText())
+	{
+		QString StructureIDs = event->mimeData()->text();
+		ids = ParseInputArray(StructureIDs);
+	}
+	
+
+	this->load_structures(ids);
+
+	event->acceptProposedAction();
+}
+
 //---------------------------------------------------------------------------
 void VikingViewApp::on_add_button_clicked()
 {
   bool ok;
-  QString text = QInputDialog::getText( this, tr( "Please enter an ID or list of IDs" ),
-                                        tr( "ID:" ), QLineEdit::Normal,
-                                        "", &ok );
+  QString text = ChooseStructuresDialog::getStructureIDs(this, tr("StructureID input"), "", &ok);
+  //QString text = QInputDialog::getText( this, tr( "Please enter an ID or list of IDs" ),
+    //                                    tr( "ID:" ), QLineEdit::Normal,
+      //                                  "", &ok );
   if ( ok && !text.isEmpty() )
   {
 	QList<long> ids = ParseInputArray(text);
@@ -108,6 +170,8 @@ void VikingViewApp::load_structures(QList<long> ids)
 	  
 	ColorMapper cmap = ColorMapper("./StructureTypeColors.txt", "./StructureColors.txt");
 	QString end_point = Preferences::Instance().get_connectome_list()[this->ui_->connectome_combo->currentIndex()];
+
+	
 	  
 	QList<QSharedPointer<Structure> > new_cells = LoadStructures(ids, end_point, cmap, progressReporter);
 	
@@ -193,6 +257,8 @@ void VikingViewApp::on_sampling_slider_valueChanged()
 {
 //  std::cerr << "sampling now : " << this->ui_->sampling_slider->value() << "\n";
 }
+
+
 
 //---------------------------------------------------------------------------
 void VikingViewApp::on_action_quit_triggered()

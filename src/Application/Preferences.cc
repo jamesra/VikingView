@@ -44,6 +44,13 @@ Preferences::Preferences()
     this->set_last_connectome( 0 );
     this->settings.setValue( "ODATA4 Update", true );
   }
+   
+  /*
+  if (!this->settings.contains("DataPath"))
+  {
+	  this->settings.setValue("DataPath", ".");
+  }
+  */
 }
 
 //-----------------------------------------------------------------------------
@@ -82,6 +89,7 @@ QStringList Preferences::get_connectome_list()
   }
   return string_list;
 }
+
 
 //-----------------------------------------------------------------------------
 void Preferences::set_connectome_list( QStringList nicknames, QStringList list )
@@ -152,10 +160,22 @@ void Preferences::set_child_scale( double scale )
   this->settings.setValue( "ChildScale", scale );
 }
 
+bool Preferences::get_reverse_Z()
+{
+	return this->settings.value("ReverseZ", true).toBool();
+}
+
+//-----------------------------------------------------------------------------
+void Preferences::set_reverse_Z(bool value)
+{
+	this->settings.setValue("ReverseZ", value);
+}
+
 //-----------------------------------------------------------------------------
 void Preferences::restore_defaults()
 {
   this->set_connectome_list( this->default_connectome_nicknames_, this->default_connectomes_ );
   this->set_last_connectome( 0 );
   this->set_child_scale( 1.0 );
+  this->set_reverse_Z(true);
 }

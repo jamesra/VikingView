@@ -48,6 +48,9 @@ public:
   double get_child_scale();
   void set_child_scale( double scale );
 
+  bool get_reverse_Z();
+  void set_reverse_Z(bool value);
+
   /// restore all default values
   void restore_defaults();
 
@@ -80,7 +83,7 @@ private:
 
   QStringList default_connectomes_;
   QStringList default_connectome_nicknames_;
-
+    
   int iActiveEndpoint = 0;
 };
 

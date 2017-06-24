@@ -16,13 +16,27 @@
 
 QList<long> ParseInputFile(QString filepath);
 
-QList<long> FetchIDsFromInputString(QString str)
+QString filename_to_absolute_path(QString str, QDir relpath)
+{
+	QFileInfo file_info(relpath, str);
+	QFileInfo line_filename_info(str);
+	if (line_filename_info.isAbsolute())
+	{ 
+		return line_filename_info.absoluteFilePath();
+	}
+	
+	file_info.makeAbsolute();
+	return file_info.absoluteFilePath();  
+}
+
+QList<long> FetchIDsFromInputString(QString str, QDir relpath)
 {
 	//Parses an input string, which can be any of the following
 	//1. Numbers
 	//2. A filename
 	//3. An OData query
 	QList<long> ids;
+	QString dirname = relpath.absolutePath();
 
 	bool isNumber = false;
 	long ID = str.toInt(&isNumber);
@@ -34,16 +48,25 @@ QList<long> FetchIDsFromInputString(QString str)
 	else
 	{
 		//Must be filename or OData query
-		if (QFile::exists(str))
-		{
-			//A file
-			ids.append(ParseInputFile(str));
+		QString file_fullpath = filename_to_absolute_path(str, relpath);
+		if (QFile::exists(file_fullpath))
+		{ 
+			ids.append(ParseInputFile(file_fullpath));
 		}
 		else
 		{
 			//OData query
 			QString endpoint = Preferences::Instance().active_endpoint();
-			ids.append(Downloader::FetchStructureIDsFromODataQuery(Preferences::Instance().active_endpoint(), str));
+			QList<long> odata_ids = Downloader::FetchStructureIDsFromODataQuery(Preferences::Instance().active_endpoint(), str);
+			if (odata_ids.count() == 0)
+			{
+				QString msg = "No ids found for input: " + str;
+				std::cout << msg.toStdString();
+			}
+			else
+			{
+				ids.append(odata_ids);
+			}
 		}
 	} 
 
@@ -52,6 +75,10 @@ QList<long> FetchIDsFromInputString(QString str)
 
 QList<long> ParseInputFile(QString filepath)
 {
+	QFileInfo file_info(filepath);
+	QDir dir = file_info.absoluteDir();
+	QString dirname = dir.absolutePath();
+
 	QList<long> ids;
 	QFile inputFile(filepath);
 	if (inputFile.open(QIODevice::ReadOnly))
@@ -60,7 +87,7 @@ QList<long> ParseInputFile(QString filepath)
 		while (!in.atEnd())
 		{
 			QString line = in.readLine();
-			ids.append(FetchIDsFromInputString(line));
+			ids.append(FetchIDsFromInputString(line, dir));
 		}
 	}
 
@@ -77,7 +104,7 @@ QList<long> ParseInputArray(QString input)
 	QStringList pieces = input.split(" ");
 	QList<long> ids;
 	foreach(QString str, pieces) {
-		QList<long> new_ids = FetchIDsFromInputString(str);
+		QList<long> new_ids = FetchIDsFromInputString(str, QDir());
 		ids.append(new_ids);
 	}
 
@@ -99,11 +126,14 @@ QList<QSharedPointer<Structure> > LoadStructures(QList<long> IDs, QString end_po
 
 	downloader.download_cells(end_point, IDs, download_object, report_progress);
 
+	bool reverse_Z = Preferences::Instance().get_reverse_Z();
+
 	QSharedPointer<StructureHash> structures = Structure::create_structures(download_object.structure_list,
 			download_object.location_list,
 			download_object.link_list,
 			scale,
-			cmap);
+			cmap,
+		    reverse_Z);
 
 	QList<QSharedPointer<Structure>> output;
 	foreach(long ID, IDs)

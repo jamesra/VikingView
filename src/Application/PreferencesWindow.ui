@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>334</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -91,6 +91,13 @@
        </item>
       </layout>
      </widget>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="checkReverseZ">
+     <property name="text">
+      <string>Reverse Z axis</string>
+     </property>
     </widget>
    </item>
    <item>
